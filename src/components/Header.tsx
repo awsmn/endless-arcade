@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
               Unlimited
             </h1>
             <span className="text-[10px] font-semibold text-game-neonCyan tracking-widest uppercase">
-              Games Hub
+              Arcade Hub
             </span>
           </div>
         </div>
@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onInstall();
               }}
               className="px-2.5 py-1 rounded-full bg-game-accent hover:bg-game-accentGlow text-white text-xs font-semibold flex items-center space-x-1 shadow-neon-indigo animate-pulse"
-              title="Install Unlimited Games App"
+              title="Install Unlimited Arcade App"
             >
               <Download className="w-3 h-3" />
               <span>Install</span>

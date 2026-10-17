@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png', 'icons/*.svg'],
       manifest: {
-        name: 'Unlimited Games',
-        short_name: 'Unlimited',
+        name: 'Unlimited Arcade',
+        short_name: 'Unlimited Arcade',
         description: 'Endless & Multi-Level Arcade Games for Mobile',
         theme_color: '#0f172a',
         background_color: '#090d16',

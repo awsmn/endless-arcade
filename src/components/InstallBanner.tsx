@@ -23,7 +23,7 @@ export const InstallBanner: React.FC<InstallBannerProps> = ({ promptEvent, onIns
             </div>
           </div>
           <div>
-            <h4 className="text-xs font-black text-white leading-tight">Install Unlimited Games</h4>
+            <h4 className="text-xs font-black text-white leading-tight">Install Unlimited Arcade</h4>
             <p className="text-[10px] text-slate-300">Play offline & enjoy full-screen arcade!</p>
           </div>
         </div>

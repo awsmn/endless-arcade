@@ -11,7 +11,7 @@ registerSW({
     console.log('New content available, auto-updating...');
   },
   onOfflineReady() {
-    console.log('Unlimited Games is ready to work offline!');
+    console.log('Unlimited Arcade is ready to work offline!');
   }
 });
 

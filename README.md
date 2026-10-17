@@ -1,6 +1,6 @@
-# Unlimited Games - Mobile Arcade PWA
+# Unlimited Arcade - Mobile Arcade PWA
 
-"Unlimited Games" is a lightweight, mobile-first Progressive Web App (PWA) designed for instant arcade play on smartphones and touch devices. It supports offline play, sound synthesis, haptic feedback, local progression, and both endless and multi-level game modes.
+"Unlimited Arcade" is a lightweight, mobile-first Progressive Web App (PWA) designed for instant arcade play on smartphones and touch devices. It supports offline play, sound synthesis, haptic feedback, local progression, and both endless and multi-level game modes.
 
 ---
 
@@ -59,7 +59,7 @@ npm run preview
 ## 📁 Project Structure
 
 ```
-unlimited-games/
+unlimited-arcade/
 ├── games.md                    # Master specification catalog for all game types
 ├── public/
 │   ├── icons/                  # PWA icons & manifest assets
