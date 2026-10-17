@@ -1,6 +1,6 @@
-# Unlimited Arcade - Master Game Catalog & Mechanics Specification
+# Endless Arcade - Master Game Catalog & Mechanics Specification
 
-> **Platform Vision**: "Unlimited Arcade" is a lightweight, mobile-first Progressive Web App (PWA) delivering an extensive library of instant-play games. The platform features two core pillars:
+> **Platform Vision**: "Endless Arcade" is a lightweight, mobile-first Progressive Web App (PWA) delivering an extensive library of instant-play games. The platform features two core pillars:
 > 1. **Endless / Infinite Games**: Procedurally generated, scaling difficulty, high-score chasing that can literally be played forever.
 > 2. **Multi-Level / Campaign Games**: Structured progressions with hundreds of crafted stages, 3-star rating mechanics, milestones, and unlockable themes.
 >
@@ -312,11 +312,11 @@
 
 ## Universal Meta-Systems & PWA Feature Set
 
-To ensure "Unlimited Games" functions as a cohesive, world-class mobile app rather than just a loose collection of demos, the following shared platform services will be baked into the architecture:
+To ensure "Endless Arcade" functions as a cohesive, world-class mobile app rather than just a loose collection of demos, the following shared platform services will be baked into the architecture:
 
 ```
 +-----------------------------------------------------------------------+
-|                       UNLIMITED ARCADE PLATFORM                       |
+|                        ENDLESS ARCADE PLATFORM                        |
 +-----------------------------------------------------------------------+
 |  [PWA Shell & Service Worker]  |  [Offline Cache]  |  [Install Prompt] |
 +-----------------------------------------------------------------------+
@@ -392,4 +392,4 @@ To launch the PWA rapidly and build momentum, games will be delivered in phased 
 ---
 
 *Document Version: 1.0.0*  
-*Project: Unlimited Arcade Mobile PWA*
+*Project: Endless Arcade Mobile PWA*

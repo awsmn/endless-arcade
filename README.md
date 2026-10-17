@@ -1,6 +1,6 @@
-# Unlimited Arcade - Mobile Arcade PWA
+# Endless Arcade - Mobile Arcade PWA
 
-"Unlimited Arcade" is a lightweight, mobile-first Progressive Web App (PWA) designed for instant arcade play on smartphones and touch devices. It supports offline play, sound synthesis, haptic feedback, local progression, and both endless and multi-level game modes.
+"Endless Arcade" is a lightweight, mobile-first Progressive Web App (PWA) designed for instant arcade play on smartphones and touch devices. It supports offline play, sound synthesis, haptic feedback, local progression, and both endless and multi-level game modes.
 
 ---
 
@@ -59,7 +59,7 @@ npm run preview
 ## 📁 Project Structure
 
 ```
-unlimited-arcade/
+endless-arcade/
 ├── games.md                    # Master specification catalog for all game types
 ├── public/
 │   ├── icons/                  # PWA icons & manifest assets

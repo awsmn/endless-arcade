@@ -72,6 +72,10 @@ class HapticsEngine {
   public failure() {
     this.trigger([60, 80, 80]);
   }
+
+  public gameOver() {
+    this.failure();
+  }
 }
 
 export const haptics = new HapticsEngine();

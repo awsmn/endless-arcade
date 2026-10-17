@@ -97,7 +97,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>Offline Ready PWA</span>
         </div>
         <p className="text-xs text-slate-300 leading-relaxed">
-          Unlimited Arcade runs fully offline without an internet connection once loaded. Add it to your home screen for the full native experience.
+          Endless Arcade runs fully offline without an internet connection once loaded. Add it to your home screen for the full native experience.
         </p>
       </div>
 

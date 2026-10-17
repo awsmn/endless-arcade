@@ -10,6 +10,24 @@ import { InstallBanner } from './components/InstallBanner';
 import { StatsView } from './components/StatsView';
 import { SettingsView } from './components/SettingsView';
 import { SnakeView } from './games/snake/SnakeView';
+import { FruitFusionView } from './games/fruit/FruitFusionView';
+import { BrickBreakerView } from './games/breaker/BrickBreakerView';
+import { Game2048View } from './games/game2048/Game2048View';
+import { KnifeStrikeView } from './games/knife/KnifeStrikeView';
+import { MinesweeperView } from './games/minesweeper/MinesweeperView';
+import { StackSliceView } from './games/stack/StackSliceView';
+import { CyberSprintView } from './games/runner/CyberSprintView';
+
+const PLAYABLE_GAMES = [
+  'neon-snake',
+  'fruit-fusion',
+  'brick-breaker',
+  '2048-unlimited',
+  'knife-strike',
+  'stack-slice',
+  'minesweeper-pulse',
+  'cyber-sprint'
+];
 
 import { GAME_CATALOG } from './games/registry';
 import { GameCategory, GameMetadata, GameScoreUpdate, PlatformSettings } from './types/game';
@@ -193,6 +211,62 @@ export const App: React.FC = () => {
                 onGameOver={handleGameOver}
               />
             )}
+            {activeGame.id === 'fruit-fusion' && (
+              <FruitFusionView
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
+            {activeGame.id === 'brick-breaker' && (
+              <BrickBreakerView
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
+            {activeGame.id === '2048-unlimited' && (
+              <Game2048View
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
+            {activeGame.id === 'knife-strike' && (
+              <KnifeStrikeView
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
+            {activeGame.id === 'minesweeper-pulse' && (
+              <MinesweeperView
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
+            {activeGame.id === 'stack-slice' && (
+              <StackSliceView
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
+            {activeGame.id === 'cyber-sprint' && (
+              <CyberSprintView
+                mode="endless"
+                isPaused={isPaused}
+                onScoreUpdate={handleScoreUpdate}
+                onGameOver={handleGameOver}
+              />
+            )}
           </div>
 
           {/* Pause Modal */}
@@ -316,7 +390,7 @@ export const App: React.FC = () => {
                           game={game}
                           progress={storage.getProgress(game.id)}
                           isFavorite={favorites.includes(game.id)}
-                          isPlayable={game.id === 'neon-snake'}
+                          isPlayable={PLAYABLE_GAMES.includes(game.id)}
                           onToggleFavorite={() => handleToggleFavorite(game.id)}
                           onSelectGame={handleStartGame}
                         />
@@ -354,7 +428,7 @@ export const App: React.FC = () => {
                         game={game}
                         progress={storage.getProgress(game.id)}
                         isFavorite={true}
-                        isPlayable={game.id === 'neon-snake'}
+                        isPlayable={PLAYABLE_GAMES.includes(game.id)}
                         onToggleFavorite={() => handleToggleFavorite(game.id)}
                         onSelectGame={handleStartGame}
                       />
@@ -377,7 +451,7 @@ export const App: React.FC = () => {
             {navTab === 'settings' && (
               <SettingsView
                 settings={settings}
-                onUpdateSettings={(patch) => {
+                onUpdateSettings={(patch: Partial<PlatformSettings>) => {
                   const updated = storage.saveSettings(patch);
                   setSettings(updated);
                 }}

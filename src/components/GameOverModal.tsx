@@ -47,11 +47,11 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   const handleShare = async () => {
     sounds.playTap();
     haptics.tap();
-    const shareText = `I just scored ${finalScore.toLocaleString()} in ${game.title} on Unlimited Arcade! Can you beat my score?`;
+    const shareText = `I just scored ${finalScore.toLocaleString()} in ${game.title} on Endless Arcade! Can you beat my score?`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Unlimited Arcade',
+          title: 'Endless Arcade',
           text: shareText,
           url: window.location.href
         });

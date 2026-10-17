@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <h1 className="text-base font-black tracking-wider leading-none uppercase bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-              Unlimited Arcade
+              Endless Arcade
             </h1>
           </div>
         </div>
@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onInstall();
               }}
               className="px-2.5 py-1 rounded-full bg-game-accent hover:bg-game-accentGlow text-white text-xs font-semibold flex items-center space-x-1 shadow-neon-indigo animate-pulse"
-              title="Install Unlimited Arcade App"
+              title="Install Endless Arcade App"
             >
               <Download className="w-3 h-3" />
               <span>Install</span>
