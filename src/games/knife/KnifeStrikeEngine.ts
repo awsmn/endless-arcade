@@ -78,14 +78,17 @@ export class KnifeStrikeEngine implements GameEngine {
     const rect = this.container.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
+    this.canvas.width = Math.round(rect.width * dpr);
+    this.canvas.height = Math.round(rect.height * dpr);
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
+
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
     this.centerX = rect.width / 2;
-    this.centerY = Math.min(220, rect.height * 0.35);
-    this.launchY = rect.height - 85;
+    this.centerY = Math.max(160, Math.min(230, rect.height * 0.32));
+    this.launchY = rect.height - 95;
   }
 
   public start(_mode: GameMode = 'levels', level = 1) {

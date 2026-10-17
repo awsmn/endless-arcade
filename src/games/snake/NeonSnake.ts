@@ -79,12 +79,21 @@ export class NeonSnakeEngine implements GameEngine {
     const rect = this.container.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
+    this.canvas.width = Math.round(rect.width * dpr);
+    this.canvas.height = Math.round(rect.height * dpr);
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
+
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
-    // Compute square grid centered in container
-    const availableSize = Math.min(rect.width - 24, rect.height - 24);
+    // Compute square grid centered between top HUD and bottom D-Pad
+    const topPad = 68;
+    const bottomPad = 175;
+    const availableWidth = rect.width - 24;
+    const availableHeight = Math.max(160, rect.height - topPad - bottomPad);
+    const availableSize = Math.min(availableWidth, availableHeight);
+
     this.gridWidth = 20;
     this.gridHeight = 20;
     this.cellSize = Math.floor(availableSize / this.gridWidth);
@@ -93,7 +102,7 @@ export class NeonSnakeEngine implements GameEngine {
     const totalGridPixelHeight = this.gridHeight * this.cellSize;
 
     this.offsetX = Math.floor((rect.width - totalGridPixelWidth) / 2);
-    this.offsetY = Math.floor((rect.height - totalGridPixelHeight) / 2);
+    this.offsetY = topPad + Math.floor((availableHeight - totalGridPixelHeight) / 2);
   }
 
   public start(mode: GameMode = 'endless', level = 1) {

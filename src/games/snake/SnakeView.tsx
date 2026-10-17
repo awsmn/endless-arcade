@@ -129,19 +129,17 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
       ref={containerRef}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
+      className="relative w-full h-full overflow-hidden select-none touch-none"
     >
-      {/* Canvas Area */}
-      <div className="relative flex-1 w-full flex items-center justify-center max-w-md">
-        <canvas ref={canvasRef} className="rounded-2xl shadow-2xl" />
-      </div>
+      {/* Game Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* Mobile Virtual D-Pad for thumb controls */}
-      <div className="w-full max-w-xs flex flex-col items-center space-y-1.5 px-4 pb-2 z-20">
+      <div className="absolute bottom-3 left-0 right-0 flex flex-col items-center space-y-1.5 px-4 z-20 pointer-events-auto">
         {/* Up Button */}
         <button
           onClick={() => handleDPadPress(0, -1)}
-          className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
           aria-label="Up"
         >
           <ArrowUp className="w-6 h-6" />
@@ -151,7 +149,7 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
         <div className="flex items-center space-x-6">
           <button
             onClick={() => handleDPadPress(-1, 0)}
-            className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
             aria-label="Left"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -161,7 +159,7 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
 
           <button
             onClick={() => handleDPadPress(1, 0)}
-            className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
             aria-label="Right"
           >
             <ArrowRight className="w-6 h-6" />
@@ -171,7 +169,7 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
         {/* Down Button */}
         <button
           onClick={() => handleDPadPress(0, 1)}
-          className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
           aria-label="Down"
         >
           <ArrowDown className="w-6 h-6" />

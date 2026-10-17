@@ -86,13 +86,16 @@ export class CyberSprintEngine implements GameEngine {
     const rect = this.container.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
+    this.canvas.width = Math.round(rect.width * dpr);
+    this.canvas.height = Math.round(rect.height * dpr);
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
+
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
-    this.roadTopY = Math.min(120, rect.height * 0.22);
-    this.roadBottomY = rect.height - 30;
+    this.roadTopY = Math.min(130, rect.height * 0.22);
+    this.roadBottomY = rect.height - 90;
     this.baseRoadWidth = Math.min(rect.width - 24, 360);
     this.horizonWidth = this.baseRoadWidth * 0.28;
   }

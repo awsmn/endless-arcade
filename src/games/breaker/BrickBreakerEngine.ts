@@ -92,16 +92,21 @@ export class BrickBreakerEngine implements GameEngine {
     const rect = this.container.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
+    this.canvas.width = Math.round(rect.width * dpr);
+    this.canvas.height = Math.round(rect.height * dpr);
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
+
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
     const padX = 16;
     this.arenaWidth = Math.min(rect.width - padX * 2, 380);
-    this.arenaHeight = Math.min(rect.height - 110, 520);
+    const topPad = 70;
+    const bottomPad = 60;
+    this.arenaHeight = Math.min(rect.height - topPad - bottomPad, 520);
     this.arenaX = Math.floor((rect.width - this.arenaWidth) / 2);
-    this.arenaY = 70;
+    this.arenaY = topPad;
 
     this.cellWidth = Math.floor(this.arenaWidth / this.cols);
     this.cellHeight = 36;

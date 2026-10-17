@@ -113,16 +113,21 @@ export class FruitFusionEngine implements GameEngine {
     const rect = this.container.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
+    this.canvas.width = Math.round(rect.width * dpr);
+    this.canvas.height = Math.round(rect.height * dpr);
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
+
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
     const padX = 16;
     this.jarWidth = Math.min(rect.width - padX * 2, 380);
-    this.jarHeight = Math.min(rect.height - 110, 520);
+    const topPad = 75;
+    const bottomPad = 80;
+    this.jarHeight = Math.min(rect.height - topPad - bottomPad, 520);
     this.jarX = Math.floor((rect.width - this.jarWidth) / 2);
-    this.jarY = 80;
+    this.jarY = topPad;
     this.dangerLineY = this.jarY + 50;
 
     this.dropperX = this.jarX + this.jarWidth / 2;

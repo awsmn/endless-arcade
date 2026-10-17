@@ -99,14 +99,17 @@ export const BrickBreakerView: React.FC<BrickBreakerViewProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
+      className="relative w-full h-full overflow-hidden select-none touch-none cursor-pointer"
     >
+      {/* Game Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
+
       {/* HUD Speed Control Button during volley */}
       <div className="absolute top-16 right-4 z-20 flex items-center space-x-2">
         {isShooting && (
           <button
             onClick={handleToggleFastForward}
-            className={`px-3 py-1.5 rounded-full text-xs font-black flex items-center space-x-1 backdrop-blur-md border transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-black flex items-center space-x-1 backdrop-blur-md border transition-all pointer-events-auto ${
               isFastForward
                 ? 'bg-amber-500 text-game-dark border-amber-400'
                 : 'glass-pill text-slate-300 border-white/20'
@@ -118,23 +121,20 @@ export const BrickBreakerView: React.FC<BrickBreakerViewProps> = ({
         )}
       </div>
 
-      {/* Canvas Area */}
-      <div className="relative flex-1 w-full flex items-center justify-center max-w-md">
-        <canvas ref={canvasRef} className="rounded-2xl" />
-      </div>
-
       {/* Guide prompt at bottom */}
-      <div className="w-full max-w-xs px-4 pb-2 z-20 text-center">
-        {!isShooting ? (
-          <div className="glass-panel py-2 px-4 rounded-xl text-xs text-slate-300 font-bold border border-white/10 flex items-center justify-center space-x-1.5">
-            <Play className="w-3 h-3 text-indigo-400 fill-current" />
-            <span>DRAG & AIM TO FIRE BALLS</span>
-          </div>
-        ) : (
-          <div className="py-2 text-xs text-slate-400 font-semibold">
-            Volley in progress...
-          </div>
-        )}
+      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-none">
+        <div className="w-full max-w-xs text-center">
+          {!isShooting ? (
+            <div className="glass-panel py-2 px-4 rounded-xl text-xs text-slate-300 font-bold border border-white/10 flex items-center justify-center space-x-1.5">
+              <Play className="w-3 h-3 text-indigo-400 fill-current" />
+              <span>DRAG & AIM TO FIRE BALLS</span>
+            </div>
+          ) : (
+            <div className="py-2 text-xs text-slate-400 font-semibold">
+              Volley in progress...
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

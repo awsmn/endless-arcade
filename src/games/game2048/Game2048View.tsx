@@ -288,7 +288,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
     >
       {/* Top Undo Bar */}
-      <div className="w-full max-w-xs px-4 flex justify-end">
+      <div className="w-full max-w-xs px-4 flex justify-end z-20">
         <button
           onClick={handleUndo}
           disabled={!history}
@@ -304,7 +304,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       </div>
 
       {/* 2048 4x4 Grid Board */}
-      <div className="w-full max-w-[340px] aspect-square p-3 bg-slate-900/80 rounded-3xl border-2 border-amber-500/30 shadow-2xl flex flex-col justify-between">
+      <div className="w-[min(340px,84vw,42vh)] aspect-square p-3 bg-slate-900/80 rounded-3xl border-2 border-amber-500/30 shadow-2xl flex flex-col justify-between my-auto">
         {board.map((row, rIdx) => (
           <div key={rIdx} className="flex-1 flex space-x-2 my-1">
             {row.map((cell, cIdx) => (
@@ -329,7 +329,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       <div className="w-full max-w-xs flex flex-col items-center space-y-1.5 px-4 pb-2 z-20">
         <button
           onClick={() => move('up')}
-          className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
           aria-label="Up"
         >
           <ArrowUp className="w-6 h-6" />
@@ -338,7 +338,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
         <div className="flex items-center space-x-6">
           <button
             onClick={() => move('left')}
-            className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
             aria-label="Left"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -348,7 +348,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
           <button
             onClick={() => move('right')}
-            className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
             aria-label="Right"
           >
             <ArrowRight className="w-6 h-6" />
@@ -357,7 +357,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
         <button
           onClick={() => move('down')}
-          className="w-13 h-13 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
           aria-label="Down"
         >
           <ArrowDown className="w-6 h-6" />

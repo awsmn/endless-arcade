@@ -187,110 +187,112 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-game-dark flex flex-col justify-between relative overflow-hidden">
-      {/* Active Game Full-Screen View */}
+      {/* Active Game View (Full Screen on Mobile, Centered Arcade Cabinet on Desktop) */}
       {activeGame ? (
-        <div className="fixed inset-0 z-50 bg-game-dark flex flex-col">
-          {/* In-Game HUD Overlay */}
-          <InGameOverlay
-            game={activeGame}
-            score={gameScore}
-            highScore={highScore}
-            soundEnabled={settings.soundEnabled}
-            onToggleSound={handleToggleSound}
-            onPause={() => setIsPaused(true)}
-            onExit={handleExitGame}
-          />
+        <div className="fixed inset-0 z-50 bg-[#060911] flex items-center justify-center">
+          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-game-dark shadow-2xl border-x border-white/5">
+            {/* In-Game HUD Overlay */}
+            <InGameOverlay
+              game={activeGame}
+              score={gameScore}
+              highScore={highScore}
+              soundEnabled={settings.soundEnabled}
+              onToggleSound={handleToggleSound}
+              onPause={() => setIsPaused(true)}
+              onExit={handleExitGame}
+            />
 
-          {/* Active Game Canvas */}
-          <div className="flex-1 w-full h-full">
-            {activeGame.id === 'neon-snake' && (
-              <SnakeView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
+            {/* Active Game View Area */}
+            <div className="relative flex-1 w-full h-full overflow-hidden">
+              {activeGame.id === 'neon-snake' && (
+                <SnakeView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'fruit-fusion' && (
+                <FruitFusionView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'brick-breaker' && (
+                <BrickBreakerView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === '2048-unlimited' && (
+                <Game2048View
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'knife-strike' && (
+                <KnifeStrikeView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'minesweeper-pulse' && (
+                <MinesweeperView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'stack-slice' && (
+                <StackSliceView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'cyber-sprint' && (
+                <CyberSprintView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+            </div>
+
+            {/* Pause Modal */}
+            {isPaused && (
+              <PauseModal
+                game={activeGame}
+                onResume={() => setIsPaused(false)}
+                onRestart={handleRestartGame}
+                onExit={handleExitGame}
               />
             )}
-            {activeGame.id === 'fruit-fusion' && (
-              <FruitFusionView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
-              />
-            )}
-            {activeGame.id === 'brick-breaker' && (
-              <BrickBreakerView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
-              />
-            )}
-            {activeGame.id === '2048-unlimited' && (
-              <Game2048View
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
-              />
-            )}
-            {activeGame.id === 'knife-strike' && (
-              <KnifeStrikeView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
-              />
-            )}
-            {activeGame.id === 'minesweeper-pulse' && (
-              <MinesweeperView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
-              />
-            )}
-            {activeGame.id === 'stack-slice' && (
-              <StackSliceView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
-              />
-            )}
-            {activeGame.id === 'cyber-sprint' && (
-              <CyberSprintView
-                mode="endless"
-                isPaused={isPaused}
-                onScoreUpdate={handleScoreUpdate}
-                onGameOver={handleGameOver}
+
+            {/* Game Over Modal */}
+            {isGameOver && (
+              <GameOverModal
+                game={activeGame}
+                finalScore={gameScore}
+                highScore={highScore}
+                isNewHighScore={isNewHighScore}
+                stars={gameStars}
+                onRestart={handleRestartGame}
+                onExit={handleExitGame}
               />
             )}
           </div>
-
-          {/* Pause Modal */}
-          {isPaused && (
-            <PauseModal
-              game={activeGame}
-              onResume={() => setIsPaused(false)}
-              onRestart={handleRestartGame}
-              onExit={handleExitGame}
-            />
-          )}
-
-          {/* Game Over Modal */}
-          {isGameOver && (
-            <GameOverModal
-              game={activeGame}
-              finalScore={gameScore}
-              highScore={highScore}
-              isNewHighScore={isNewHighScore}
-              stars={gameStars}
-              onRestart={handleRestartGame}
-              onExit={handleExitGame}
-            />
-          )}
         </div>
       ) : (
         /* Arcade Launcher Hub */

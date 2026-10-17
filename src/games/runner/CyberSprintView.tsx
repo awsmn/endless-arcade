@@ -121,63 +121,63 @@ export const CyberSprintView: React.FC<CyberSprintViewProps> = ({
       ref={containerRef}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
+      className="relative w-full h-full overflow-hidden select-none touch-none"
     >
-      {/* Canvas Area */}
-      <div className="relative flex-1 w-full flex items-center justify-center max-w-md">
-        <canvas ref={canvasRef} className="rounded-2xl" />
-      </div>
+      {/* Game Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
-      {/* On-Screen Touch Controls */}
-      <div className="w-full max-w-xs flex items-center justify-between px-4 pb-2 z-20">
-        {/* Left / Right Lane Shifts */}
-        <div className="flex space-x-2">
-          <button
-            onClick={() => {
-              haptics.tap();
-              engineRef.current?.shiftLane(-1);
-            }}
-            className="w-13 h-13 rounded-2xl glass-panel border border-cyan-500/30 flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
-            aria-label="Shift Left"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
+      {/* On-Screen Touch Controls positioned at bottom */}
+      <div className="absolute bottom-3 left-0 right-0 flex justify-center px-4 z-20 pointer-events-auto">
+        <div className="w-full max-w-xs flex items-center justify-between">
+          {/* Left / Right Lane Shifts */}
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                haptics.tap();
+                engineRef.current?.shiftLane(-1);
+              }}
+              className="w-12 h-12 rounded-2xl glass-panel border border-cyan-500/30 flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
+              aria-label="Shift Left"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
 
-          <button
-            onClick={() => {
-              haptics.tap();
-              engineRef.current?.shiftLane(1);
-            }}
-            className="w-13 h-13 rounded-2xl glass-panel border border-cyan-500/30 flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
-            aria-label="Shift Right"
-          >
-            <ArrowRight className="w-6 h-6" />
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                haptics.tap();
+                engineRef.current?.shiftLane(1);
+              }}
+              className="w-12 h-12 rounded-2xl glass-panel border border-cyan-500/30 flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
+              aria-label="Shift Right"
+            >
+              <ArrowRight className="w-6 h-6" />
+            </button>
+          </div>
 
-        {/* Jump / Slide Actions */}
-        <div className="flex space-x-2">
-          <button
-            onClick={() => {
-              haptics.tap();
-              engineRef.current?.slide();
-            }}
-            className="w-13 h-13 rounded-2xl glass-panel border border-purple-500/30 flex items-center justify-center text-purple-300 active:scale-90 transition-transform shadow-lg"
-            aria-label="Slide"
-          >
-            <ArrowDown className="w-6 h-6" />
-          </button>
+          {/* Jump / Slide Actions */}
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                haptics.tap();
+                engineRef.current?.slide();
+              }}
+              className="w-12 h-12 rounded-2xl glass-panel border border-purple-500/30 flex items-center justify-center text-purple-300 active:scale-90 transition-transform shadow-lg"
+              aria-label="Slide"
+            >
+              <ArrowDown className="w-6 h-6" />
+            </button>
 
-          <button
-            onClick={() => {
-              haptics.tap();
-              engineRef.current?.jump();
-            }}
-            className="w-13 h-13 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 flex items-center justify-center text-white active:scale-90 transition-transform shadow-neon-cyan"
-            aria-label="Jump"
-          >
-            <ArrowUp className="w-6 h-6" />
-          </button>
+            <button
+              onClick={() => {
+                haptics.tap();
+                engineRef.current?.jump();
+              }}
+              className="w-12 h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 flex items-center justify-center text-white active:scale-90 transition-transform shadow-neon-cyan"
+              aria-label="Jump"
+            >
+              <ArrowUp className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

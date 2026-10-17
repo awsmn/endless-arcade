@@ -269,7 +269,7 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
       </div>
 
       {/* Minesweeper Grid Board */}
-      <div className="w-full max-w-[340px] aspect-square p-2 bg-slate-900/90 rounded-3xl border-2 border-slate-700/60 shadow-2xl flex flex-col justify-between">
+      <div className="w-[min(340px,85vw,44vh)] aspect-square p-2 bg-slate-900/90 rounded-3xl border-2 border-slate-700/60 shadow-2xl flex flex-col justify-between my-auto">
         {grid.map((row, r) => (
           <div key={r} className="flex-1 flex space-x-1 my-0.5">
             {row.map((cell, c) => (
