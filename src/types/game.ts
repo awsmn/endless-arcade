@@ -23,6 +23,7 @@ export interface GameMetadata {
   description: string;
   instructions: string[];
   totalLevels?: number;
+  illustration?: string;
 }
 
 export interface UserGameProgress {
@@ -38,7 +39,7 @@ export interface PlatformSettings {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   vibrationIntensity: 'light' | 'medium' | 'strong';
-  theme: 'dark' | 'neon' | 'cyber';
+  theme: 'dark' | 'light' | 'neon' | 'cyber';
 }
 
 export interface GameScoreUpdate {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Sparkles, Flame, Clock, Award } from 'lucide-react';
+import { Trophy, Sparkles, Flame } from 'lucide-react';
 import { GAME_CATALOG } from '../games/registry';
 import { storage } from '../engine/storage';
 
@@ -19,10 +19,10 @@ export const StatsView: React.FC = () => {
     <div className="w-full max-w-md mx-auto px-4 py-4 space-y-5 animate-fade-in pb-24">
       {/* Title */}
       <div>
-        <h2 className="text-2xl font-pop font-black text-white pop-text-shadow">
+        <h2 className="text-2xl font-pop font-black text-slate-900 dark:text-white pop-text-shadow">
           ARCADE <span className="text-pop-yellow">STATS</span>
         </h2>
-        <p className="text-xs text-slate-300">Track your records, stars, and milestones</p>
+        <p className="text-xs text-slate-600 dark:text-slate-300">Track your records, stars, and milestones</p>
       </div>
 
       {/* Highlights Grid */}
@@ -56,19 +56,19 @@ export const StatsView: React.FC = () => {
           {gameStats.map(({ game, progress }) => (
             <div
               key={game.id}
-              className="bg-[#14192b] p-3 rounded-2xl border-2 border-black shadow-pop-xs flex items-center justify-between hover:translate-x-0.5 hover:shadow-pop-sm transition-all"
+              className="bg-white dark:bg-[#14192b] p-3 rounded-2xl border-2 border-black shadow-pop-xs flex items-center justify-between hover:translate-x-0.5 hover:shadow-pop-sm transition-all"
             >
               <div className="flex items-center space-x-3">
-                <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${game.color} border-2 border-black shadow-[1.5px_1.5px_0px_#000] flex items-center justify-center font-bungee text-xs text-white`}>
-                  {game.title.charAt(0)}
+                <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${game.color} border-2 border-black shadow-[1.5px_1.5px_0px_#000] flex items-center justify-center font-bungee text-base text-white`}>
+                  {game.illustration || game.title.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="text-xs font-pop font-black text-white">{game.title}</h4>
-                  <span className="text-[10px] text-slate-400 font-medium">Played {progress.playCount} times</span>
+                  <h4 className="text-xs font-pop font-black text-slate-900 dark:text-white">{game.title}</h4>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Played {progress.playCount} times</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-1 text-xs font-bungee text-pop-yellow bg-black/70 px-2.5 py-1 rounded-lg border border-black shadow-[1px_1px_0px_#000]">
+              <div className="flex items-center space-x-1 text-xs font-bungee text-pop-yellow bg-black/85 px-2.5 py-1 rounded-lg border border-black shadow-[1px_1px_0px_#000]">
                 <Trophy className="w-3.5 h-3.5 fill-pop-yellow text-pop-yellow" />
                 <span>{progress.highScore > 0 ? progress.highScore.toLocaleString() : '---'}</span>
               </div>

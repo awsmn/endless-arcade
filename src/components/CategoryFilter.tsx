@@ -39,7 +39,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-pop flex items-center space-x-1.5 transition-all duration-150 ${
                 isSelected
                   ? 'bg-pop-pink text-white border-2 border-black shadow-pop-sm scale-105 -rotate-1'
-                  : 'bg-[#151b30] text-slate-300 border-2 border-black/90 hover:bg-[#1d2542] hover:text-white shadow-[1.5px_1.5px_0px_#000] active:scale-95'
+                  : 'bg-white dark:bg-[#151b30] text-slate-800 dark:text-slate-300 border-2 border-black hover:bg-slate-100 dark:hover:bg-[#1d2542] hover:text-black dark:hover:text-white shadow-[1.5px_1.5px_0px_#000] active:scale-95'
               }`}
             >
               <span className="text-sm">{cat.emoji}</span>

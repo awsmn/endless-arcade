@@ -11,6 +11,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-emerald-500 to-teal-700',
     accentColor: '#10b981',
     iconName: 'Zap',
+    illustration: '🐍',
     description: 'Slither through a cyberpunk grid, consume energy power orbs, and grow your glowing tail while dodging walls and your own body.',
     instructions: [
       'Swipe anywhere or use the D-Pad to change direction',
@@ -29,6 +30,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-pink-500 to-rose-700',
     accentColor: '#ec4899',
     iconName: 'Apple',
+    illustration: '🍉',
     description: 'Drop juicy fruits into the jar. When two identical fruits touch, they fuse into a bigger fruit! Avoid overflowing.',
     instructions: [
       'Drag horizontally across the top to align your dropper',
@@ -46,6 +48,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-indigo-500 to-blue-700',
     accentColor: '#6366f1',
     iconName: 'Boxes',
+    illustration: '🧱',
     description: 'Aim your trajectory and unleash a swarm of bouncy balls to shatter brick defenses before they hit the ground line.',
     instructions: [
       'Drag backwards to aim the dotted trajectory line',
@@ -64,6 +67,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-amber-500 to-orange-700',
     accentColor: '#f59e0b',
     iconName: 'Grid',
+    illustration: '🔢',
     description: 'Swipe to slide tiles across the board. Matching numbers merge into their sum. How high can your powers of two go?',
     instructions: [
       'Swipe Up, Down, Left, or Right to slide all tiles',
@@ -81,6 +85,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-cyan-500 to-blue-600',
     accentColor: '#06b6d4',
     iconName: 'Activity',
+    illustration: '🏃',
     description: 'Dodge trains, leap over barricades, and slide beneath laser barriers at blistering speeds.',
     instructions: [
       'Swipe Left/Right to shift lanes',
@@ -98,6 +103,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-violet-500 to-purple-700',
     accentColor: '#8b5cf6',
     iconName: 'Crosshair',
+    illustration: '🎯',
     description: 'Tap to launch blades into the rotating core without hitting any existing knives. Slices apples for bonus gems.',
     instructions: [
       'Tap anywhere to throw a knife straight up',
@@ -115,6 +121,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-fuchsia-500 to-pink-600',
     accentColor: '#d946ef',
     iconName: 'Layers',
+    illustration: '🏗️',
     description: 'Time your tap as slabs slide across the screen. Overhangs are sliced away. Chain perfect drops to expand your base!',
     instructions: [
       'Tap when the moving block overlaps the tower base',
@@ -132,6 +139,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-slate-600 to-slate-800',
     accentColor: '#94a3b8',
     iconName: 'Flag',
+    illustration: '💣',
     description: 'Clear the minefield using mathematical deduction. Zero guesswork required with our smart generator.',
     instructions: [
       'Tap to reveal a safe tile',
@@ -150,6 +158,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-sky-500 to-blue-700',
     accentColor: '#0ea5e9',
     iconName: 'Rocket',
+    illustration: '🚀',
     description: 'Pilot an agile orbital space probe through planetary debris and laser gates using one-tap gravitational impulse thrusts.',
     instructions: [
       'Tap anywhere or press Space/Up to thrust upward',
@@ -169,6 +178,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-purple-500 via-pink-600 to-cyan-500',
     accentColor: '#a855f7',
     iconName: 'CircleDot',
+    illustration: '🎨',
     description: 'Bounce your color sphere upward through rotating multi-colored rings and crosses. Only matching color segments are permeable!',
     instructions: [
       'Tap anywhere or press Space/Up to bounce upward',
@@ -187,6 +197,7 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-blue-600 via-indigo-700 to-purple-800',
     accentColor: '#38bdf8',
     iconName: 'Crosshair',
+    illustration: '🛸',
     description: 'Pilot an advanced starfighter through bullet-hell space sectors. Dodge diving alien squadrons, collect weapon upgrades, and destroy massive flagship bosses.',
     instructions: [
       'Drag anywhere or use WASD/Arrows to steer starfighter',
@@ -206,12 +217,71 @@ export const GAME_CATALOG: GameMetadata[] = [
     color: 'from-amber-500 via-rose-500 to-purple-600',
     accentColor: '#f59e0b',
     iconName: 'Grid',
+    illustration: '🧩',
     description: 'Relaxing yet deep spatial puzzle. Drag gem blocks from your bottom tray into the 8x8 grid. Complete lines to trigger explosive jewel collapses.',
     instructions: [
       'Drag shapes from the bottom tray onto the board',
       'Fill complete horizontal rows or vertical columns to clear them',
       'Clear multiple lines simultaneously for exponential combo multipliers',
       'Plan ahead! If no current piece can fit, the game ends'
+    ]
+  },
+  {
+    id: 'helix-descent',
+    title: 'Helix Descent',
+    tagline: 'Rotate the spiral helix tower, dive through tier gaps, and smash platforms!',
+    category: 'reflex',
+    modes: ['endless', 'levels'],
+    badge: 'NEW',
+    color: 'from-orange-500 via-rose-600 to-purple-700',
+    accentColor: '#f97316',
+    iconName: 'RotateCw',
+    illustration: '🧬',
+    description: 'Descend an infinite spiral tower cylinder. Drag horizontally or use A/D to rotate the helix, guiding the bouncing ball through gaps. Plunge through multiple tiers to activate Destroyer Mode and smash platforms!',
+    instructions: [
+      'Drag horizontally or use Left/Right / A/D to rotate the spiral tower',
+      'Guide the bouncing ball through open gaps in platforms',
+      'Never land on red hazard segments!',
+      'Drop 3+ tiers without bouncing to ignite Destroyer Mode and smash whatever platform you hit!'
+    ],
+    totalLevels: 60
+  },
+  {
+    id: 'rhythm-fall',
+    title: 'Rhythm Fall',
+    tagline: 'Tap falling neon musical beats across 4 lanes with rhythm and timing!',
+    category: 'arcade',
+    modes: ['endless'],
+    badge: 'HOT',
+    color: 'from-violet-600 via-fuchsia-600 to-cyan-500',
+    accentColor: '#8b5cf6',
+    iconName: 'Music',
+    illustration: '🎹',
+    description: 'Fast-paced cyber rhythm challenge. 4 vertical tracks stream neon musical notes downward to a bottom judgment line. Tap lane buttons or keys D, F, J, K in time with the music to build massive combos!',
+    instructions: [
+      'Tap the 4 lanes or use keys D, F, J, K (or 1, 2, 3, 4) on your keyboard',
+      'Hit each note as it reaches the glowing judgment line',
+      'Time your taps for PERFECT and GREAT ratings',
+      'Keep your combo alive to multiply your score!'
+    ]
+  },
+  {
+    id: 'crossy-lane',
+    title: 'Crossy Lane',
+    tagline: 'Hop across high-speed cyber traffic, dodge speeding cars and trains!',
+    category: 'retro',
+    modes: ['endless'],
+    badge: 'NEW',
+    color: 'from-emerald-500 via-teal-600 to-cyan-700',
+    accentColor: '#10b981',
+    iconName: 'Footprints',
+    illustration: '🚗',
+    description: 'The ultimate hop adventure! Guide your neon hopper across multi-lane highways packed with sports cars, semi-trucks, high-speed train tracks with warning signals, and river log crossings.',
+    instructions: [
+      'Tap anywhere or press Up / W to hop forward one lane',
+      'Swipe or use Left/Right arrows to move sideways; Down to back up',
+      'Watch out for speeding cars and warning bells on railway tracks',
+      'Collect gold coins along the road and set a new distance record!'
     ]
   }
 ];

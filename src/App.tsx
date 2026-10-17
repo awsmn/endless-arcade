@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { CategoryFilter } from './components/CategoryFilter';
 import { GameCard } from './components/GameCard';
+import { RandomHeroPicker } from './components/RandomHeroPicker';
 import { InGameOverlay } from './components/InGameOverlay';
 import { PauseModal } from './components/PauseModal';
 import { GameOverModal } from './components/GameOverModal';
@@ -21,6 +22,9 @@ import { FlappyOrbitView } from './games/flappy/FlappyOrbitView';
 import { ChromaJumpView } from './games/chroma/ChromaJumpView';
 import { GalaxiaVoidView } from './games/space/GalaxiaVoidView';
 import { BlockPuzzleView } from './games/blockpuzzle/BlockPuzzleView';
+import { HelixDescentView } from './games/helix/HelixDescentView';
+import { RhythmFallView } from './games/rhythm/RhythmFallView';
+import { CrossyLaneView } from './games/crossy/CrossyLaneView';
 
 const PLAYABLE_GAMES = [
   'neon-snake',
@@ -34,7 +38,10 @@ const PLAYABLE_GAMES = [
   'flappy-orbit',
   'chroma-jump',
   'galaxia-void',
-  'block-puzzle'
+  'block-puzzle',
+  'helix-descent',
+  'rhythm-fall',
+  'crossy-lane'
 ];
 
 import { GAME_CATALOG } from './games/registry';
@@ -42,7 +49,7 @@ import { GameCategory, GameMetadata, GameScoreUpdate, PlatformSettings } from '.
 import { storage } from './engine/storage';
 import { sounds } from './engine/audio';
 import { haptics } from './engine/haptics';
-import { Search, Flame, Sparkles } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation & Filtering
@@ -84,6 +91,13 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Theme Sync effect (Light vs Dark mode)
+  useEffect(() => {
+    const isLight = settings.theme === 'light';
+    document.documentElement.classList.toggle('light', isLight);
+    document.documentElement.classList.toggle('dark', !isLight);
+  }, [settings.theme]);
+
   const handleInstallApp = async () => {
     if (!installPrompt) return;
     installPrompt.prompt();
@@ -91,6 +105,13 @@ export const App: React.FC = () => {
     if (choice.outcome === 'accepted') {
       setInstallPrompt(null);
     }
+  };
+
+  const handleToggleTheme = () => {
+    const nextTheme = settings.theme === 'light' ? 'dark' : 'light';
+    const updated = storage.saveSettings({ theme: nextTheme });
+    setSettings(updated);
+    sounds.playTap();
   };
 
   const handleToggleSound = () => {
@@ -193,15 +214,14 @@ export const App: React.FC = () => {
     return true;
   });
 
-  // Featured Game (Neon Snake)
-  const featuredGame = GAME_CATALOG.find((g) => g.id === 'neon-snake')!;
+  const isLight = settings.theme === 'light';
 
   return (
-    <div className="min-h-screen bg-[#0b0e1b] flex flex-col justify-between relative overflow-hidden pop-dots-bg">
+    <div className={`min-h-screen ${isLight ? 'bg-[#f1f3f9] text-slate-900' : 'bg-[#0b0e1b] text-white'} flex flex-col justify-between relative overflow-hidden pop-dots-bg transition-colors duration-200`}>
       {/* Active Game View (Full Screen on Mobile, Centered Arcade Cabinet on Desktop) */}
       {activeGame ? (
         <div className="fixed inset-0 z-50 bg-[#05070e] flex items-center justify-center">
-          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c101e] shadow-2xl border-x-2 border-black">
+          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c1020] shadow-2xl border-x-2 border-black">
             {/* In-Game HUD Overlay */}
             <InGameOverlay
               game={activeGame}
@@ -311,6 +331,30 @@ export const App: React.FC = () => {
                   onGameOver={handleGameOver}
                 />
               )}
+              {activeGame.id === 'helix-descent' && (
+                <HelixDescentView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'rhythm-fall' && (
+                <RhythmFallView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'crossy-lane' && (
+                <CrossyLaneView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
             </div>
 
             {/* Pause Modal */}
@@ -346,6 +390,8 @@ export const App: React.FC = () => {
             onToggleSound={handleToggleSound}
             hapticsEnabled={settings.hapticsEnabled}
             onToggleHaptics={handleToggleHaptics}
+            theme={settings.theme}
+            onToggleTheme={handleToggleTheme}
             totalStars={totalStars}
             installPrompt={installPrompt}
             onInstall={handleInstallApp}
@@ -358,50 +404,24 @@ export const App: React.FC = () => {
                 {/* Search Bar */}
                 <div className="px-4 pt-3">
                   <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pop-yellow stroke-[2.5]" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pop-pink dark:text-pop-yellow stroke-[2.5]" />
                     <input
                       type="text"
                       placeholder="Search games, mechanics..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-sm text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pop-yellow focus:shadow-pop transition-all font-medium"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-[#14192b] border-2 border-black shadow-pop-sm text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-pop-yellow focus:shadow-pop transition-all font-medium"
                     />
                   </div>
                 </div>
 
-                {/* Hero / Featured Game Banner (Only if no search active) */}
+                {/* Hero / Surprise Pick Card with Interactive Random Roll */}
                 {searchQuery === '' && selectedCategory === 'all' && (
-                  <div className="px-4">
-                    <div
-                      onClick={() => handleStartGame(featuredGame)}
-                      className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900 border-2 border-black shadow-pop-lg cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-sm transition-all pop-dots-dense"
-                    >
-                      <div className="relative z-10 space-y-2.5">
-                        <div className="flex items-center space-x-2">
-                          <span className="px-2.5 py-0.5 rounded bg-pop-pink text-white text-[9px] font-bungee uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] -rotate-3 inline-block">
-                            HOT
-                          </span>
-                        </div>
-                        <h2 className="text-2xl font-pop font-black text-white pop-text-shadow leading-tight">
-                          {featuredGame.title}
-                        </h2>
-                        <p className="text-xs text-emerald-100/90 line-clamp-2 max-w-[260px] leading-relaxed">
-                          {featuredGame.tagline}
-                        </p>
-                        <div className="pt-1">
-                          <button className="py-2.5 px-4 rounded-xl bg-pop-yellow text-black font-pop font-black text-xs flex items-center space-x-2 border-2 border-black shadow-pop hover:shadow-pop-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all tracking-wider">
-                            <span>PLAY NOW</span>
-                            <span>▶</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Ambient background graphics */}
-                      <div className="absolute right-2 -bottom-4 text-8xl font-black text-black/20 select-none pointer-events-none drop-shadow">
-                        🐍
-                      </div>
-                    </div>
-                  </div>
+                  <RandomHeroPicker
+                    catalog={GAME_CATALOG}
+                    onSelectGame={handleStartGame}
+                    isLight={isLight}
+                  />
                 )}
 
                 {/* Category Filter Pills */}
@@ -413,12 +433,12 @@ export const App: React.FC = () => {
                 {/* Games Grid */}
                 <div className="px-4">
                   <div className="flex items-center justify-between pb-2">
-                    <h3 className="text-xs font-pop font-black uppercase tracking-wider text-white pop-text-shadow">
+                    <h3 className="text-xs font-pop font-black uppercase tracking-wider text-slate-900 dark:text-white pop-text-shadow">
                       {selectedCategory === 'all'
                         ? '★ ALL ARCADE GAMES ★'
                         : `★ ${selectedCategory.toUpperCase()} GAMES ★`}
                     </h3>
-                    <span className="text-[10px] font-bungee text-pop-yellow bg-[#14192b] px-2 py-0.5 rounded border-2 border-black shadow-pop-xs">
+                    <span className="text-[10px] font-bungee text-pop-pink dark:text-pop-yellow bg-white dark:bg-[#14192b] px-2 py-0.5 rounded border-2 border-black shadow-pop-xs">
                       {filteredGames.length} GAMES
                     </span>
                   </div>
@@ -438,14 +458,14 @@ export const App: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 space-y-2 bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
-                      <p className="text-slate-300 text-sm font-pop font-bold">NO GAMES FOUND</p>
+                    <div className="text-center py-12 space-y-2 bg-white dark:bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
+                      <p className="text-slate-800 dark:text-slate-300 text-sm font-pop font-bold">NO GAMES FOUND</p>
                       <button
                         onClick={() => {
                           setSelectedCategory('all');
                           setSearchQuery('');
                         }}
-                        className="text-xs font-pop font-black text-pop-yellow hover:underline"
+                        className="text-xs font-pop font-black text-pop-pink dark:text-pop-yellow hover:underline"
                       >
                         RESET FILTERS
                       </button>
@@ -458,10 +478,10 @@ export const App: React.FC = () => {
             {navTab === 'favorites' && (
               <div className="px-4 py-4 space-y-4 pb-24">
                 <div>
-                  <h2 className="text-xl font-pop font-black text-white pop-text-shadow">
+                  <h2 className="text-xl font-pop font-black text-slate-900 dark:text-white pop-text-shadow">
                     FAVORITE <span className="text-pop-pink">GAMES</span>
                   </h2>
-                  <p className="text-xs text-slate-300">Quick access to the games you love</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">Quick access to the games you love</p>
                 </div>
                 {filteredGames.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3.5">
@@ -478,10 +498,10 @@ export const App: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 space-y-3 bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
+                  <div className="text-center py-16 space-y-3 bg-white dark:bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
                     <span className="text-4xl inline-block animate-bounce">❤️</span>
-                    <p className="text-white text-base font-pop font-black">NO FAVORITES YET</p>
-                    <p className="text-xs text-slate-300 max-w-[220px] mx-auto">
+                    <p className="text-slate-900 dark:text-white text-base font-pop font-black">NO FAVORITES YET</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 max-w-[220px] mx-auto">
                       Tap the heart icon on any game card to pin it to your favorites!
                     </p>
                   </div>

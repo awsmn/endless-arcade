@@ -33,6 +33,31 @@ body {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
+/* Light theme overrides */
+html.light,
+html.light :root {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f1f3f9;
+  color: #0f172a;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+html.light .pop-dots-bg {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.07) 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+}
+
+html.light .pop-dots-dense {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.12) 1.8px, transparent 1.8px);
+  background-size: 10px 10px;
+}
+
 /* Custom Pop Art scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
