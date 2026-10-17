@@ -36,11 +36,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <h1 className="text-base font-black tracking-wider leading-none uppercase bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-              Unlimited
+              Unlimited Arcade
             </h1>
-            <span className="text-[10px] font-semibold text-game-neonCyan tracking-widest uppercase">
-              Arcade Hub
-            </span>
           </div>
         </div>
 
