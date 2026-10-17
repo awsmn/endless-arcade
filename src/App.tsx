@@ -197,11 +197,11 @@ export const App: React.FC = () => {
   const featuredGame = GAME_CATALOG.find((g) => g.id === 'neon-snake')!;
 
   return (
-    <div className="min-h-screen bg-game-dark flex flex-col justify-between relative overflow-hidden">
+    <div className="min-h-screen bg-[#0b0e1b] flex flex-col justify-between relative overflow-hidden pop-dots-bg">
       {/* Active Game View (Full Screen on Mobile, Centered Arcade Cabinet on Desktop) */}
       {activeGame ? (
-        <div className="fixed inset-0 z-50 bg-[#060911] flex items-center justify-center">
-          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-game-dark shadow-2xl border-x border-white/5">
+        <div className="fixed inset-0 z-50 bg-[#05070e] flex items-center justify-center">
+          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c101e] shadow-2xl border-x-2 border-black">
             {/* In-Game HUD Overlay */}
             <InGameOverlay
               game={activeGame}
@@ -358,13 +358,13 @@ export const App: React.FC = () => {
                 {/* Search Bar */}
                 <div className="px-4 pt-3">
                   <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pop-yellow stroke-[2.5]" />
                     <input
                       type="text"
                       placeholder="Search games, mechanics..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 rounded-2xl glass-pill text-xs text-white placeholder-slate-400 focus:outline-none focus:border-game-accent/60 transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-sm text-xs text-white placeholder-slate-400 focus:outline-none focus:border-pop-yellow focus:shadow-pop transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -374,34 +374,30 @@ export const App: React.FC = () => {
                   <div className="px-4">
                     <div
                       onClick={() => handleStartGame(featuredGame)}
-                      className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900 border border-emerald-500/30 shadow-neon-indigo cursor-pointer active:scale-[0.98] transition-transform"
+                      className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900 border-2 border-black shadow-pop-lg cursor-pointer active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-sm transition-all pop-dots-dense"
                     >
-                      <div className="relative z-10 space-y-2">
+                      <div className="relative z-10 space-y-2.5">
                         <div className="flex items-center space-x-2">
-                          <span className="px-2 py-0.5 rounded-full bg-game-neonCyan text-game-dark text-[10px] font-black uppercase tracking-wider">
-                            FEATURED
-                          </span>
-                          <span className="flex items-center space-x-1 text-white text-[11px] font-bold">
-                            <Sparkles className="w-3 h-3 text-amber-300" />
-                            <span>Instant Play</span>
+                          <span className="px-2.5 py-0.5 rounded bg-pop-pink text-white text-[9px] font-bungee uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_#000] -rotate-3 inline-block">
+                            HOT
                           </span>
                         </div>
-                        <h2 className="text-2xl font-black text-white leading-tight">
+                        <h2 className="text-2xl font-pop font-black text-white pop-text-shadow leading-tight">
                           {featuredGame.title}
                         </h2>
-                        <p className="text-xs text-emerald-100/90 line-clamp-2 max-w-[260px]">
+                        <p className="text-xs text-emerald-100/90 line-clamp-2 max-w-[260px] leading-relaxed">
                           {featuredGame.tagline}
                         </p>
-                        <button className="pt-2 flex items-center space-x-2 text-xs font-black text-white">
-                          <div className="w-8 h-8 rounded-full bg-white text-emerald-900 flex items-center justify-center shadow-lg">
-                            ▶
-                          </div>
-                          <span className="tracking-wider">TAP TO PLAY NOW</span>
-                        </button>
+                        <div className="pt-1">
+                          <button className="py-2.5 px-4 rounded-xl bg-pop-yellow text-black font-pop font-black text-xs flex items-center space-x-2 border-2 border-black shadow-pop hover:shadow-pop-md active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all tracking-wider">
+                            <span>PLAY NOW</span>
+                            <span>▶</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Ambient background graphics */}
-                      <div className="absolute right-2 -bottom-4 text-8xl font-black text-white/5 select-none pointer-events-none">
+                      <div className="absolute right-2 -bottom-4 text-8xl font-black text-black/20 select-none pointer-events-none drop-shadow">
                         🐍
                       </div>
                     </div>
@@ -417,13 +413,13 @@ export const App: React.FC = () => {
                 {/* Games Grid */}
                 <div className="px-4">
                   <div className="flex items-center justify-between pb-2">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    <h3 className="text-xs font-pop font-black uppercase tracking-wider text-white pop-text-shadow">
                       {selectedCategory === 'all'
-                        ? 'All Arcade Games'
-                        : `${selectedCategory.toUpperCase()} GAMES`}
+                        ? '★ ALL ARCADE GAMES ★'
+                        : `★ ${selectedCategory.toUpperCase()} GAMES ★`}
                     </h3>
-                    <span className="text-[11px] text-slate-500 font-semibold">
-                      {filteredGames.length} Available
+                    <span className="text-[10px] font-bungee text-pop-yellow bg-[#14192b] px-2 py-0.5 rounded border-2 border-black shadow-pop-xs">
+                      {filteredGames.length} GAMES
                     </span>
                   </div>
 
@@ -442,16 +438,16 @@ export const App: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 space-y-2">
-                      <p className="text-slate-400 text-sm font-semibold">No games found</p>
+                    <div className="text-center py-12 space-y-2 bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
+                      <p className="text-slate-300 text-sm font-pop font-bold">NO GAMES FOUND</p>
                       <button
                         onClick={() => {
                           setSelectedCategory('all');
                           setSearchQuery('');
                         }}
-                        className="text-xs text-game-neonCyan font-bold"
+                        className="text-xs font-pop font-black text-pop-yellow hover:underline"
                       >
-                        Reset filters
+                        RESET FILTERS
                       </button>
                     </div>
                   )}
@@ -462,8 +458,10 @@ export const App: React.FC = () => {
             {navTab === 'favorites' && (
               <div className="px-4 py-4 space-y-4 pb-24">
                 <div>
-                  <h2 className="text-xl font-black text-white">Your Favorites</h2>
-                  <p className="text-xs text-slate-400">Quick access to the games you love</p>
+                  <h2 className="text-xl font-pop font-black text-white pop-text-shadow">
+                    FAVORITE <span className="text-pop-pink">GAMES</span>
+                  </h2>
+                  <p className="text-xs text-slate-300">Quick access to the games you love</p>
                 </div>
                 {filteredGames.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3.5">
@@ -480,11 +478,11 @@ export const App: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 space-y-2">
-                    <span className="text-4xl">❤️</span>
-                    <p className="text-slate-300 text-sm font-bold">No favorites yet</p>
-                    <p className="text-xs text-slate-500">
-                      Tap the heart icon on any game card to pin it here!
+                  <div className="text-center py-16 space-y-3 bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
+                    <span className="text-4xl inline-block animate-bounce">❤️</span>
+                    <p className="text-white text-base font-pop font-black">NO FAVORITES YET</p>
+                    <p className="text-xs text-slate-300 max-w-[220px] mx-auto">
+                      Tap the heart icon on any game card to pin it to your favorites!
                     </p>
                   </div>
                 )}

@@ -21,20 +21,7 @@ export const GameCard: React.FC<GameCardProps> = ({
   onToggleFavorite,
   onSelectGame
 }) => {
-  const getBadgeStyle = (badge?: string) => {
-    switch (badge) {
-      case 'HOT':
-        return 'bg-rose-500 text-white';
-      case 'NEW':
-        return 'bg-game-neonCyan text-game-dark';
-      case 'POPULAR':
-        return 'bg-amber-400 text-game-dark';
-      case 'ENDLESS':
-        return 'bg-purple-500 text-white';
-      default:
-        return 'bg-slate-700 text-slate-200';
-    }
-  };
+  const isHotOrNew = game.badge === 'HOT' || game.badge === 'NEW';
 
   return (
     <div
@@ -45,29 +32,27 @@ export const GameCard: React.FC<GameCardProps> = ({
           onSelectGame(game);
         }
       }}
-      className={`group relative overflow-hidden rounded-2xl glass-panel border border-game-border transition-all duration-300 ${
+      className={`group relative overflow-hidden rounded-2xl bg-[#14192b] border-2 border-black shadow-pop transition-all duration-200 ${
         isPlayable
-          ? 'cursor-pointer hover:border-game-accent/50 hover:shadow-neon-indigo active:scale-[0.98]'
-          : 'opacity-75 cursor-default'
+          ? 'cursor-pointer hover:shadow-pop-lg hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-xs'
+          : 'opacity-70 cursor-default'
       }`}
     >
-      {/* Top Banner & Gradient Art */}
-      <div className={`h-24 w-full bg-gradient-to-r ${game.color} relative p-3 flex flex-col justify-between overflow-hidden`}>
-        {/* Subtle background glow circle */}
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none" />
+      {/* Top Banner & Gradient Art with Ben-Day Halftone */}
+      <div className={`h-24 w-full bg-gradient-to-br ${game.color} relative p-3 flex flex-col justify-between overflow-hidden border-b-2 border-black pop-dots-dense`}>
+        {/* Subtle pop comic burst graphic */}
+        <div className="absolute -right-3 -bottom-3 w-20 h-20 rounded-full bg-black/20 pointer-events-none" />
 
         {/* Top Badges & Favorite Button */}
         <div className="flex items-center justify-between z-10">
-          <div className="flex items-center space-x-1.5">
-            {game.badge && (
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${getBadgeStyle(game.badge)}`}>
+          <div>
+            {isHotOrNew && (
+              <span className={`text-[9px] font-bungee px-2.5 py-0.5 rounded border-2 border-black shadow-[2px_2px_0px_#000] uppercase tracking-wider inline-block ${
+                game.badge === 'HOT'
+                  ? 'bg-pop-pink text-white -rotate-3'
+                  : 'bg-pop-cyan text-black rotate-3'
+              }`}>
                 {game.badge}
-              </span>
-            )}
-            {game.modes.includes('endless') && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-black/40 text-white flex items-center space-x-0.5">
-                <InfinityIcon className="w-2.5 h-2.5" />
-                <span>Endless</span>
               </span>
             )}
           </div>
@@ -79,12 +64,12 @@ export const GameCard: React.FC<GameCardProps> = ({
               haptics.tap();
               onToggleFavorite(e);
             }}
-            className="w-7 h-7 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-125"
+            className="w-7 h-7 rounded-xl bg-black/70 border border-black flex items-center justify-center text-white/90 hover:text-white hover:scale-110 active:scale-125 transition-transform shadow-[1px_1px_0px_#000]"
             aria-label="Toggle Favorite"
           >
             <Heart
               className={`w-3.5 h-3.5 ${
-                isFavorite ? 'fill-game-neonPink text-game-neonPink' : 'text-white'
+                isFavorite ? 'fill-pop-pink text-pop-pink' : 'text-white'
               }`}
             />
           </button>
@@ -92,32 +77,32 @@ export const GameCard: React.FC<GameCardProps> = ({
 
         {/* Game Title inside Banner */}
         <div className="z-10">
-          <h3 className="text-lg font-black text-white drop-shadow-md leading-tight">
+          <h3 className="text-base font-pop font-black text-white pop-text-shadow leading-tight">
             {game.title}
           </h3>
         </div>
       </div>
 
       {/* Card Body Info */}
-      <div className="p-3.5 flex flex-col justify-between space-y-3">
+      <div className="p-3.5 flex flex-col justify-between space-y-3 bg-[#14192b]">
         <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
           {game.tagline}
         </p>
 
         {/* Stats Row */}
-        <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-xs">
-          <div className="flex items-center space-x-1 text-slate-400">
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span className="font-semibold text-slate-200">
+        <div className="flex items-center justify-between pt-1 border-t-2 border-black/40 text-xs">
+          <div className="flex items-center space-x-1 text-slate-300">
+            <Trophy className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
+            <span className="font-bungee text-[11px] text-white">
               {progress.highScore > 0 ? progress.highScore.toLocaleString() : '---'}
             </span>
           </div>
 
           {game.totalLevels && (
-            <div className="flex items-center space-x-1 text-slate-400">
-              <Sparkles className="w-3.5 h-3.5 text-game-neonCyan" />
+            <div className="flex items-center space-x-1 text-pop-cyan text-[11px] font-pop font-black">
+              <Sparkles className="w-3.5 h-3.5 fill-pop-cyan" />
               <span>
-                Lvl {progress.highestLevelUnlocked}/{game.totalLevels}
+                LVL {progress.highestLevelUnlocked}/{game.totalLevels}
               </span>
             </div>
           )}
@@ -127,14 +112,14 @@ export const GameCard: React.FC<GameCardProps> = ({
         <div>
           {isPlayable ? (
             <button
-              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-game-accent to-indigo-600 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md group-hover:shadow-neon-indigo transition-all"
+              className="w-full py-2.5 px-3 rounded-xl bg-pop-yellow hover:bg-yellow-300 text-black font-pop font-black text-xs flex items-center justify-center space-x-1.5 border-2 border-black shadow-pop-sm group-hover:shadow-pop active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all tracking-wider"
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="w-3.5 h-3.5 fill-black stroke-[2]" />
               <span>PLAY NOW</span>
             </button>
           ) : (
-            <div className="w-full py-2 px-3 rounded-xl bg-slate-800/80 text-slate-400 font-semibold text-xs text-center border border-slate-700/50">
-              COMING NEXT
+            <div className="w-full py-2.5 px-3 rounded-xl bg-[#1c233c] text-slate-400 font-pop font-bold text-xs text-center border-2 border-black/60 uppercase tracking-wider">
+              COMING SOON
             </div>
           )}
         </div>

@@ -294,37 +294,37 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
         }
         touchStartRef.current = null;
       }}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
+      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
     >
       {/* Top Undo Bar */}
       <div className="w-full max-w-xs px-4 flex justify-end z-20">
         <button
           onClick={handleUndo}
           disabled={!history}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition-all ${
+          className={`px-3 py-1.5 rounded-xl text-xs font-pop font-black flex items-center space-x-1.5 border-2 border-black transition-all ${
             history
-              ? 'glass-pill text-white active:scale-95'
-              : 'opacity-40 text-slate-500 cursor-not-allowed'
+              ? 'bg-pop-yellow text-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
+              : 'opacity-40 bg-[#14192b] text-slate-500 cursor-not-allowed'
           }`}
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>UNDO</span>
         </button>
       </div>
 
       {/* 2048 4x4 Grid Board */}
-      <div className="w-[min(340px,84vw,42vh)] aspect-square p-3 bg-slate-900/80 rounded-3xl border-2 border-amber-500/30 shadow-2xl flex flex-col justify-between my-auto">
+      <div className="w-[min(340px,84vw,42vh)] aspect-square p-3 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto">
         {board.map((row, rIdx) => (
           <div key={rIdx} className="flex-1 flex space-x-2 my-1">
             {row.map((cell, cIdx) => (
               <div
                 key={cIdx}
-                className={`flex-1 rounded-2xl flex items-center justify-center transition-all duration-150 transform ${getTileStyle(
+                className={`flex-1 rounded-2xl flex items-center justify-center border-2 border-black/80 transition-all duration-150 transform ${getTileStyle(
                   cell
                 )}`}
               >
                 {cell && (
-                  <span className={`${getFontSize(cell)} select-none drop-shadow`}>
+                  <span className={`${getFontSize(cell)} select-none font-bungee drop-shadow`}>
                     {cell}
                   </span>
                 )}
@@ -338,38 +338,38 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       <div className="w-full max-w-xs flex flex-col items-center space-y-1.5 px-4 pb-2 z-20">
         <button
           onClick={() => move('up')}
-          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
           aria-label="Up"
         >
-          <ArrowUp className="w-6 h-6" />
+          <ArrowUp className="w-6 h-6 stroke-[3]" />
         </button>
 
         <div className="flex items-center space-x-6">
           <button
             onClick={() => move('left')}
-            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
             aria-label="Left"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 stroke-[3]" />
           </button>
 
-          <div className="w-4 h-4 rounded-full bg-amber-500/40 border border-amber-500/60" />
+          <div className="w-4 h-4 rounded-full bg-pop-pink border-2 border-black shadow-[1px_1px_0px_#000]" />
 
           <button
             onClick={() => move('right')}
-            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
             aria-label="Right"
           >
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-6 h-6 stroke-[3]" />
           </button>
         </div>
 
         <button
           onClick={() => move('down')}
-          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
           aria-label="Down"
         >
-          <ArrowDown className="w-6 h-6" />
+          <ArrowDown className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
     </div>

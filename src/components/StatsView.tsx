@@ -19,53 +19,57 @@ export const StatsView: React.FC = () => {
     <div className="w-full max-w-md mx-auto px-4 py-4 space-y-5 animate-fade-in pb-24">
       {/* Title */}
       <div>
-        <h2 className="text-xl font-black text-white">Arcade Statistics</h2>
-        <p className="text-xs text-slate-400">Track your records, stars, and milestones</p>
+        <h2 className="text-2xl font-pop font-black text-white pop-text-shadow">
+          ARCADE <span className="text-pop-yellow">STATS</span>
+        </h2>
+        <p className="text-xs text-slate-300">Track your records, stars, and milestones</p>
       </div>
 
       {/* Highlights Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="glass-panel p-3.5 rounded-2xl border border-white/5 space-y-1">
-          <div className="flex items-center space-x-1.5 text-amber-400 text-xs font-bold">
-            <Sparkles className="w-4 h-4" />
-            <span>Stars Collected</span>
+      <div className="grid grid-cols-2 gap-3.5">
+        <div className="bg-pop-yellow text-black border-2 border-black rounded-2xl p-4 shadow-pop -rotate-1">
+          <div className="flex items-center space-x-1.5 text-xs font-pop font-black uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 fill-black text-black" />
+            <span>STARS COLLECTED</span>
           </div>
-          <div className="text-2xl font-black text-white">{totalStars}</div>
+          <div className="text-3xl font-bungee text-black pt-1">{totalStars}</div>
         </div>
 
-        <div className="glass-panel p-3.5 rounded-2xl border border-white/5 space-y-1">
-          <div className="flex items-center space-x-1.5 text-game-neonCyan text-xs font-bold">
-            <Flame className="w-4 h-4" />
-            <span>Total Sessions</span>
+        <div className="bg-pop-cyan text-black border-2 border-black rounded-2xl p-4 shadow-pop rotate-1">
+          <div className="flex items-center space-x-1.5 text-xs font-pop font-black uppercase tracking-wider">
+            <Flame className="w-4 h-4 fill-black text-black" />
+            <span>SESSIONS PLAYED</span>
           </div>
-          <div className="text-2xl font-black text-white">{totalPlays}</div>
+          <div className="text-3xl font-bungee text-black pt-1">{totalPlays}</div>
         </div>
       </div>
 
       {/* Per Game High Scores */}
       <div className="space-y-3">
-        <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
-          Personal Best Records
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-pop font-black uppercase tracking-wider text-pop-pink pop-text-shadow">
+            ★ PERSONAL BEST RECORDS ★
+          </h3>
+        </div>
 
         <div className="space-y-2">
           {gameStats.map(({ game, progress }) => (
             <div
               key={game.id}
-              className="glass-panel p-3 rounded-2xl border border-white/5 flex items-center justify-between"
+              className="bg-[#14192b] p-3 rounded-2xl border-2 border-black shadow-pop-xs flex items-center justify-between hover:translate-x-0.5 hover:shadow-pop-sm transition-all"
             >
               <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${game.color} flex items-center justify-center font-bold text-xs text-white`}>
+                <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${game.color} border-2 border-black shadow-[1.5px_1.5px_0px_#000] flex items-center justify-center font-bungee text-xs text-white`}>
                   {game.title.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white">{game.title}</h4>
-                  <span className="text-[10px] text-slate-400">Played {progress.playCount} times</span>
+                  <h4 className="text-xs font-pop font-black text-white">{game.title}</h4>
+                  <span className="text-[10px] text-slate-400 font-medium">Played {progress.playCount} times</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-1 text-xs font-black text-amber-400">
-                <Trophy className="w-3.5 h-3.5" />
+              <div className="flex items-center space-x-1 text-xs font-bungee text-pop-yellow bg-black/70 px-2.5 py-1 rounded-lg border border-black shadow-[1px_1px_0px_#000]">
+                <Trophy className="w-3.5 h-3.5 fill-pop-yellow text-pop-yellow" />
                 <span>{progress.highScore > 0 ? progress.highScore.toLocaleString() : '---'}</span>
               </div>
             </div>

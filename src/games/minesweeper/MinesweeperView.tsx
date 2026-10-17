@@ -262,22 +262,22 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense">
       {/* Top HUD: Flag & Time counter */}
       <div className="w-full max-w-xs px-4 flex items-center justify-between z-20">
-        <div className="glass-pill px-3 py-1 flex items-center space-x-1.5 border border-red-500/30">
-          <Flag className="w-3.5 h-3.5 text-rose-400" />
-          <span className="text-xs font-black text-white">{remainingFlags}</span>
+        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
+          <Flag className="w-3.5 h-3.5 text-pop-pink fill-pop-pink" />
+          <span className="text-xs font-bungee text-white">{remainingFlags}</span>
         </div>
 
-        <div className="glass-pill px-3 py-1 flex items-center space-x-1.5 border border-cyan-500/30">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-xs font-black text-white">{timer}s</span>
+        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
+          <span className="text-xs font-bungee text-white">{timer}s</span>
         </div>
       </div>
 
       {/* Minesweeper Grid Board */}
-      <div className="w-[min(340px,85vw,44vh)] aspect-square p-2 bg-slate-900/90 rounded-3xl border-2 border-slate-700/60 shadow-2xl flex flex-col justify-between my-auto">
+      <div className="w-[min(340px,85vw,44vh)] aspect-square p-2 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto">
         {grid.map((row, r) => (
           <div key={r} className="flex-1 flex space-x-1 my-0.5">
             {row.map((cell, c) => (
@@ -293,21 +293,21 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
                 className={`flex-1 rounded-xl flex items-center justify-center transition-all duration-100 cursor-pointer ${
                   cell.isRevealed
                     ? cell.isMine
-                      ? 'bg-rose-600/90 text-white shadow-inner animate-pulse'
-                      : 'bg-slate-800/80 border border-slate-700/40'
-                    : 'bg-slate-700/80 hover:bg-slate-600/90 active:scale-95 border-t border-slate-500/40 shadow-sm'
+                      ? 'bg-pop-red text-white shadow-inner animate-pulse'
+                      : 'bg-[#13182b] border border-black/40'
+                    : 'bg-[#1e2744] hover:bg-[#283458] active:scale-95 border-2 border-black/80 shadow-[1px_1px_0px_#000]'
                 }`}
               >
                 {cell.isRevealed ? (
                   cell.isMine ? (
                     <Bomb className="w-4 h-4 text-white fill-current" />
                   ) : cell.neighborMines > 0 ? (
-                    <span className={`text-sm ${getNumberColor(cell.neighborMines)}`}>
+                    <span className={`text-sm font-bungee ${getNumberColor(cell.neighborMines)}`}>
                       {cell.neighborMines}
                     </span>
                   ) : null
                 ) : cell.isFlagged ? (
-                  <Flag className="w-4 h-4 text-rose-400 fill-current drop-shadow" />
+                  <Flag className="w-4 h-4 text-pop-pink fill-pop-pink drop-shadow" />
                 ) : null}
               </div>
             ))}
@@ -323,13 +323,13 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
             sounds.playTap();
             haptics.tap();
           }}
-          className={`flex-1 py-3 rounded-2xl font-black text-xs flex items-center justify-center space-x-2 transition-all ${
+          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all ${
             !flagMode
-              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-neon-cyan'
-              : 'glass-panel text-slate-400 border border-white/10'
+              ? 'bg-pop-yellow text-black border-2 border-black shadow-pop-xs -translate-y-0.5'
+              : 'bg-[#14192b] text-slate-300 border-2 border-black/80'
           }`}
         >
-          <Shield className="w-4 h-4" />
+          <Shield className="w-4 h-4 stroke-[2.5]" />
           <span>REVEAL</span>
         </button>
 
@@ -339,13 +339,13 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
             sounds.playTap();
             haptics.tap();
           }}
-          className={`flex-1 py-3 rounded-2xl font-black text-xs flex items-center justify-center space-x-2 transition-all ${
+          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all ${
             flagMode
-              ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-neon-pink'
-              : 'glass-panel text-slate-400 border border-white/10'
+              ? 'bg-pop-pink text-white border-2 border-black shadow-pop-xs -translate-y-0.5'
+              : 'bg-[#14192b] text-slate-300 border-2 border-black/80'
           }`}
         >
-          <Flag className="w-4 h-4" />
+          <Flag className="w-4 h-4 stroke-[2.5]" />
           <span>FLAG ({remainingFlags})</span>
         </button>
       </div>

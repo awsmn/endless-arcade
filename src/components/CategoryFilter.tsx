@@ -36,14 +36,14 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
                 haptics.tap();
                 onSelectCategory(cat.id);
               }}
-              className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200 ${
+              className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-pop flex items-center space-x-1.5 transition-all duration-150 ${
                 isSelected
-                  ? 'bg-gradient-to-r from-game-accent to-game-accentGlow text-white shadow-neon-indigo scale-105'
-                  : 'glass-pill text-slate-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-pop-pink text-white border-2 border-black shadow-pop-sm scale-105 -rotate-1'
+                  : 'bg-[#151b30] text-slate-300 border-2 border-black/90 hover:bg-[#1d2542] hover:text-white shadow-[1.5px_1.5px_0px_#000] active:scale-95'
               }`}
             >
-              <span>{cat.emoji}</span>
-              <span>{cat.label}</span>
+              <span className="text-sm">{cat.emoji}</span>
+              <span className="font-black uppercase tracking-wider text-[11px]">{cat.label}</span>
             </button>
           );
         })}

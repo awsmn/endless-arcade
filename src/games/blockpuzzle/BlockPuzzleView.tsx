@@ -255,25 +255,25 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
     <div
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
+      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
     >
       {/* Top Score HUD */}
       <div className="w-full max-w-xs px-4 flex items-center justify-between z-20">
-        <div className="glass-pill px-3 py-1 flex items-center space-x-1.5 border border-amber-500/30">
-          <Trophy className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-xs font-black text-white">{score}</span>
+        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
+          <Trophy className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
+          <span className="text-xs font-bungee text-white">{score}</span>
         </div>
 
-        <div className="glass-pill px-3 py-1 flex items-center space-x-1.5 border border-purple-500/30">
-          <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-          <span className="text-xs font-black text-white">JEWEL COLLAPSE</span>
+        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-pop-pink fill-pop-pink" />
+          <span className="text-xs font-pop font-black text-pop-pink uppercase">POP 1010</span>
         </div>
       </div>
 
       {/* 8x8 Board */}
       <div
         ref={boardRef}
-        className="w-[min(340px,86vw,44vh)] aspect-square p-2 bg-slate-900/95 rounded-3xl border-2 border-indigo-500/30 shadow-2xl flex flex-col justify-between my-auto relative"
+        className="w-[min(340px,86vw,44vh)] aspect-square p-2 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto relative"
       >
         {board.map((row, r) => (
           <div key={r} className="flex-1 flex space-x-1 my-0.5">
@@ -325,7 +325,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
       </div>
 
       {/* Bottom Tray with 3 Pieces */}
-      <div className="w-full max-w-xs px-2 py-3 flex items-center justify-around z-20 glass-panel rounded-2xl border border-white/10">
+      <div className="w-full max-w-xs px-2 py-3 flex items-center justify-around z-20 bg-[#14192b] rounded-2xl border-2 border-black shadow-pop">
         {tray.map((shape, idx) => (
           <div
             key={idx}

@@ -139,40 +139,40 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
         {/* Up Button */}
         <button
           onClick={() => handleDPadPress(0, -1)}
-          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
           aria-label="Up"
         >
-          <ArrowUp className="w-6 h-6" />
+          <ArrowUp className="w-6 h-6 stroke-[3]" />
         </button>
 
         {/* Left, Center Indicator, Right */}
         <div className="flex items-center space-x-6">
           <button
             onClick={() => handleDPadPress(-1, 0)}
-            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
             aria-label="Left"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 stroke-[3]" />
           </button>
 
-          <div className="w-4 h-4 rounded-full bg-game-neonCyan/30 border border-game-neonCyan/50" />
+          <div className="w-4 h-4 rounded-full bg-pop-pink border-2 border-black shadow-[1px_1px_0px_#000]" />
 
           <button
             onClick={() => handleDPadPress(1, 0)}
-            className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
             aria-label="Right"
           >
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-6 h-6 stroke-[3]" />
           </button>
         </div>
 
         {/* Down Button */}
         <button
           onClick={() => handleDPadPress(0, 1)}
-          className="w-12 h-12 rounded-2xl glass-panel border border-white/10 active:bg-white/20 active:scale-90 flex items-center justify-center text-slate-200 transition-transform shadow-lg"
+          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
           aria-label="Down"
         >
-          <ArrowDown className="w-6 h-6" />
+          <ArrowDown className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
     </div>

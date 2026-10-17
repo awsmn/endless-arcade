@@ -35,28 +35,28 @@ export const InGameOverlay: React.FC<InGameOverlayProps> = ({
             haptics.tap();
             onExit();
           }}
-          className="w-9 h-9 rounded-xl glass-panel flex items-center justify-center text-slate-200 hover:text-white active:scale-95 transition-transform"
+          className="w-9 h-9 rounded-xl bg-[#14192b] border-2 border-black shadow-pop-xs flex items-center justify-center text-white hover:text-pop-yellow active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
           aria-label="Exit Game"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
         </button>
 
         {/* Center: Live Score Display */}
         <div className="flex flex-col items-center">
-          <div className="px-4 py-1 rounded-2xl glass-panel border border-white/10 shadow-lg flex items-center space-x-2">
-            <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300 tracking-tight">
+          <div className="px-4 py-1.5 rounded-2xl bg-[#0e1222] border-2 border-black shadow-pop-sm flex items-center space-x-2">
+            <span className="text-xl font-bungee text-pop-yellow tracking-wider">
               {score.toLocaleString()}
             </span>
             {highScore > 0 && (
-              <div className="flex items-center space-x-1 pl-2 border-l border-white/10 text-[11px] text-amber-400 font-bold">
-                <Trophy className="w-3 h-3" />
+              <div className="flex items-center space-x-1 pl-2 border-l-2 border-black/80 text-[11px] text-pop-cyan font-pop font-black">
+                <Trophy className="w-3.5 h-3.5 fill-pop-cyan" />
                 <span>{highScore.toLocaleString()}</span>
               </div>
             )}
           </div>
           {level && (
-            <span className="text-[10px] font-bold text-game-neonCyan tracking-widest uppercase mt-0.5">
-              Level {level}
+            <span className="text-[9px] font-bungee text-pop-pink tracking-widest uppercase mt-0.5 drop-shadow">
+              LVL {level}
             </span>
           )}
         </div>
@@ -68,13 +68,17 @@ export const InGameOverlay: React.FC<InGameOverlayProps> = ({
               onToggleSound();
               haptics.tap();
             }}
-            className="w-9 h-9 rounded-xl glass-panel flex items-center justify-center text-slate-200 hover:text-white active:scale-95 transition-transform"
+            className={`w-9 h-9 rounded-xl border-2 border-black shadow-pop-xs flex items-center justify-center transition-all ${
+              soundEnabled
+                ? 'bg-pop-cyan text-black'
+                : 'bg-[#14192b] text-slate-400 hover:text-white'
+            } active:translate-x-0.5 active:translate-y-0.5 active:shadow-none`}
             aria-label="Toggle Sound"
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-game-neonCyan" />
+              <Volume2 className="w-4 h-4 stroke-[2.5]" />
             ) : (
-              <VolumeX className="w-4 h-4 text-slate-500" />
+              <VolumeX className="w-4 h-4 stroke-[2]" />
             )}
           </button>
 
@@ -84,10 +88,10 @@ export const InGameOverlay: React.FC<InGameOverlayProps> = ({
               haptics.bump();
               onPause();
             }}
-            className="w-9 h-9 rounded-xl glass-panel flex items-center justify-center text-slate-200 hover:text-white active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-xl bg-pop-pink text-white border-2 border-black shadow-pop-xs flex items-center justify-center hover:bg-pink-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             aria-label="Pause Game"
           >
-            <Pause className="w-4 h-4 text-white" />
+            <Pause className="w-4 h-4 stroke-[2.5] fill-white" />
           </button>
         </div>
       </div>

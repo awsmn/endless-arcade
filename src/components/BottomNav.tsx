@@ -24,8 +24,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-game-border safe-bottom px-6 py-2">
-      <div className="max-w-md mx-auto flex items-center justify-between">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0d111f]/95 backdrop-blur-lg border-t-2 border-black safe-bottom px-4 py-2 shadow-[0_-4px_0_rgba(0,0,0,0.5)] pop-dots-bg">
+      <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = currentTab === tab.id;
@@ -38,26 +38,27 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 haptics.tap();
                 onSelectTab(tab.id);
               }}
-              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-200 ${
+              className={`relative flex flex-col items-center justify-center py-1.5 px-3.5 rounded-xl transition-all duration-150 ${
                 isActive
-                  ? 'text-game-neonCyan scale-105'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-pop-yellow text-black border-2 border-black shadow-pop-sm -translate-y-1'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
               <div className="relative">
-                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px] drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]' : 'stroke-[1.8px]'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.8px]' : 'stroke-[2px]'}`} />
                 {tab.badge && (
-                  <span className="absolute -top-1.5 -right-2 bg-game-neonPink text-white text-[9px] font-black rounded-full px-1 min-w-[14px] h-[14px] flex items-center justify-center">
+                  <span className={`absolute -top-2 -right-3 font-bungee text-[9px] rounded-full px-1 min-w-[16px] h-[16px] flex items-center justify-center border border-black shadow-[1px_1px_0px_#000] ${
+                    isActive ? 'bg-pop-pink text-white' : 'bg-pop-pink text-white'
+                  }`}>
                     {tab.badge}
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] mt-1 font-semibold tracking-wider ${isActive ? 'text-game-neonCyan' : 'text-slate-400'}`}>
+              <span className={`text-[10px] mt-0.5 tracking-wider font-pop uppercase ${
+                isActive ? 'font-black text-black' : 'font-bold text-slate-300'
+              }`}>
                 {tab.label}
               </span>
-              {isActive && (
-                <div className="absolute -bottom-1 w-5 h-0.5 rounded-full bg-game-neonCyan shadow-neon-cyan" />
-              )}
             </button>
           );
         })}

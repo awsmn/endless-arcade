@@ -16,7 +16,7 @@ export interface GameMetadata {
   tagline: string;
   category: GameCategory;
   modes: GameMode[];
-  badge?: 'HOT' | 'NEW' | 'POPULAR' | 'ENDLESS';
+  badge?: 'HOT' | 'NEW';
   color: string; // Tailwind gradient or accent
   accentColor: string;
   iconName: string;
