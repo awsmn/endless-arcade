@@ -159,7 +159,11 @@ export class StackSliceEngine implements GameEngine {
 
       // Expand width reward if combo >= 5
       if (this.combo >= 5) {
-        this.activeWidth = Math.min(220, this.activeWidth + 8);
+        const bonusW = 8;
+        const newW = Math.min(220, this.activeWidth + bonusW);
+        const added = newW - this.activeWidth;
+        this.activeWidth = newW;
+        topBlock.x = Math.max(10, topBlock.x - added / 2);
       }
 
       this.stack.push({

@@ -214,7 +214,13 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
     haptics.bump();
   };
 
+  const didLongPressRef = useRef(false);
+
   const handleCellClick = (r: number, c: number) => {
+    if (didLongPressRef.current) {
+      didLongPressRef.current = false;
+      return;
+    }
     if (flagMode) {
       toggleFlag(r, c);
     } else {
@@ -223,10 +229,12 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
   };
 
   const handleTouchStart = (r: number, c: number) => {
+    didLongPressRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
+      didLongPressRef.current = true;
       toggleFlag(r, c);
       longPressTimerRef.current = null;
-    }, 450);
+    }, 400);
   };
 
   const handleTouchEnd = () => {
@@ -276,6 +284,10 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
               <div
                 key={c}
                 onClick={() => handleCellClick(r, c)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  toggleFlag(r, c);
+                }}
                 onTouchStart={() => handleTouchStart(r, c)}
                 onTouchEnd={handleTouchEnd}
                 className={`flex-1 rounded-xl flex items-center justify-center transition-all duration-100 cursor-pointer ${

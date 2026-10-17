@@ -78,9 +78,8 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
       const newBoard = board.map(row => [...row]);
 
-      const slideAndMergeRow = (row: (number | null)[]): (number | null)[] => {
-        // Filter out nulls
-        const filtered = row.filter((val): val is number => val !== null);
+      const slide = (line: (number | null)[]): (number | null)[] => {
+        const filtered = line.filter((val): val is number => val !== null);
         const result: (number | null)[] = [];
 
         for (let i = 0; i < filtered.length; i++) {
@@ -104,35 +103,31 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       if (direction === 'left') {
         for (let r = 0; r < 4; r++) {
           const oldRow = newBoard[r];
-          const newRow = slideAndMergeRow(oldRow);
+          const newRow = slide(oldRow);
           if (oldRow.some((val, idx) => val !== newRow[idx])) changed = true;
           newBoard[r] = newRow;
         }
       } else if (direction === 'right') {
         for (let r = 0; r < 4; r++) {
-          const oldRow = [...newBoard[r]].reverse();
-          const newRow = slideAndMergeRow(oldRow).reverse();
-          if (newBoard[r].some((val, idx) => val !== newRow[idx])) changed = true;
+          const oldRow = newBoard[r];
+          const reversed = [...oldRow].reverse();
+          const newRow = slide(reversed).reverse();
+          if (oldRow.some((val, idx) => val !== newRow[idx])) changed = true;
           newBoard[r] = newRow;
         }
       } else if (direction === 'up') {
         for (let c = 0; c < 4; c++) {
-          const col = [newBoard[0][c], newBoard[1][c], newBoard[2][c], newBoard[3][c]];
-          const newCol = slideAndMergeRow(col);
-          if (col.some((val, idx) => val !== newCol[idx])) changed = true;
+          const oldCol = [newBoard[0][c], newBoard[1][c], newBoard[2][c], newBoard[3][c]];
+          const newCol = slide(oldCol);
+          if (oldCol.some((val, idx) => val !== newCol[idx])) changed = true;
           for (let r = 0; r < 4; r++) newBoard[r][c] = newCol[r];
         }
       } else if (direction === 'down') {
         for (let c = 0; c < 4; c++) {
-          const col = [newBoard[3][c], newBoard[2][c], newBoard[1][c], newBoard[0][c]];
-          const newCol = slideAndMergeRow(col).reverse();
-          if (
-            [newBoard[0][c], newBoard[1][c], newBoard[2][c], newBoard[3][c]].some(
-              (val, idx) => val !== newCol[idx]
-            )
-          ) {
-            changed = true;
-          }
+          const oldCol = [newBoard[0][c], newBoard[1][c], newBoard[2][c], newBoard[3][c]];
+          const reversed = [...oldCol].reverse();
+          const newCol = slide(reversed).reverse();
+          if (oldCol.some((val, idx) => val !== newCol[idx])) changed = true;
           for (let r = 0; r < 4; r++) newBoard[r][c] = newCol[r];
         }
       }
@@ -208,17 +203,15 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [move]);
 
-  // Touch Swipe Handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  // Pointer & Touch Swipe Handlers (Works on mobile touch & desktop mouse drag)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    touchStartRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     if (!touchStartRef.current) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
+    const dx = e.clientX - touchStartRef.current.x;
+    const dy = e.clientY - touchStartRef.current.y;
     const minDistance = 25;
 
     if (Math.abs(dx) > Math.abs(dy)) {
@@ -283,8 +276,24 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
   return (
     <div
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        touchStartRef.current = { x: t.clientX, y: t.clientY };
+      }}
+      onTouchEnd={(e) => {
+        if (!touchStartRef.current) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - touchStartRef.current.x;
+        const dy = t.clientY - touchStartRef.current.y;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          if (Math.abs(dx) > 25) move(dx > 0 ? 'right' : 'left');
+        } else {
+          if (Math.abs(dy) > 25) move(dy > 0 ? 'down' : 'up');
+        }
+        touchStartRef.current = null;
+      }}
       className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
     >
       {/* Top Undo Bar */}

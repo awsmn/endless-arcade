@@ -10,6 +10,7 @@ interface Obstacle {
   z: number;    // 0 (at player) to 1 (far horizon)
   type: ObstacleType;
   collected?: boolean;
+  cleared?: boolean;
 }
 
 interface Particle {
@@ -235,7 +236,7 @@ export class CyberSprintEngine implements GameEngine {
       obs.z -= this.worldSpeed * dt;
 
       // Collision zone: z roughly between 0.04 and 0.16
-      if (obs.z >= 0.04 && obs.z <= 0.16 && !obs.collected) {
+      if (obs.z >= 0.04 && obs.z <= 0.16 && !obs.collected && !obs.cleared) {
         const laneDiff = Math.abs(this.currentLaneX - obs.lane);
         if (laneDiff < 0.45) {
           if (obs.type === 'coin') {
@@ -247,8 +248,10 @@ export class CyberSprintEngine implements GameEngine {
             this.spawnParticles(pt.x, pt.y, '#f59e0b', 8);
           } else if (obs.type === 'barrier' && this.isJumping) {
             // Jumped safely over barrier!
+            obs.cleared = true;
           } else if (obs.type === 'laser' && this.isSliding) {
             // Slid safely under laser!
+            obs.cleared = true;
           } else {
             // Crash!
             this.handleCrash(obs);

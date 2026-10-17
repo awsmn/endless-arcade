@@ -142,6 +142,81 @@ export const GAME_CATALOG: GameMetadata[] = [
       'Clear all safe tiles to claim victory'
     ],
     totalLevels: 100
+  },
+  {
+    id: 'flappy-orbit',
+    title: 'Flappy Orbit',
+    tagline: 'Impulse thruster navigation through neon gravity fields & orbital asteroid gates',
+    category: 'reflex',
+    modes: ['endless', 'levels'],
+    badge: 'NEW',
+    color: 'from-sky-500 to-blue-700',
+    accentColor: '#0ea5e9',
+    iconName: 'Rocket',
+    description: 'Pilot an agile orbital space probe through planetary debris and laser gates using one-tap gravitational impulse thrusts.',
+    instructions: [
+      'Tap anywhere or press Space/Up to thrust upward',
+      'Navigate cleanly through asteroid pylons and planetary rings',
+      'Collect bonus energy stars inside gaps for extra points',
+      'Do not collide with pylons or crash into the ground'
+    ],
+    totalLevels: 80
+  },
+  {
+    id: 'chroma-jump',
+    title: 'Chroma Jump',
+    tagline: 'Color match reflex jump - pass through spinning obstacles matching your hue',
+    category: 'arcade',
+    modes: ['endless', 'levels'],
+    badge: 'HOT',
+    color: 'from-purple-500 via-pink-600 to-cyan-500',
+    accentColor: '#a855f7',
+    iconName: 'CircleDot',
+    description: 'Bounce your color sphere upward through rotating multi-colored rings and crosses. Only matching color segments are permeable!',
+    instructions: [
+      'Tap anywhere or press Space/Up to bounce upward',
+      'Pass through barriers only when their color matches your sphere',
+      'Pass through multi-color switchers to adapt to new hues',
+      'Collect golden stars inside obstacles to boost your score'
+    ],
+    totalLevels: 60
+  },
+  {
+    id: 'galaxia-void',
+    title: 'Galaxia Void',
+    tagline: 'Classic 90s neon space shooter - pilot your starship against alien swarms',
+    category: 'retro',
+    modes: ['endless', 'levels'],
+    badge: 'POPULAR',
+    color: 'from-blue-600 via-indigo-700 to-purple-800',
+    accentColor: '#38bdf8',
+    iconName: 'Crosshair',
+    description: 'Pilot an advanced starfighter through bullet-hell space sectors. Dodge diving alien squadrons, collect weapon upgrades, and destroy massive flagship bosses.',
+    instructions: [
+      'Drag anywhere or use WASD/Arrows to steer starfighter',
+      'Twin plasma lasers fire continuously automatically',
+      'Collect lightning powerups for spread cannons and shields',
+      'Defeat colossal flagship bosses every 10 waves'
+    ],
+    totalLevels: 50
+  },
+  {
+    id: 'block-puzzle',
+    title: 'Block Puzzle 1010',
+    tagline: 'Fit polyomino jewel blocks onto the grid to collapse rows & columns',
+    category: 'puzzle',
+    modes: ['endless'],
+    badge: 'NEW',
+    color: 'from-amber-500 via-rose-500 to-purple-600',
+    accentColor: '#f59e0b',
+    iconName: 'Grid',
+    description: 'Relaxing yet deep spatial puzzle. Drag gem blocks from your bottom tray into the 8x8 grid. Complete lines to trigger explosive jewel collapses.',
+    instructions: [
+      'Drag shapes from the bottom tray onto the board',
+      'Fill complete horizontal rows or vertical columns to clear them',
+      'Clear multiple lines simultaneously for exponential combo multipliers',
+      'Plan ahead! If no current piece can fit, the game ends'
+    ]
   }
 ];
 

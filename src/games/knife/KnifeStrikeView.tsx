@@ -45,10 +45,17 @@ export const KnifeStrikeView: React.FC<KnifeStrikeViewProps> = ({
     const handleResize = () => {
       engine.resize();
     };
-    window.addEventListener('resize', handleResize);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        e.preventDefault();
+        engine.throwKnife();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
       engine.destroy();
       engineRef.current = null;
     };

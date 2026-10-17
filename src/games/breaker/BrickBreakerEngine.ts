@@ -57,6 +57,7 @@ export class BrickBreakerEngine implements GameEngine {
   private launchY = 500;
   private nextLaunchX = 180;
   private firstBallReturned = false;
+  private volleyStartTime = 0;
 
   public isAiming = false;
   public aimAngle = -Math.PI / 2;
@@ -174,6 +175,7 @@ export class BrickBreakerEngine implements GameEngine {
     this.balls = [];
     this.firstBallReturned = false;
     this.lastLaunchTime = performance.now();
+    this.volleyStartTime = performance.now();
 
     sounds.playTap();
     this.onStateChange?.(true, this.ballsToLaunch, this.totalBalls);
@@ -231,6 +233,20 @@ export class BrickBreakerEngine implements GameEngine {
   private update(dt: number) {
     const ballSpeed = 680; // px/s
 
+    // Watchdog for endless volley / stuck balls
+    if (this.isShooting) {
+      const elapsed = performance.now() - this.volleyStartTime;
+      if (elapsed > 15000 && this.speedMultiplier === 1) {
+        this.speedMultiplier = 2.5;
+      }
+      if (elapsed > 24000) {
+        // Emergency turn recall
+        for (const b of this.balls) {
+          b.active = false;
+        }
+      }
+    }
+
     // Ball streaming launcher
     if (this.isShooting && this.ballsToLaunch > 0) {
       const now = performance.now();
@@ -267,10 +283,12 @@ export class BrickBreakerEngine implements GameEngine {
         if (b.x <= left) {
           b.x = left;
           b.vx = Math.abs(b.vx);
+          if (Math.abs(b.vy) < 25) b.vy += b.vy >= 0 ? 35 : -35;
           sounds.playBounce();
         } else if (b.x >= right) {
           b.x = right;
           b.vx = -Math.abs(b.vx);
+          if (Math.abs(b.vy) < 25) b.vy += b.vy >= 0 ? 35 : -35;
           sounds.playBounce();
         }
 

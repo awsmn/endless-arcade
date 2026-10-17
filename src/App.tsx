@@ -17,6 +17,10 @@ import { KnifeStrikeView } from './games/knife/KnifeStrikeView';
 import { MinesweeperView } from './games/minesweeper/MinesweeperView';
 import { StackSliceView } from './games/stack/StackSliceView';
 import { CyberSprintView } from './games/runner/CyberSprintView';
+import { FlappyOrbitView } from './games/flappy/FlappyOrbitView';
+import { ChromaJumpView } from './games/chroma/ChromaJumpView';
+import { GalaxiaVoidView } from './games/space/GalaxiaVoidView';
+import { BlockPuzzleView } from './games/blockpuzzle/BlockPuzzleView';
 
 const PLAYABLE_GAMES = [
   'neon-snake',
@@ -26,7 +30,11 @@ const PLAYABLE_GAMES = [
   'knife-strike',
   'stack-slice',
   'minesweeper-pulse',
-  'cyber-sprint'
+  'cyber-sprint',
+  'flappy-orbit',
+  'chroma-jump',
+  'galaxia-void',
+  'block-puzzle'
 ];
 
 import { GAME_CATALOG } from './games/registry';
@@ -50,6 +58,7 @@ export const App: React.FC = () => {
 
   // Active Game State
   const [activeGame, setActiveGame] = useState<GameMetadata | null>(null);
+  const [gameSessionId, setGameSessionId] = useState(0);
   const [gameScore, setGameScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -114,6 +123,7 @@ export const App: React.FC = () => {
     setIsGameOver(false);
     setIsNewHighScore(false);
     setGameStars(0);
+    setGameSessionId((prev) => prev + 1);
   };
 
   const handleScoreUpdate = (update: GameScoreUpdate) => {
@@ -135,6 +145,7 @@ export const App: React.FC = () => {
     setIsPaused(false);
     setIsGameOver(false);
     setIsNewHighScore(false);
+    setGameSessionId((prev) => prev + 1);
   };
 
   const handleExitGame = () => {
@@ -203,7 +214,7 @@ export const App: React.FC = () => {
             />
 
             {/* Active Game View Area */}
-            <div className="relative flex-1 w-full h-full overflow-hidden">
+            <div key={gameSessionId} className="relative flex-1 w-full h-full overflow-hidden">
               {activeGame.id === 'neon-snake' && (
                 <SnakeView
                   mode="endless"
@@ -262,6 +273,38 @@ export const App: React.FC = () => {
               )}
               {activeGame.id === 'cyber-sprint' && (
                 <CyberSprintView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'flappy-orbit' && (
+                <FlappyOrbitView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'chroma-jump' && (
+                <ChromaJumpView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'galaxia-void' && (
+                <GalaxiaVoidView
+                  mode="endless"
+                  isPaused={isPaused}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'block-puzzle' && (
+                <BlockPuzzleView
                   mode="endless"
                   isPaused={isPaused}
                   onScoreUpdate={handleScoreUpdate}

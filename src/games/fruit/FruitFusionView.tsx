@@ -44,8 +44,25 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
     };
     window.addEventListener('resize', handleResize);
 
+    // Keyboard support (Desktop arrows & space)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!engineRef.current) return;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        engineRef.current.setDropperX(engineRef.current.dropperX - 25);
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        engineRef.current.setDropperX(engineRef.current.dropperX + 25);
+      } else if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        engineRef.current.drop();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
       engine.destroy();
       engineRef.current = null;
     };
@@ -110,9 +127,13 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
       <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
         <div className="w-full max-w-xs">
           <button
-            onClick={(e) => {
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => {
               e.stopPropagation();
               handleManualDrop();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
             }}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-600 to-pink-700 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20 active:scale-95 transition-transform"
           >

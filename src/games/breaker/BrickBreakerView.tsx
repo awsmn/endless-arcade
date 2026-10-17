@@ -108,6 +108,7 @@ export const BrickBreakerView: React.FC<BrickBreakerViewProps> = ({
       <div className="absolute top-16 right-4 z-20 flex items-center space-x-2">
         {isShooting && (
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={handleToggleFastForward}
             className={`px-3 py-1.5 rounded-full text-xs font-black flex items-center space-x-1 backdrop-blur-md border transition-all pointer-events-auto ${
               isFastForward

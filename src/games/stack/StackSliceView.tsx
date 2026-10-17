@@ -42,10 +42,17 @@ export const StackSliceView: React.FC<StackSliceViewProps> = ({
     const handleResize = () => {
       engine.resize();
     };
-    window.addEventListener('resize', handleResize);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        engine.drop();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
       engine.destroy();
       engineRef.current = null;
     };

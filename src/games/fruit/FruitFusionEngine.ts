@@ -36,6 +36,7 @@ export interface FruitBody {
   radius: number;
   merged: boolean;
   scale: number; // spawn pop animation
+  age: number;   // time alive in seconds
 }
 
 interface Particle {
@@ -186,7 +187,8 @@ export class FruitFusionEngine implements GameEngine {
       vy: 1.5,
       radius: fruitDef.radius,
       merged: false,
-      scale: 1
+      scale: 1,
+      age: 0
     };
 
     this.fruits.push(newFruit);
@@ -295,7 +297,8 @@ export class FruitFusionEngine implements GameEngine {
                 vy: (a.vy + b.vy) * 0.3 - 30, // tiny pop up
                 radius: nextDef.radius,
                 merged: false,
-                scale: 1.25 // pop scale
+                scale: 1.25, // pop scale
+                age: 0
               });
 
               this.score += nextDef.score;
@@ -318,15 +321,15 @@ export class FruitFusionEngine implements GameEngine {
             b.x += nx * overlap * 0.5;
             b.y += ny * overlap * 0.5;
 
-            // Velocity resolution
-            const kx = a.vx - b.vx;
-            const ky = a.vy - b.vy;
-            const p = 2 * (nx * kx + ny * ky) / 2;
-
-            a.vx -= p * nx * (1 + restitution);
-            a.vy -= p * ny * (1 + restitution);
-            b.vx += p * nx * (1 + restitution);
-            b.vy += p * ny * (1 + restitution);
+            // Relative velocity along collision normal (from a to b)
+            const relVel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (relVel < 0) { // Only apply impulse if approaching each other
+              const impulse = -(1 + restitution) * relVel * 0.5;
+              a.vx -= impulse * nx;
+              a.vy -= impulse * ny;
+              b.vx += impulse * nx;
+              b.vy += impulse * ny;
+            }
           }
         }
       }
@@ -337,8 +340,9 @@ export class FruitFusionEngine implements GameEngine {
       }
     }
 
-    // Scale pop decay
+    // Scale pop decay and age accumulation
     for (const f of this.fruits) {
+      f.age = (f.age || 0) + dt;
       if (f.scale > 1) {
         f.scale = Math.max(1, f.scale - dt * 2);
       }
@@ -359,8 +363,8 @@ export class FruitFusionEngine implements GameEngine {
     // Danger line overflow check
     let anyAboveDanger = false;
     for (const f of this.fruits) {
-      // Check if settled or slow enough above line
-      if (f.y - f.radius < this.dangerLineY && Math.abs(f.vy) < 40) {
+      // Must be settled and inside the jar for over 1.2s (not freshly dropped)
+      if (f.age > 1.2 && (f.y - f.radius) < this.dangerLineY && Math.abs(f.vy) < 40) {
         anyAboveDanger = true;
         break;
       }

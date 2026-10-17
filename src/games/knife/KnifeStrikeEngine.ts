@@ -3,6 +3,7 @@ import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
 
 interface FlyingKnife {
+  x?: number;
   y: number;
   speed: number;
   state: 'flying' | 'embedded' | 'deflected';
@@ -201,13 +202,15 @@ export class KnifeStrikeEngine implements GameEngine {
           this.handleKnifeImpact();
         }
       } else if (this.flyingKnife.state === 'deflected') {
+        const boundsHeight = this.container.clientHeight || (this.canvas.height / (window.devicePixelRatio || 1));
+        this.flyingKnife.x = (this.flyingKnife.x ?? this.centerX) + (this.flyingKnife.deflectVx || 0) * dt;
         this.flyingKnife.y += (this.flyingKnife.deflectVy || 200) * dt;
         this.flyingKnife.deflectVy = (this.flyingKnife.deflectVy || 200) + 1200 * dt; // gravity
         if (this.flyingKnife.rotation !== undefined) {
           this.flyingKnife.rotation += 15 * dt;
         }
 
-        if (this.flyingKnife.y > this.canvas.height + 100) {
+        if (this.flyingKnife.y > boundsHeight + 40) {
           // Deflected knife fell off screen
           this.isGameOver = true;
           sounds.playGameOver();
@@ -398,7 +401,7 @@ export class KnifeStrikeEngine implements GameEngine {
     // 2. Draw Flying or Deflected Knife
     if (this.flyingKnife) {
       ctx.save();
-      ctx.translate(this.centerX, this.flyingKnife.y);
+      ctx.translate(this.flyingKnife.x ?? this.centerX, this.flyingKnife.y);
       if (this.flyingKnife.rotation) {
         ctx.rotate(this.flyingKnife.rotation);
       }
@@ -433,15 +436,10 @@ export class KnifeStrikeEngine implements GameEngine {
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    embedded: boolean
+    _embedded: boolean
   ) {
     ctx.save();
     ctx.translate(x, y);
-
-    if (embedded) {
-      // Points outward from target center
-      ctx.rotate(Math.PI / 2);
-    }
 
     // Blade
     ctx.fillStyle = '#f1f5f9';
