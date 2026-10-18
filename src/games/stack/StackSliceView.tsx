@@ -74,7 +74,10 @@ export const StackSliceView: React.FC<StackSliceViewProps> = ({
   return (
     <div
       ref={containerRef}
-      onClick={handleDrop}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        handleDrop();
+      }}
       className="relative w-full h-full overflow-hidden select-none touch-none cursor-pointer"
     >
       {/* Game Canvas */}
@@ -93,7 +96,8 @@ export const StackSliceView: React.FC<StackSliceViewProps> = ({
       <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
         <div className="w-full max-w-xs">
           <button
-            onClick={(e) => {
+            onPointerDown={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               handleDrop();
             }}

@@ -387,8 +387,6 @@ export class NeonSnakeEngine implements GameEngine {
     const foodRadius = this.cellSize * 0.38;
 
     this.ctx.save();
-    this.ctx.shadowColor = '#10b981';
-    this.ctx.shadowBlur = 14;
     this.ctx.fillStyle = '#34d399';
     this.ctx.beginPath();
     this.ctx.arc(foodPx, foodPy, foodRadius, 0, Math.PI * 2);
@@ -408,8 +406,6 @@ export class NeonSnakeEngine implements GameEngine {
       const bRadius = this.cellSize * 0.42;
 
       this.ctx.save();
-      this.ctx.shadowColor = '#f59e0b';
-      this.ctx.shadowBlur = 18;
       this.ctx.fillStyle = '#fbbf24';
       this.ctx.beginPath();
       this.ctx.arc(bPx, bPy, bRadius, 0, Math.PI * 2);
@@ -435,8 +431,6 @@ export class NeonSnakeEngine implements GameEngine {
       this.ctx.save();
       if (i === 0) {
         // Snake Head
-        this.ctx.shadowColor = '#06b6d4';
-        this.ctx.shadowBlur = 14;
         this.ctx.fillStyle = '#06b6d4';
         this.ctx.beginPath();
         this.ctx.roundRect(sx + pad, sy + pad, this.cellSize - pad * 2, this.cellSize - pad * 2, 7);
@@ -498,8 +492,6 @@ export class NeonSnakeEngine implements GameEngine {
       this.ctx.save();
       this.ctx.globalAlpha = p.alpha;
       this.ctx.fillStyle = p.color;
-      this.ctx.shadowColor = p.color;
-      this.ctx.shadowBlur = 8;
       this.ctx.beginPath();
       this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       this.ctx.fill();

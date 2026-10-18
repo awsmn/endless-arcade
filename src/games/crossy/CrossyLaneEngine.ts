@@ -210,8 +210,11 @@ export class CrossyLaneEngine implements GameEngine {
     this.hopProgress = 0;
     this.idleTime = 0;
 
+    const baseCol = Math.round(this.playerCol);
+
     if (direction === 'up') {
       this.playerRow++;
+      this.playerCol = baseCol;
       sounds.playTap();
       haptics.tap();
 
@@ -221,27 +224,28 @@ export class CrossyLaneEngine implements GameEngine {
         this.onScoreUpdate?.({ score: this.score });
       }
     } else if (direction === 'down') {
-      if (this.playerRow > this.maxRowReached - 3) {
+      if (this.playerRow > 0 && this.playerRow > this.maxRowReached - 3) {
         this.playerRow--;
+        this.playerCol = baseCol;
         sounds.playTap();
       }
     } else if (direction === 'left') {
-      if (this.playerCol > 0) {
-        this.playerCol--;
+      if (baseCol > 0) {
+        this.playerCol = baseCol - 1;
         sounds.playTap();
       }
     } else if (direction === 'right') {
-      if (this.playerCol < GRID_COLS - 1) {
-        this.playerCol++;
+      if (baseCol < GRID_COLS - 1) {
+        this.playerCol = baseCol + 1;
         sounds.playTap();
       }
     }
 
-    // Check coin collection
+    // Check coin collection with rounded column
     const currentRow = this.rows.find(r => r.index === this.playerRow);
     if (currentRow) {
       for (const coin of currentRow.coins) {
-        if (!coin.collected && coin.col === this.playerCol) {
+        if (!coin.collected && coin.col === Math.round(this.playerCol)) {
           coin.collected = true;
           this.score += 5;
           sounds.playCollect(1.4);
@@ -282,7 +286,10 @@ export class CrossyLaneEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    if (this.isGameOver) return;
+    if (this.isGameOver) {
+      this.updateParticles(dt);
+      return;
+    }
 
     const rect = this.container.getBoundingClientRect();
     const worldWidth = rect.width;
@@ -356,11 +363,18 @@ export class CrossyLaneEngine implements GameEngine {
             // Drifts with the log!
             const colShift = (log.speed * dt) / (rect.width / GRID_COLS);
             this.playerCol += colShift;
+            // Lessen idle pressure while actively riding a log
+            this.idleTime = Math.max(0, this.idleTime - dt * 0.5);
             break;
           }
         }
         if (!onLog && this.hopProgress >= 0.7) {
           this.triggerGameOver('Fell in the river!');
+          return;
+        }
+        // Check if drifted out of bounds
+        if (playerX < -20 || playerX > rect.width + 20) {
+          this.triggerGameOver('Swept off-screen by river!');
           return;
         }
       }
@@ -376,7 +390,16 @@ export class CrossyLaneEngine implements GameEngine {
       this.generateLane();
     }
 
+    // Clean up rows far behind camera to prevent memory leak
+    while (this.rows.length > 0 && this.rows[0].index < this.playerRow - 10) {
+      this.rows.shift();
+    }
+
     // Update Particles
+    this.updateParticles(dt);
+  }
+
+  private updateParticles(dt: number) {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.life += dt;
@@ -397,12 +420,13 @@ export class CrossyLaneEngine implements GameEngine {
 
     const rect = this.container.getBoundingClientRect();
     const px = this.playerCol * (rect.width / GRID_COLS) + (rect.width / GRID_COLS) / 2;
+    const py = rect.height * 0.65 - (this.playerRow * TILE_SIZE - this.cameraY);
     for (let i = 0; i < 25; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 70 + Math.random() * 200;
       this.particles.push({
         x: px,
-        y: rect.height / 2,
+        y: py,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         color: '#FF1E44',

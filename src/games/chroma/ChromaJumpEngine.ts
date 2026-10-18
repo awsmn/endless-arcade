@@ -102,8 +102,8 @@ export class ChromaJumpEngine implements GameEngine {
     const rect = this.container.getBoundingClientRect();
     this.ballX = rect.width / 2;
     this.ballY = 400;
-    this.ballVy = 0;
-    this.cameraY = 400;
+    this.ballVy = -200;
+    this.cameraY = 400 - rect.height * 0.2;
     this.currentColorIndex = Math.floor(Math.random() * 4);
     this.obstacles = [];
     this.particles = [];
@@ -285,36 +285,59 @@ export class ChromaJumpEngine implements GameEngine {
   }
 
   private checkObstacleCollision(obs: ChromaObstacle): boolean {
-    const ringThickness = 12;
+    const ringThickness = 14;
+    const centerX = this.container.clientWidth / 2;
 
-    if (obs.type === 'circle' || obs.type === 'double_circle') {
-      // Check ring collision: distance from obstacle center to ball
+    if (obs.type === 'circle') {
       const dy = this.ballY - obs.y;
-      const dx = this.ballX - (this.container.clientWidth / 2);
+      const dx = this.ballX - centerX;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Does the ball overlap the ring circumference?
       if (Math.abs(dist - obs.radius) < (this.ballRadius + ringThickness / 2)) {
-        // Calculate angle of impact on the circle
         const impactAngle = Math.atan2(dy, dx);
         const relAngle = ((impactAngle - obs.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-
-        // Circle is split into 4 arcs of 90 degrees (Math.PI / 2)
         const quadrant = Math.floor(relAngle / (Math.PI / 2)) % 4;
         if (quadrant !== this.currentColorIndex) {
-          return true; // Hit mismatched color!
+          return true;
+        }
+      }
+    } else if (obs.type === 'double_circle') {
+      const dy = this.ballY - obs.y;
+      const dx = this.ballX - centerX;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Outer ring
+      if (Math.abs(dist - obs.radius) < (this.ballRadius + ringThickness / 2)) {
+        const impactAngle = Math.atan2(dy, dx);
+        const relAngle = ((impactAngle - obs.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const quadrant = Math.floor(relAngle / (Math.PI / 2)) % 4;
+        if (quadrant !== this.currentColorIndex) {
+          return true;
+        }
+      }
+
+      // Inner ring (counter-rotating at -obs.angle * 1.2)
+      const innerRadius = 55;
+      if (Math.abs(dist - innerRadius) < (this.ballRadius + ringThickness / 2)) {
+        const impactAngle = Math.atan2(dy, dx);
+        const innerAngle = -obs.angle * 1.2;
+        const relAngle = ((impactAngle - innerAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const quadrant = Math.floor(relAngle / (Math.PI / 2)) % 4;
+        if (quadrant !== this.currentColorIndex) {
+          return true;
         }
       }
     } else if (obs.type === 'cross') {
-      // 4 arms spinning from center
-      const centerX = this.container.clientWidth / 2;
+      const innerRadius = 24; // Safe hollow center hub allows passing between rotating blades
       for (let arm = 0; arm < 4; arm++) {
         const armAngle = obs.angle + (arm * Math.PI / 2);
+        const startX = centerX + Math.cos(armAngle) * innerRadius;
+        const startY = obs.y + Math.sin(armAngle) * innerRadius;
         const armEndX = centerX + Math.cos(armAngle) * obs.radius;
         const armEndY = obs.y + Math.sin(armAngle) * obs.radius;
 
-        // Line-segment to circle distance
-        const dist = this.distToSegment(this.ballX, this.ballY, centerX, obs.y, armEndX, armEndY);
+        // Line-segment to circle distance along the colored blade
+        const dist = this.distToSegment(this.ballX, this.ballY, startX, startY, armEndX, armEndY);
         if (dist < this.ballRadius + 5) {
           if (arm !== this.currentColorIndex) {
             return true; // Hit mismatched arm!
@@ -345,7 +368,9 @@ export class ChromaJumpEngine implements GameEngine {
     this.spawnParticles(this.ballX, this.ballY, '#ffffff', 15);
 
     const stars = this.score >= 25 ? 3 : this.score >= 12 ? 2 : this.score >= 4 ? 1 : 0;
-    this.onGameOver?.(this.score, false, stars);
+    setTimeout(() => {
+      this.onGameOver?.(this.score, false, stars);
+    }, 650);
   }
 
   private spawnParticles(x: number, y: number, color: string, count: number) {
@@ -392,7 +417,7 @@ export class ChromaJumpEngine implements GameEngine {
 
     // 2. Render Obstacles
     for (const obs of this.obstacles) {
-      if (obs.type === 'circle' || obs.type === 'double_circle') {
+      if (obs.type === 'circle') {
         const ringWidth = 14;
         ctx.save();
         ctx.translate(centerX, obs.y);
@@ -404,26 +429,49 @@ export class ChromaJumpEngine implements GameEngine {
           ctx.arc(0, 0, obs.radius, i * Math.PI / 2, (i + 1) * Math.PI / 2);
           ctx.strokeStyle = CHROMA_COLORS[i].hex;
           ctx.lineWidth = ringWidth;
-          ctx.shadowColor = CHROMA_COLORS[i].glow;
-          ctx.shadowBlur = 10;
           ctx.stroke();
         }
         ctx.restore();
-      } else if (obs.type === 'cross') {
-        // 4 spinning arms
+      } else if (obs.type === 'double_circle') {
+        const ringWidth = 12;
+        // Outer ring
         ctx.save();
         ctx.translate(centerX, obs.y);
         ctx.rotate(obs.angle);
         for (let i = 0; i < 4; i++) {
           ctx.beginPath();
-          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, obs.radius, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+          ctx.strokeStyle = CHROMA_COLORS[i].hex;
+          ctx.lineWidth = ringWidth;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Inner counter-rotating ring
+        ctx.save();
+        ctx.translate(centerX, obs.y);
+        ctx.rotate(-obs.angle * 1.2);
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, 55, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+          ctx.strokeStyle = CHROMA_COLORS[i].hex;
+          ctx.lineWidth = ringWidth;
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (obs.type === 'cross') {
+        const innerRadius = 24;
+        ctx.save();
+        ctx.translate(centerX, obs.y);
+        ctx.rotate(obs.angle);
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
           const armAngle = i * Math.PI / 2;
+          ctx.moveTo(Math.cos(armAngle) * innerRadius, Math.sin(armAngle) * innerRadius);
           ctx.lineTo(Math.cos(armAngle) * obs.radius, Math.sin(armAngle) * obs.radius);
           ctx.strokeStyle = CHROMA_COLORS[i].hex;
           ctx.lineWidth = 12;
           ctx.lineCap = 'round';
-          ctx.shadowColor = CHROMA_COLORS[i].glow;
-          ctx.shadowBlur = 10;
           ctx.stroke();
         }
         ctx.restore();
@@ -433,8 +481,6 @@ export class ChromaJumpEngine implements GameEngine {
       if (!obs.starCollected) {
         ctx.save();
         ctx.fillStyle = '#f59e0b';
-        ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 14;
         ctx.font = '20px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -473,23 +519,23 @@ export class ChromaJumpEngine implements GameEngine {
     }
 
     // 4. Render Player Chroma Ball
-    const curColor = CHROMA_COLORS[this.currentColorIndex];
-    ctx.save();
-    ctx.translate(this.ballX, this.ballY);
+    if (!this.isGameOver) {
+      const curColor = CHROMA_COLORS[this.currentColorIndex];
+      ctx.save();
+      ctx.translate(this.ballX, this.ballY);
 
-    ctx.shadowColor = curColor.glow;
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = curColor.hex;
-    ctx.beginPath();
-    ctx.arc(0, 0, this.ballRadius, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = curColor.hex;
+      ctx.beginPath();
+      ctx.arc(0, 0, this.ballRadius, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Inner bright core
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, this.ballRadius * 0.45, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+      // Inner bright core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, this.ballRadius * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
     ctx.restore(); // restore camera offset
     ctx.restore(); // restore screen shake

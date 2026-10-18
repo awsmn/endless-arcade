@@ -90,33 +90,34 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
     }
   }, [isPaused]);
 
-  // Touch Swipe Handlers for anywhere on screen
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  const pointerStartRef = useRef<{ x: number; y: number; swiped: boolean } | null>(null);
+
+  // Responsive pointer swipe: turns immediately mid-swipe without waiting for finger release
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, swiped: false };
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - touchStartRef.current.x;
-    const dy = touch.clientY - touchStartRef.current.y;
-    const minSwipeDistance = 25;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current || pointerStartRef.current.swiped) return;
+    const dx = e.clientX - pointerStartRef.current.x;
+    const dy = e.clientY - pointerStartRef.current.y;
+    const minSwipeDistance = 20;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (Math.abs(dx) > minSwipeDistance) {
-        haptics.tap();
+    if (Math.abs(dx) > minSwipeDistance || Math.abs(dy) > minSwipeDistance) {
+      pointerStartRef.current.swiped = true;
+      haptics.tap();
+      if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 0) engineRef.current?.setDirection(1, 0);
         else engineRef.current?.setDirection(-1, 0);
-      }
-    } else {
-      if (Math.abs(dy) > minSwipeDistance) {
-        haptics.tap();
+      } else {
         if (dy > 0) engineRef.current?.setDirection(0, 1);
         else engineRef.current?.setDirection(0, -1);
       }
     }
-    touchStartRef.current = null;
+  };
+
+  const handlePointerUp = () => {
+    pointerStartRef.current = null;
   };
 
   const handleDPadPress = (x: number, y: number) => {
@@ -127,18 +128,27 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
   return (
     <div
       ref={containerRef}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className="relative w-full h-full overflow-hidden select-none touch-none"
     >
       {/* Game Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* Mobile Virtual D-Pad for thumb controls */}
-      <div className="absolute bottom-3 left-0 right-0 flex flex-col items-center space-y-1.5 px-4 z-20 pointer-events-auto">
+      <div 
+        className="absolute bottom-3 left-0 right-0 flex flex-col items-center space-y-1.5 px-4 z-20 pointer-events-auto"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         {/* Up Button */}
         <button
-          onClick={() => handleDPadPress(0, -1)}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDPadPress(0, -1);
+          }}
           className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
           aria-label="Up"
         >
@@ -148,7 +158,11 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
         {/* Left, Center Indicator, Right */}
         <div className="flex items-center space-x-6">
           <button
-            onClick={() => handleDPadPress(-1, 0)}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDPadPress(-1, 0);
+            }}
             className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
             aria-label="Left"
           >
@@ -158,7 +172,11 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
           <div className="w-4 h-4 rounded-full bg-pop-pink border-2 border-black shadow-[1px_1px_0px_#000]" />
 
           <button
-            onClick={() => handleDPadPress(1, 0)}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDPadPress(1, 0);
+            }}
             className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
             aria-label="Right"
           >
@@ -168,7 +186,11 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
 
         {/* Down Button */}
         <button
-          onClick={() => handleDPadPress(0, 1)}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleDPadPress(0, 1);
+          }}
           className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
           aria-label="Down"
         >

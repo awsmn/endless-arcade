@@ -385,8 +385,6 @@ export class CyberSprintEngine implements GameEngine {
     ctx.fillRect(0, 0, rect.width, this.roadTopY);
 
     // Horizon glowing neon line
-    ctx.shadowColor = '#06b6d4';
-    ctx.shadowBlur = 12;
     ctx.strokeStyle = '#06b6d4';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -464,10 +462,6 @@ export class CyberSprintEngine implements GameEngine {
       ctx.scale(1.2, 0.4);
     }
 
-    // Hovercraft thruster glow
-    ctx.shadowColor = '#06b6d4';
-    ctx.shadowBlur = 18;
-
     // Hovercraft Body
     ctx.fillStyle = '#06b6d4';
     ctx.beginPath();
@@ -523,8 +517,6 @@ export class CyberSprintEngine implements GameEngine {
     if (type === 'coin') {
       // Glowing Gold Coin Ring
       ctx.fillStyle = '#f59e0b';
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.arc(0, -12, 12, 0, Math.PI * 2);
       ctx.fill();
@@ -536,8 +528,6 @@ export class CyberSprintEngine implements GameEngine {
     } else if (type === 'barrier') {
       // Low ground barricade (jumpable)
       ctx.fillStyle = '#f43f5e';
-      ctx.shadowColor = '#f43f5e';
-      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.roundRect(-24, -14, 48, 14, 4);
       ctx.fill();
@@ -555,8 +545,6 @@ export class CyberSprintEngine implements GameEngine {
 
       // Overhead laser beam
       ctx.fillStyle = '#e879f9';
-      ctx.shadowColor = '#e879f9';
-      ctx.shadowBlur = 14;
       ctx.fillRect(-22, -34, 44, 8);
     } else {
       // Solid concrete cyber cube (must switch lane)

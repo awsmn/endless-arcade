@@ -122,8 +122,14 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
   }, []);
 
   // Handle Drag Start
+  // Handle Drag Start
   const handlePointerDown = (index: number, e: React.PointerEvent) => {
     if (isPaused || isGameOverRef.current || !tray[index]) return;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
     setDraggingShapeIndex(index);
     setDragOffset({ x: e.clientX, y: e.clientY });
     haptics.tap();
@@ -134,19 +140,30 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
     if (draggingShapeIndex === null || !boardRef.current) return;
     setDragOffset({ x: e.clientX, y: e.clientY });
 
+    const shape = tray[draggingShapeIndex];
+    if (!shape) {
+      setHoverCell(null);
+      return;
+    }
+
     // Calculate which board cell we are hovering over
     const rect = boardRef.current.getBoundingClientRect();
     const cellSize = rect.width / BOARD_SIZE;
+    const sCols = shape.matrix[0].length;
+    const sRows = shape.matrix.length;
 
-    // Offset hover slightly above finger for clear view
-    const hoverX = e.clientX - rect.left;
-    const hoverY = e.clientY - rect.top - cellSize * 1.5;
+    // The floating preview is centered at (e.clientX, e.clientY - 60).
+    // Calculate the top-left cell position (0, 0) of the shape relative to board grid
+    const shapeCenterX = e.clientX - rect.left;
+    const shapeCenterY = e.clientY - 60 - rect.top;
 
-    const c = Math.floor(hoverX / cellSize);
-    const r = Math.floor(hoverY / cellSize);
+    const hoverX = shapeCenterX - (sCols / 2) * cellSize;
+    const hoverY = shapeCenterY - (sRows / 2) * cellSize;
 
-    const shape = tray[draggingShapeIndex];
-    if (shape && canPlaceShape(shape, r, c, board)) {
+    const c = Math.round(hoverX / cellSize);
+    const r = Math.round(hoverY / cellSize);
+
+    if (canPlaceShape(shape, r, c, board)) {
       setHoverCell({ r, c });
     } else {
       setHoverCell(null);
@@ -154,7 +171,14 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
   };
 
   // Global Pointer Up (Drop)
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: React.PointerEvent) => {
+    if (e) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+      } catch {
+        // ignore
+      }
+    }
     if (draggingShapeIndex === null) return;
 
     const shape = tray[draggingShapeIndex];
@@ -242,7 +266,9 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
         sounds.playGameOver();
         haptics.gameOver();
         const stars = nextScore >= 350 ? 3 : nextScore >= 180 ? 2 : nextScore >= 80 ? 1 : 0;
-        onGameOver(nextScore, false, stars);
+        setTimeout(() => {
+          onGameOver(nextScore, false, stars);
+        }, 600);
       }
     }
 
@@ -255,6 +281,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
     <div
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
     >
       {/* Top Score HUD */}
@@ -366,7 +393,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
           className="fixed pointer-events-none z-50 transform -translate-x-1/2 -translate-y-1/2"
           style={{
             left: dragOffset.x,
-            top: dragOffset.y - 45
+            top: dragOffset.y - 60
           }}
         >
           <div

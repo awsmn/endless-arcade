@@ -89,50 +89,59 @@ export const CyberSprintView: React.FC<CyberSprintViewProps> = ({
     }
   }, [isPaused]);
 
-  // Swipe gesture handling
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  const pointerStartRef = useRef<{ x: number; y: number; swiped: boolean } | null>(null);
+
+  // Responsive pointer gestures: immediate action mid-swipe
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, swiped: false };
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current || !engineRef.current) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
-    const minDistance = 25;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current || pointerStartRef.current.swiped || !engineRef.current) return;
+    const dx = e.clientX - pointerStartRef.current.x;
+    const dy = e.clientY - pointerStartRef.current.y;
+    const minDistance = 20;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (Math.abs(dx) > minDistance) {
+    if (Math.abs(dx) > minDistance || Math.abs(dy) > minDistance) {
+      pointerStartRef.current.swiped = true;
+      if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 0) engineRef.current.shiftLane(1);
         else engineRef.current.shiftLane(-1);
-      }
-    } else {
-      if (Math.abs(dy) > minDistance) {
+      } else {
         if (dy < 0) engineRef.current.jump();
         else engineRef.current.slide();
       }
     }
-    touchStartRef.current = null;
+  };
+
+  const handlePointerUp = () => {
+    pointerStartRef.current = null;
   };
 
   return (
     <div
       ref={containerRef}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className="relative w-full h-full overflow-hidden select-none touch-none"
     >
       {/* Game Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* On-Screen Touch Controls positioned at bottom */}
-      <div className="absolute bottom-3 left-0 right-0 flex justify-center px-4 z-20 pointer-events-auto">
+      <div 
+        className="absolute bottom-3 left-0 right-0 flex justify-center px-4 z-20 pointer-events-auto"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <div className="w-full max-w-xs flex items-center justify-between">
           {/* Left / Right Lane Shifts */}
           <div className="flex space-x-2">
             <button
-              onClick={() => {
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 haptics.tap();
                 engineRef.current?.shiftLane(-1);
               }}
@@ -143,7 +152,9 @@ export const CyberSprintView: React.FC<CyberSprintViewProps> = ({
             </button>
 
             <button
-              onClick={() => {
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 haptics.tap();
                 engineRef.current?.shiftLane(1);
               }}
@@ -157,7 +168,9 @@ export const CyberSprintView: React.FC<CyberSprintViewProps> = ({
           {/* Jump / Slide Actions */}
           <div className="flex space-x-2">
             <button
-              onClick={() => {
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 haptics.tap();
                 engineRef.current?.slide();
               }}
@@ -168,7 +181,9 @@ export const CyberSprintView: React.FC<CyberSprintViewProps> = ({
             </button>
 
             <button
-              onClick={() => {
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 haptics.tap();
                 engineRef.current?.jump();
               }}

@@ -74,45 +74,59 @@ export const CrossyLaneView: React.FC<CrossyLaneViewProps> = ({
     }
   }, [isPaused]);
 
-  // Touch gesture / Tap to hop forward
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  const pointerStartRef = useRef<{ x: number; y: number; swiped: boolean } | null>(null);
+
+  // Responsive pointer gestures: immediate swipe detection without waiting for finger lift
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, swiped: false };
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current || !engineRef.current) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
-    touchStartRef.current = null;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current || pointerStartRef.current.swiped || !engineRef.current) return;
+    const dx = e.clientX - pointerStartRef.current.x;
+    const dy = e.clientY - pointerStartRef.current.y;
+    const swipeThreshold = 22;
 
-    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-      // Simple tap -> hop forward
-      engineRef.current.hop('up');
-    } else if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 25) engineRef.current.hop('right');
-      else if (dx < -25) engineRef.current.hop('left');
-    } else {
-      if (dy > 25) engineRef.current.hop('down');
-      else if (dy < -25) engineRef.current.hop('up');
+    if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+      pointerStartRef.current.swiped = true;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) engineRef.current.hop('right');
+        else engineRef.current.hop('left');
+      } else {
+        if (dy > 0) engineRef.current.hop('down');
+        else engineRef.current.hop('up');
+      }
     }
+  };
+
+  const handlePointerUp = () => {
+    if (!pointerStartRef.current || !engineRef.current) return;
+    if (!pointerStartRef.current.swiped) {
+      // Quick tap -> hop forward
+      engineRef.current.hop('up');
+    }
+    pointerStartRef.current = null;
   };
 
   return (
     <div
       ref={containerRef}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onClick={() => engineRef.current?.hop('up')}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className="relative w-full h-full overflow-hidden select-none touch-none cursor-pointer"
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* On-screen Directional Touch Controls for Accessibility */}
-      <div className="absolute bottom-4 right-4 z-20 flex flex-col items-center space-y-1 pointer-events-auto">
+      <div 
+        className="absolute bottom-4 right-4 z-20 flex flex-col items-center space-y-1 pointer-events-auto"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <button
-          onClick={(e) => {
+          onPointerDown={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             engineRef.current?.hop('up');
           }}
@@ -122,7 +136,8 @@ export const CrossyLaneView: React.FC<CrossyLaneViewProps> = ({
         </button>
         <div className="flex space-x-1">
           <button
-            onClick={(e) => {
+            onPointerDown={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               engineRef.current?.hop('left');
             }}
@@ -131,7 +146,8 @@ export const CrossyLaneView: React.FC<CrossyLaneViewProps> = ({
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
           <button
-            onClick={(e) => {
+            onPointerDown={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               engineRef.current?.hop('down');
             }}
@@ -140,7 +156,8 @@ export const CrossyLaneView: React.FC<CrossyLaneViewProps> = ({
             <ArrowDown className="w-5 h-5 stroke-[2.5]" />
           </button>
           <button
-            onClick={(e) => {
+            onPointerDown={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               engineRef.current?.hop('right');
             }}

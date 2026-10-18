@@ -215,33 +215,36 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
   };
 
   const didLongPressRef = useRef(false);
+  const pointerStartRef = useRef<{ r: number; c: number } | null>(null);
 
-  const handleCellClick = (r: number, c: number) => {
-    if (didLongPressRef.current) {
-      didLongPressRef.current = false;
-      return;
-    }
-    if (flagMode) {
-      toggleFlag(r, c);
-    } else {
-      revealCell(r, c);
-    }
-  };
-
-  const handleTouchStart = (r: number, c: number) => {
+  const handlePointerDownCell = (r: number, c: number, e: React.PointerEvent) => {
+    (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    pointerStartRef.current = { r, c };
     didLongPressRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
       didLongPressRef.current = true;
       toggleFlag(r, c);
       longPressTimerRef.current = null;
-    }, 400);
+    }, 350);
   };
 
-  const handleTouchEnd = () => {
+  const handlePointerUpCell = (r: number, c: number) => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
+    if (didLongPressRef.current) {
+      didLongPressRef.current = false;
+      return;
+    }
+    if (pointerStartRef.current && pointerStartRef.current.r === r && pointerStartRef.current.c === c) {
+      if (flagMode) {
+        toggleFlag(r, c);
+      } else {
+        revealCell(r, c);
+      }
+    }
+    pointerStartRef.current = null;
   };
 
   const getNumberColor = (num: number) => {
@@ -283,19 +286,25 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
             {row.map((cell, c) => (
               <div
                 key={c}
-                onClick={() => handleCellClick(r, c)}
+                onPointerDown={(e) => handlePointerDownCell(r, c, e)}
+                onPointerUp={() => handlePointerUpCell(r, c)}
+                onPointerCancel={() => {
+                  if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                  }
+                  pointerStartRef.current = null;
+                }}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   toggleFlag(r, c);
                 }}
-                onTouchStart={() => handleTouchStart(r, c)}
-                onTouchEnd={handleTouchEnd}
                 className={`flex-1 rounded-xl flex items-center justify-center transition-all duration-100 cursor-pointer ${
                   cell.isRevealed
                     ? cell.isMine
-                      ? 'bg-pop-red text-white shadow-inner animate-pulse'
-                      : 'bg-[#13182b] border border-black/40'
-                    : 'bg-[#1e2744] hover:bg-[#283458] active:scale-95 border-2 border-black/80 shadow-[1px_1px_0px_#000]'
+                    ? 'bg-pop-red text-white shadow-inner animate-pulse'
+                    : 'bg-[#13182b] border border-black/40'
+                  : 'bg-[#1e2744] hover:bg-[#283458] active:scale-95 border-2 border-black/80 shadow-[1px_1px_0px_#000]'
                 }`}
               >
                 {cell.isRevealed ? (
@@ -318,12 +327,13 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
       {/* Mode Switcher Buttons */}
       <div className="w-full max-w-xs px-4 pb-2 z-20 flex space-x-3">
         <button
-          onClick={() => {
+          onPointerDown={(e) => {
+            e.preventDefault();
             setFlagMode(false);
             sounds.playTap();
             haptics.tap();
           }}
-          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all ${
+          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer ${
             !flagMode
               ? 'bg-pop-yellow text-black border-2 border-black shadow-pop-xs -translate-y-0.5'
               : 'bg-[#14192b] text-slate-300 border-2 border-black/80'
@@ -334,12 +344,13 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
         </button>
 
         <button
-          onClick={() => {
+          onPointerDown={(e) => {
+            e.preventDefault();
             setFlagMode(true);
             sounds.playTap();
             haptics.tap();
           }}
-          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all ${
+          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer ${
             flagMode
               ? 'bg-pop-pink text-white border-2 border-black shadow-pop-xs -translate-y-0.5'
               : 'bg-[#14192b] text-slate-300 border-2 border-black/80'

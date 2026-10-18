@@ -127,15 +127,12 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
       <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
         <div className="w-full max-w-xs">
           <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerUp={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               handleManualDrop();
             }}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-600 to-pink-700 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20 active:scale-95 transition-transform"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-600 to-pink-700 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20 active:scale-95 transition-transform cursor-pointer"
           >
             <ChevronDown className="w-5 h-5 animate-bounce" />
             <span>TAP TO DROP</span>

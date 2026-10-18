@@ -401,8 +401,6 @@ export class FlappyOrbitEngine implements GameEngine {
       // Top Pylon Laser Rim
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 10;
       ctx.stroke();
 
       // Bottom Pylon
@@ -426,8 +424,6 @@ export class FlappyOrbitEngine implements GameEngine {
         ctx.translate(g.x, g.gapY);
         ctx.rotate(g.angle);
         ctx.fillStyle = '#f59e0b';
-        ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 12;
         ctx.font = '18px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -454,9 +450,7 @@ export class FlappyOrbitEngine implements GameEngine {
     ctx.rotate(this.probeRotation);
 
     // Glowing shield outer ring
-    ctx.shadowColor = '#38bdf8';
-    ctx.shadowBlur = 14;
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(0, 0, this.probeRadius + 4, 0, Math.PI * 2);

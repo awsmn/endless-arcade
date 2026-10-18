@@ -339,8 +339,6 @@ export class StackSliceEngine implements GameEngine {
     for (const b of this.stack) {
       ctx.save();
       ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color;
-      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.roundRect(b.x, b.y, b.width, b.height, 4);
       ctx.fill();
@@ -360,8 +358,6 @@ export class StackSliceEngine implements GameEngine {
 
       ctx.save();
       ctx.fillStyle = curColor;
-      ctx.shadowColor = curColor;
-      ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.roundRect(this.activeX, activeY, this.activeWidth, this.blockHeight, 4);
       ctx.fill();

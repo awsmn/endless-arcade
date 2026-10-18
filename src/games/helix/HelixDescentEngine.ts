@@ -227,6 +227,11 @@ export class HelixDescentEngine implements GameEngine {
   };
 
   private update(dt: number) {
+    // Screen shake decay (always decay, even during game over)
+    if (this.screenShake > 0) {
+      this.screenShake = Math.max(0, this.screenShake - dt * 25);
+    }
+
     if (this.isGameOver) {
       this.updateParticles(dt);
       return;
@@ -239,11 +244,6 @@ export class HelixDescentEngine implements GameEngine {
     // Squish recovery
     if (this.squishFactor < 1) {
       this.squishFactor = Math.min(1, this.squishFactor + dt * 5);
-    }
-
-    // Screen shake decay
-    if (this.screenShake > 0) {
-      this.screenShake = Math.max(0, this.screenShake - dt * 25);
     }
 
     // Check collisions with rings
@@ -355,10 +355,11 @@ export class HelixDescentEngine implements GameEngine {
   private spawnBounceSparks(y: number, color: string) {
     const rect = this.container.getBoundingClientRect();
     const cx = rect.width / 2;
+    const platformFrontOffset = (this.columnRadius + (this.towerRadius - this.columnRadius) * 0.45) * 0.35;
     for (let i = 0; i < 10; i++) {
       this.particles.push({
         x: cx + (Math.random() - 0.5) * 16,
-        y: y,
+        y: y + platformFrontOffset,
         vx: (Math.random() - 0.5) * 140,
         vy: -40 - Math.random() * 90,
         radius: 2 + Math.random() * 2,
@@ -378,12 +379,13 @@ export class HelixDescentEngine implements GameEngine {
     // Splatter ball particles
     const rect = this.container.getBoundingClientRect();
     const cx = rect.width / 2;
+    const platformFrontOffset = (this.columnRadius + (this.towerRadius - this.columnRadius) * 0.45) * 0.35;
     for (let i = 0; i < 35; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 80 + Math.random() * 320;
       this.particles.push({
         x: cx,
-        y: this.ballY,
+        y: this.ballY + platformFrontOffset,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         radius: 3 + Math.random() * 4,
@@ -460,7 +462,8 @@ export class HelixDescentEngine implements GameEngine {
 
     // Render Ball (Centered horizontally, at ball screen Y)
     if (!this.isGameOver) {
-      const ballScreenY = this.ballY - this.cameraY;
+      const platformFrontOffset = (this.columnRadius + (this.towerRadius - this.columnRadius) * 0.45) * 0.35;
+      const ballScreenY = this.ballY - this.cameraY + platformFrontOffset;
 
       // Ball Destroyer Fire Aura
       if (this.isDestroyer) {

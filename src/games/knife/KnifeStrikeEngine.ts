@@ -351,10 +351,6 @@ export class KnifeStrikeEngine implements GameEngine {
     ctx.translate(this.centerX, this.centerY);
     ctx.rotate(this.wheelAngle);
 
-    // Target Base Glow
-    ctx.shadowColor = '#8b5cf6';
-    ctx.shadowBlur = 16;
-
     // Wood / Core Disc
     const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, this.targetRadius);
     grad.addColorStop(0, '#7c3aed');

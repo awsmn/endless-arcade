@@ -26,6 +26,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
   // Swipe detection ref
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeHandledRef = useRef(false);
 
   function createEmptyBoard(): Board {
     return Array.from({ length: 4 }, () => Array(4).fill(null));
@@ -203,27 +204,32 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [move]);
 
-  // Pointer & Touch Swipe Handlers (Works on mobile touch & desktop mouse drag)
+  // Pointer Swipe Handlers (instant swipe detection on pointermove)
   const handlePointerDown = (e: React.PointerEvent) => {
+    (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
     touchStartRef.current = { x: e.clientX, y: e.clientY };
+    swipeHandledRef.current = false;
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!touchStartRef.current) return;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!touchStartRef.current || swipeHandledRef.current) return;
     const dx = e.clientX - touchStartRef.current.x;
     const dy = e.clientY - touchStartRef.current.y;
-    const minDistance = 25;
+    const minDistance = 20;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (Math.abs(dx) > minDistance) {
+    if (Math.abs(dx) > minDistance || Math.abs(dy) > minDistance) {
+      if (Math.abs(dx) > Math.abs(dy)) {
         move(dx > 0 ? 'right' : 'left');
-      }
-    } else {
-      if (Math.abs(dy) > minDistance) {
+      } else {
         move(dy > 0 ? 'down' : 'up');
       }
+      swipeHandledRef.current = true;
     }
+  };
+
+  const handlePointerUp = () => {
     touchStartRef.current = null;
+    swipeHandledRef.current = false;
   };
 
   const handleUndo = () => {
@@ -277,33 +283,23 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
   return (
     <div
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onTouchStart={(e) => {
-        const t = e.touches[0];
-        touchStartRef.current = { x: t.clientX, y: t.clientY };
-      }}
-      onTouchEnd={(e) => {
-        if (!touchStartRef.current) return;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - touchStartRef.current.x;
-        const dy = t.clientY - touchStartRef.current.y;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          if (Math.abs(dx) > 25) move(dx > 0 ? 'right' : 'left');
-        } else {
-          if (Math.abs(dy) > 25) move(dy > 0 ? 'down' : 'up');
-        }
-        touchStartRef.current = null;
-      }}
+      onPointerCancel={handlePointerUp}
       className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
     >
       {/* Top Undo Bar */}
       <div className="w-full max-w-xs px-4 flex justify-end z-20">
         <button
-          onClick={handleUndo}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleUndo();
+          }}
           disabled={!history}
           className={`px-3 py-1.5 rounded-xl text-xs font-pop font-black flex items-center space-x-1.5 border-2 border-black transition-all ${
             history
-              ? 'bg-pop-yellow text-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none'
+              ? 'bg-pop-yellow text-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer'
               : 'opacity-40 bg-[#14192b] text-slate-500 cursor-not-allowed'
           }`}
         >
@@ -337,8 +333,12 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       {/* Mobile Virtual D-Pad for one-handed thumb navigation */}
       <div className="w-full max-w-xs flex flex-col items-center space-y-1.5 px-4 pb-2 z-20">
         <button
-          onClick={() => move('up')}
-          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            move('up');
+          }}
+          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
           aria-label="Up"
         >
           <ArrowUp className="w-6 h-6 stroke-[3]" />
@@ -346,8 +346,12 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
         <div className="flex items-center space-x-6">
           <button
-            onClick={() => move('left')}
-            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              move('left');
+            }}
+            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
             aria-label="Left"
           >
             <ArrowLeft className="w-6 h-6 stroke-[3]" />
@@ -356,8 +360,12 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
           <div className="w-4 h-4 rounded-full bg-pop-pink border-2 border-black shadow-[1px_1px_0px_#000]" />
 
           <button
-            onClick={() => move('right')}
-            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              move('right');
+            }}
+            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
             aria-label="Right"
           >
             <ArrowRight className="w-6 h-6 stroke-[3]" />
@@ -365,8 +373,12 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
         </div>
 
         <button
-          onClick={() => move('down')}
-          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            move('down');
+          }}
+          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
           aria-label="Down"
         >
           <ArrowDown className="w-6 h-6 stroke-[3]" />

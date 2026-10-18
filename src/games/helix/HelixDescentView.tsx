@@ -41,9 +41,11 @@ export const HelixDescentView: React.FC<HelixDescentViewProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        engine.rotateTower(-0.15);
+        e.preventDefault();
+        engine.rotateTower(0.15); // Rotate front face towards right
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        engine.rotateTower(0.15);
+        e.preventDefault();
+        engine.rotateTower(-0.15); // Rotate front face towards left
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -65,8 +67,13 @@ export const HelixDescentView: React.FC<HelixDescentViewProps> = ({
     }
   }, [isPaused]);
 
-  // Pointer drag controls (Smooth 360 tower rotation)
+  // Pointer drag controls (Smooth 360 tower rotation matching drag direction)
   const handlePointerDown = (e: React.PointerEvent) => {
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
     pointerStartRef.current = { x: e.clientX };
   };
 
@@ -74,10 +81,16 @@ export const HelixDescentView: React.FC<HelixDescentViewProps> = ({
     if (!pointerStartRef.current || !engineRef.current) return;
     const dx = e.clientX - pointerStartRef.current.x;
     pointerStartRef.current = { x: e.clientX };
-    engineRef.current.rotateTower(dx * 0.015);
+    // Inverted so dragging right turns the front surface to the right
+    engineRef.current.rotateTower(-dx * 0.015);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
     pointerStartRef.current = null;
   };
 

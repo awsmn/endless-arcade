@@ -220,8 +220,8 @@ export const App: React.FC = () => {
     <div className={`min-h-screen ${isLight ? 'bg-[#f1f3f9] text-slate-900' : 'bg-[#0b0e1b] text-white'} flex flex-col justify-between relative overflow-hidden pop-dots-bg transition-colors duration-200`}>
       {/* Active Game View (Full Screen on Mobile, Centered Arcade Cabinet on Desktop) */}
       {activeGame ? (
-        <div className="fixed inset-0 z-50 bg-[#05070e] flex items-center justify-center">
-          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c1020] shadow-2xl border-x-2 border-black">
+        <div className="fixed inset-0 z-50 bg-[#05070e] flex items-center justify-center touch-none overscroll-none select-none">
+          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c1020] shadow-2xl border-x-2 border-black touch-none select-none">
             {/* In-Game HUD Overlay */}
             <InGameOverlay
               game={activeGame}
@@ -234,7 +234,7 @@ export const App: React.FC = () => {
             />
 
             {/* Active Game View Area */}
-            <div key={gameSessionId} className="relative flex-1 w-full h-full overflow-hidden">
+            <div key={gameSessionId} className="relative flex-1 w-full h-full overflow-hidden touch-none select-none game-canvas-container">
               {activeGame.id === 'neon-snake' && (
                 <SnakeView
                   mode="endless"

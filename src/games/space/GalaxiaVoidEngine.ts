@@ -217,9 +217,9 @@ export class GalaxiaVoidEngine implements GameEngine {
   private update(dt: number) {
     const rect = this.container.getBoundingClientRect();
 
-    // Smooth player steering interpolation
-    this.playerX += (this.targetPlayerX - this.playerX) * 16 * dt;
-    this.playerY += (this.targetPlayerY - this.playerY) * 16 * dt;
+    // Snappy player steering interpolation
+    this.playerX += (this.targetPlayerX - this.playerX) * Math.min(1, 28 * dt);
+    this.playerY += (this.targetPlayerY - this.playerY) * Math.min(1, 28 * dt);
 
     // Scroll stars
     for (const star of this.stars) {
@@ -585,16 +585,12 @@ export class GalaxiaVoidEngine implements GameEngine {
       ctx.restore();
     }
 
-    // 3. Bullets
+    // 3. Bullets (Optimized batch rendering)
     for (const b of this.bullets) {
-      ctx.save();
       ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color;
-      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.isEnemy ? 4 : 3, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
 
     // 4. PowerUps
@@ -617,8 +613,6 @@ export class GalaxiaVoidEngine implements GameEngine {
       if (enemy.type === 'boss') {
         // Boss Flagship
         ctx.fillStyle = '#7c3aed';
-        ctx.shadowColor = '#a855f7';
-        ctx.shadowBlur = 18;
         ctx.beginPath();
         ctx.moveTo(0, enemy.radius);
         ctx.lineTo(-enemy.radius, -enemy.radius * 0.8);
@@ -642,8 +636,6 @@ export class GalaxiaVoidEngine implements GameEngine {
       } else if (enemy.type === 'cruiser') {
         // Heavy Cruiser
         ctx.fillStyle = '#f43f5e';
-        ctx.shadowColor = '#f43f5e';
-        ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.moveTo(0, enemy.radius);
         ctx.lineTo(-enemy.radius * 0.9, -enemy.radius * 0.6);
@@ -653,8 +645,6 @@ export class GalaxiaVoidEngine implements GameEngine {
       } else {
         // Scout Drone
         ctx.fillStyle = '#38bdf8';
-        ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -682,8 +672,6 @@ export class GalaxiaVoidEngine implements GameEngine {
     if (this.hasShield) {
       ctx.save();
       ctx.strokeStyle = '#38bdf8';
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 16;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(0, 0, this.playerRadius + 8, 0, Math.PI * 2);
@@ -693,8 +681,6 @@ export class GalaxiaVoidEngine implements GameEngine {
 
     // Fighter Wings
     ctx.fillStyle = '#0284c7';
-    ctx.shadowColor = '#38bdf8';
-    ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.moveTo(0, -18); // nose
     ctx.lineTo(16, 12);

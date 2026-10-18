@@ -532,16 +532,12 @@ export class BrickBreakerEngine implements GameEngine {
     ctx.restore();
 
     // Active Balls
+    ctx.fillStyle = '#ffffff';
     for (const b of this.balls) {
       if (!b.active) continue;
-      ctx.save();
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = '#818cf8';
-      ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(b.x, b.y, this.ballRadius, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
 
     // Particles

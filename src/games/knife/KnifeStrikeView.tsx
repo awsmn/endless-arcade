@@ -77,7 +77,10 @@ export const KnifeStrikeView: React.FC<KnifeStrikeViewProps> = ({
   return (
     <div
       ref={containerRef}
-      onClick={handleThrow}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        handleThrow();
+      }}
       className="relative w-full h-full overflow-hidden select-none touch-none cursor-pointer"
     >
       {/* Game Canvas */}
@@ -107,7 +110,8 @@ export const KnifeStrikeView: React.FC<KnifeStrikeViewProps> = ({
       <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
         <div className="w-full max-w-xs">
           <button
-            onClick={(e) => {
+            onPointerDown={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               handleThrow();
             }}
