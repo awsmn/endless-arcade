@@ -67,6 +67,8 @@ export class GalaxiaVoidEngine implements GameEngine {
   private playerRadius = 16;
   private weaponLevel = 1;
   private hasShield = false;
+  public lives = 3;
+  private invulnerableTimer = 0;
   private autoFireTimer = 0;
   private fireInterval = 0.14; // seconds
 
@@ -95,6 +97,7 @@ export class GalaxiaVoidEngine implements GameEngine {
 
   public onScoreUpdate?: (update: GameScoreUpdate) => void;
   public onGameOver?: (finalScore: number, isNewHighScore: boolean, stars?: number) => void;
+  public onLivesChange?: (lives: number) => void;
 
   public init(canvas: HTMLCanvasElement, container: HTMLElement) {
     this.canvas = canvas;
@@ -150,6 +153,8 @@ export class GalaxiaVoidEngine implements GameEngine {
     this.targetPlayerY = this.playerY;
     this.weaponLevel = 1;
     this.hasShield = false;
+    this.lives = 3;
+    this.invulnerableTimer = 0;
     this.autoFireTimer = 0;
 
     this.bullets = [];
@@ -167,6 +172,7 @@ export class GalaxiaVoidEngine implements GameEngine {
     this.isGameOver = false;
 
     this.onScoreUpdate?.({ score: 0 });
+    this.onLivesChange?.(this.lives);
     this.lastTime = performance.now();
     cancelAnimationFrame(this.animationFrameId);
     this.loop();
@@ -216,6 +222,10 @@ export class GalaxiaVoidEngine implements GameEngine {
 
   private update(dt: number) {
     const rect = this.container.getBoundingClientRect();
+
+    if (this.invulnerableTimer > 0) {
+      this.invulnerableTimer = Math.max(0, this.invulnerableTimer - dt);
+    }
 
     // Snappy player steering interpolation
     this.playerX += (this.targetPlayerX - this.playerX) * Math.min(1, 28 * dt);
@@ -513,8 +523,11 @@ export class GalaxiaVoidEngine implements GameEngine {
   }
 
   private takePlayerDamage() {
+    if (this.invulnerableTimer > 0) return;
+
     if (this.hasShield) {
       this.hasShield = false;
+      this.invulnerableTimer = 0.8;
       this.screenShake = 10;
       sounds.playBounce();
       haptics.bump();
@@ -522,7 +535,20 @@ export class GalaxiaVoidEngine implements GameEngine {
       return;
     }
 
-    // Game Over
+    this.lives--;
+    this.weaponLevel = Math.max(1, this.weaponLevel - 1);
+    this.onLivesChange?.(this.lives);
+
+    if (this.lives > 0) {
+      this.invulnerableTimer = 1.8;
+      this.screenShake = 12;
+      sounds.playHit();
+      haptics.impact();
+      this.spawnParticles(this.playerX, this.playerY, '#f43f5e', 20);
+      return;
+    }
+
+    // Out of lives: Game Over
     this.isGameOver = true;
     this.screenShake = 18;
     sounds.playHit();
@@ -532,7 +558,7 @@ export class GalaxiaVoidEngine implements GameEngine {
     this.spawnParticles(this.playerX, this.playerY, '#38bdf8', 30);
     this.spawnParticles(this.playerX, this.playerY, '#f43f5e', 20);
 
-    const stars = this.score >= 300 ? 3 : this.score >= 150 ? 2 : this.score >= 50 ? 1 : 0;
+    const stars = this.score >= 400 ? 3 : this.score >= 200 ? 2 : this.score >= 60 ? 1 : 0;
     this.onGameOver?.(this.score, false, stars);
   }
 
@@ -668,6 +694,10 @@ export class GalaxiaVoidEngine implements GameEngine {
     ctx.save();
     ctx.translate(this.playerX, this.playerY);
 
+    if (this.invulnerableTimer > 0) {
+      ctx.globalAlpha = Math.floor(this.invulnerableTimer * 10) % 2 === 0 ? 0.35 : 0.95;
+    }
+
     // Shield Aura
     if (this.hasShield) {
       ctx.save();
@@ -702,6 +732,22 @@ export class GalaxiaVoidEngine implements GameEngine {
     ctx.arc(8, 12 + Math.random() * 4, 3, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.restore();
+
+    // 8. Lives HUD (Top Right)
+    ctx.save();
+    for (let l = 0; l < 3; l++) {
+      const lx = rect.width - 24 - (2 - l) * 22;
+      const ly = 24;
+      const isAlive = l < this.lives;
+      ctx.fillStyle = isAlive ? '#f43f5e' : '#334155';
+      ctx.beginPath();
+      ctx.arc(lx - 4, ly, 4, Math.PI, 0, false);
+      ctx.arc(lx + 4, ly, 4, Math.PI, 0, false);
+      ctx.lineTo(lx, ly + 8);
+      ctx.closePath();
+      ctx.fill();
+    }
     ctx.restore();
 
     ctx.restore(); // restore screen shake

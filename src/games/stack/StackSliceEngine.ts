@@ -56,7 +56,7 @@ export class StackSliceEngine implements GameEngine {
   // Combo & Score
   private combo = 0;
   private score = 0;
-  private perfectTolerance = 3.5;
+  private perfectTolerance = 7.5; // Fair 60fps frame window
 
   private isRunning = false;
   private isPaused = false;
@@ -157,10 +157,10 @@ export class StackSliceEngine implements GameEngine {
       sounds.playCombo(this.combo);
       haptics.impact();
 
-      // Expand width reward if combo >= 5
-      if (this.combo >= 5) {
-        const bonusW = 8;
-        const newW = Math.min(220, this.activeWidth + bonusW);
+      // Expand width reward if combo >= 3
+      if (this.combo >= 3) {
+        const bonusW = 6;
+        const newW = Math.min(200, this.activeWidth + bonusW);
         const added = newW - this.activeWidth;
         this.activeWidth = newW;
         topBlock.x = Math.max(10, topBlock.x - added / 2);
@@ -177,12 +177,34 @@ export class StackSliceEngine implements GameEngine {
       this.spawnParticles(topBlock.x + this.activeWidth / 2, currentY + this.blockHeight / 2, '#38bdf8', 16);
       this.onCombo?.(this.combo);
     } else if (Math.abs(diff) < this.activeWidth) {
+      const newWidth = this.activeWidth - Math.abs(diff);
+
+      // If sliced sliver is too small, game over cleanly
+      if (newWidth < 5) {
+        this.debris.push({
+          x: this.activeX,
+          y: currentY,
+          width: this.activeWidth,
+          height: this.blockHeight,
+          color: this.getColorForIndex(this.score + 1),
+          vx: this.slideDir * 120,
+          vy: 20,
+          rotation: 0,
+          vRot: this.slideDir * 4
+        });
+        this.isGameOver = true;
+        sounds.playGameOver();
+        haptics.gameOver();
+        const stars = this.score >= 35 ? 3 : this.score >= 18 ? 2 : this.score >= 8 ? 1 : 0;
+        this.onGameOver?.(this.score, false, stars);
+        return;
+      }
+
       // Sliced overhang!
       this.combo = 0;
       sounds.playHit();
       haptics.tap();
 
-      const newWidth = this.activeWidth - Math.abs(diff);
       const newX = diff > 0 ? this.activeX : topBlock.x;
 
       // Spawn falling slice debris
@@ -227,7 +249,7 @@ export class StackSliceEngine implements GameEngine {
       this.isGameOver = true;
       sounds.playGameOver();
       haptics.gameOver();
-      const stars = this.score >= 40 ? 3 : this.score >= 20 ? 2 : this.score >= 10 ? 1 : 0;
+      const stars = this.score >= 35 ? 3 : this.score >= 18 ? 2 : this.score >= 8 ? 1 : 0;
       this.onGameOver?.(this.score, false, stars);
       return;
     }
@@ -235,8 +257,8 @@ export class StackSliceEngine implements GameEngine {
     this.score++;
     this.onScoreUpdate?.({ score: this.score });
 
-    // Speed scales slightly with score
-    this.slideSpeed = Math.min(480, 220 + this.score * 5);
+    // Speed scales smoothly with score
+    this.slideSpeed = Math.min(420, 200 + this.score * 4);
 
     // Reposition active block for next drop
     const rect = this.container.getBoundingClientRect();

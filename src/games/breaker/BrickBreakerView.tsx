@@ -8,7 +8,7 @@ interface BrickBreakerViewProps {
   level?: number;
   isPaused: boolean;
   onScoreUpdate: (update: GameScoreUpdate) => void;
-  onGameOver: (finalScore: number, isNewHighScore: boolean) => void;
+  onGameOver: (finalScore: number, isNewHighScore: boolean, stars?: number) => void;
 }
 
 export const BrickBreakerView: React.FC<BrickBreakerViewProps> = ({

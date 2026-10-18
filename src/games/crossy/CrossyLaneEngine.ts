@@ -70,7 +70,7 @@ export class CrossyLaneEngine implements GameEngine {
 
   // Idle timer
   private idleTime = 0;
-  private maxIdleTime = 5.5;
+  private maxIdleTime = 8.5;
 
   // Particles & Game State
   private particles: Particle[] = [];
@@ -78,6 +78,7 @@ export class CrossyLaneEngine implements GameEngine {
   private isRunning = false;
   private isPaused = false;
   private isGameOver = false;
+  private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
 
   private lastTime = 0;
   private animationFrameId = 0;
@@ -269,6 +270,10 @@ export class CrossyLaneEngine implements GameEngine {
 
   public destroy() {
     this.isRunning = false;
+    if (this.gameOverTimer) {
+      clearTimeout(this.gameOverTimer);
+      this.gameOverTimer = null;
+    }
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -337,14 +342,15 @@ export class CrossyLaneEngine implements GameEngine {
     }
 
     // Check Player Collision
+    const curCol = this.prevCol + (this.playerCol - this.prevCol) * this.hopProgress;
     const currentRow = this.rows.find(r => r.index === this.playerRow);
-    const playerX = this.playerCol * (rect.width / GRID_COLS) + (rect.width / GRID_COLS) / 2;
+    const colWidth = rect.width / GRID_COLS;
+    const playerX = curCol * colWidth + colWidth / 2;
 
     if (currentRow) {
       if (currentRow.type === 'road') {
-        const laneW = rect.width / GRID_COLS;
         for (const v of currentRow.vehicles) {
-          if (playerX + laneW * 0.3 > v.x && playerX - laneW * 0.3 < v.x + v.width) {
+          if (playerX + colWidth * 0.3 > v.x && playerX - colWidth * 0.3 < v.x + v.width) {
             this.triggerGameOver('Hit by traffic!');
             return;
           }
@@ -361,14 +367,15 @@ export class CrossyLaneEngine implements GameEngine {
           if (playerX > log.x && playerX < log.x + log.width) {
             onLog = true;
             // Drifts with the log!
-            const colShift = (log.speed * dt) / (rect.width / GRID_COLS);
+            const colShift = (log.speed * dt) / colWidth;
             this.playerCol += colShift;
+            this.prevCol += colShift;
             // Lessen idle pressure while actively riding a log
             this.idleTime = Math.max(0, this.idleTime - dt * 0.5);
             break;
           }
         }
-        if (!onLog && this.hopProgress >= 0.7) {
+        if (!onLog && this.hopProgress >= 0.8) {
           this.triggerGameOver('Fell in the river!');
           return;
         }
@@ -436,8 +443,9 @@ export class CrossyLaneEngine implements GameEngine {
       });
     }
 
-    setTimeout(() => {
-      this.onGameOver?.(this.score, false);
+    const stars = this.score >= 100 ? 3 : this.score >= 50 ? 2 : this.score >= 20 ? 1 : 0;
+    this.gameOverTimer = setTimeout(() => {
+      this.onGameOver?.(this.score, false, stars);
     }, 650);
   }
 

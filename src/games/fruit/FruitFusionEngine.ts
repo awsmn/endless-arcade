@@ -82,7 +82,7 @@ export class FruitFusionEngine implements GameEngine {
   private animationFrameId = 0;
 
   public onScoreUpdate?: (update: GameScoreUpdate) => void;
-  public onGameOver?: (finalScore: number, isNewHighScore: boolean) => void;
+  public onGameOver?: (finalScore: number, isNewHighScore: boolean, stars?: number) => void;
   public onDropperChange?: (currentTier: number, nextTier: number) => void;
 
   public init(canvas: HTMLCanvasElement, container: HTMLElement) {
@@ -310,25 +310,31 @@ export class FruitFusionEngine implements GameEngine {
               break;
             }
 
-            // Normal circle-circle elastic collision
+            // Realistic mass-weighted elastic collision
             const overlap = minDist - dist;
             const nx = dx / dist;
             const ny = dy / dist;
 
-            // Positional resolution
-            a.x -= nx * overlap * 0.5;
-            a.y -= ny * overlap * 0.5;
-            b.x += nx * overlap * 0.5;
-            b.y += ny * overlap * 0.5;
+            const massA = a.radius * a.radius;
+            const massB = b.radius * b.radius;
+            const totalMass = massA + massB;
+            const ratioA = massB / totalMass;
+            const ratioB = massA / totalMass;
+
+            // Positional resolution weighted by inertia
+            a.x -= nx * overlap * ratioA;
+            a.y -= ny * overlap * ratioA;
+            b.x += nx * overlap * ratioB;
+            b.y += ny * overlap * ratioB;
 
             // Relative velocity along collision normal (from a to b)
             const relVel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relVel < 0) { // Only apply impulse if approaching each other
-              const impulse = -(1 + restitution) * relVel * 0.5;
-              a.vx -= impulse * nx;
-              a.vy -= impulse * ny;
-              b.vx += impulse * nx;
-              b.vy += impulse * ny;
+              const impulse = -(1 + restitution) * relVel;
+              a.vx -= impulse * nx * ratioA;
+              a.vy -= impulse * ny * ratioA;
+              b.vx += impulse * nx * ratioB;
+              b.vy += impulse * ny * ratioB;
             }
           }
         }
@@ -360,11 +366,11 @@ export class FruitFusionEngine implements GameEngine {
       }
     }
 
-    // Danger line overflow check
+    // Danger line overflow check: checks settled fruits near top
     let anyAboveDanger = false;
     for (const f of this.fruits) {
-      // Must be settled and inside the jar for over 1.2s (not freshly dropped)
-      if (f.age > 1.2 && (f.y - f.radius) < this.dangerLineY && Math.abs(f.vy) < 40) {
+      // Must be inside jar and settled
+      if (f.age > 1.0 && (f.y - f.radius * 0.5) < this.dangerLineY && Math.abs(f.vy) < 80) {
         anyAboveDanger = true;
         break;
       }
@@ -372,11 +378,11 @@ export class FruitFusionEngine implements GameEngine {
 
     if (anyAboveDanger) {
       this.dangerTime += dt * 1000;
-      if (this.dangerTime > 3200) {
+      if (this.dangerTime > 3500) {
         this.handleGameOver();
       }
     } else {
-      this.dangerTime = Math.max(0, this.dangerTime - dt * 500);
+      this.dangerTime = Math.max(0, this.dangerTime - dt * 600);
     }
   }
 
@@ -384,7 +390,8 @@ export class FruitFusionEngine implements GameEngine {
     this.isGameOver = true;
     sounds.playGameOver();
     haptics.impact();
-    this.onGameOver?.(this.score, false);
+    const stars = this.score >= 2500 ? 3 : this.score >= 1200 ? 2 : this.score >= 400 ? 1 : 0;
+    this.onGameOver?.(this.score, false, stars);
   }
 
   private spawnParticles(x: number, y: number, color: string, count: number) {

@@ -90,7 +90,9 @@ export const GalaxiaVoidView: React.FC<GalaxiaVoidViewProps> = ({
   // Direct finger / mouse steering
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!containerRef.current || !engineRef.current) return;
-    (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
     isDraggingRef.current = true;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;

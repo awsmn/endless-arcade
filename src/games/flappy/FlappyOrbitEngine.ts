@@ -43,6 +43,8 @@ export class FlappyOrbitEngine implements GameEngine {
   private probeVy = 0;
   private probeRadius = 14;
   private probeRotation = 0;
+  private hasStarted = false;
+  private hoverTimer = 0;
 
   // Physics constants
   private gravity = 980; // px/s^2
@@ -118,11 +120,13 @@ export class FlappyOrbitEngine implements GameEngine {
     this.probeY = rect.height * 0.45;
     this.probeVy = 0;
     this.probeRotation = 0;
+    this.hasStarted = false;
+    this.hoverTimer = 0;
     this.gates = [];
     this.particles = [];
     this.score = 0;
     this.worldSpeed = 165;
-    this.spawnTimer = 0.5; // first gate appears sooner
+    this.spawnTimer = 0;
     this.screenShake = 0;
 
     this.isRunning = true;
@@ -152,6 +156,10 @@ export class FlappyOrbitEngine implements GameEngine {
 
   public flap() {
     if (this.isPaused || this.isGameOver) return;
+    if (!this.hasStarted) {
+      this.hasStarted = true;
+      this.spawnTimer = 0.6; // first gate appears smoothly
+    }
     this.probeVy = this.impulse;
     sounds.playLaser();
     haptics.tap();
@@ -188,8 +196,36 @@ export class FlappyOrbitEngine implements GameEngine {
   private update(dt: number) {
     const rect = this.container.getBoundingClientRect();
 
+    // Scroll stars
+    for (const star of this.stars) {
+      star.x -= star.speed * (this.hasStarted ? dt : dt * 0.4);
+      if (star.x < -10) {
+        star.x = rect.width + 10;
+        star.y = Math.random() * rect.height;
+      }
+    }
+
+    // Update particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.life >= p.maxLife) {
+        this.particles.splice(i, 1);
+      }
+    }
+
+    // Gentle hover before player's first tap
+    if (!this.hasStarted) {
+      this.hoverTimer += dt;
+      this.probeY = rect.height * 0.45 + Math.sin(this.hoverTimer * 3.5) * 12;
+      this.probeRotation = Math.sin(this.hoverTimer * 3.5) * 0.08;
+      return;
+    }
+
     // Gradually scale speed
-    this.worldSpeed = Math.min(270, 165 + this.score * 2.5);
+    this.worldSpeed = Math.min(260, 160 + this.score * 2.2);
 
     // Physics on probe
     this.probeVy += this.gravity * dt;
@@ -214,15 +250,6 @@ export class FlappyOrbitEngine implements GameEngine {
     if (this.probeY + this.probeRadius > bottomPad) {
       this.handleCrash();
       return;
-    }
-
-    // Scroll stars
-    for (const star of this.stars) {
-      star.x -= star.speed * dt;
-      if (star.x < -10) {
-        star.x = rect.width + 10;
-        star.y = Math.random() * rect.height;
-      }
     }
 
     // Gate spawner
@@ -282,17 +309,6 @@ export class FlappyOrbitEngine implements GameEngine {
     // Decay screen shake
     if (this.screenShake > 0) {
       this.screenShake = Math.max(0, this.screenShake - dt * 25);
-    }
-
-    // Update particles
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-      p.life += dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      if (p.life >= p.maxLife) {
-        this.particles.splice(i, 1);
-      }
     }
   }
 
@@ -473,6 +489,19 @@ export class FlappyOrbitEngine implements GameEngine {
     ctx.fill();
 
     ctx.restore();
+
+    // Tap to thrust prompt before game begins
+    if (!this.hasStarted) {
+      ctx.save();
+      ctx.font = 'bold 16px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowColor = '#0284c7';
+      ctx.shadowBlur = 10;
+      const bounce = Math.sin(this.hoverTimer * 4) * 4;
+      ctx.fillText('TAP TO THRUST', rect.width / 2, this.probeY + 50 + bounce);
+      ctx.restore();
+    }
 
     ctx.restore(); // restore screen shake
   }

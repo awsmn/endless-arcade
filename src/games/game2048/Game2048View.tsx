@@ -206,13 +206,17 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
 
   // Pointer Swipe Handlers (instant swipe detection on pointermove)
   const handlePointerDown = (e: React.PointerEvent) => {
-    (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    try {
+      (e.currentTarget as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
     touchStartRef.current = { x: e.clientX, y: e.clientY };
     swipeHandledRef.current = false;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!touchStartRef.current || swipeHandledRef.current) return;
+    if (!touchStartRef.current) return;
     const dx = e.clientX - touchStartRef.current.x;
     const dy = e.clientY - touchStartRef.current.y;
     const minDistance = 20;
@@ -223,11 +227,16 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       } else {
         move(dy > 0 ? 'down' : 'up');
       }
-      swipeHandledRef.current = true;
+      touchStartRef.current = { x: e.clientX, y: e.clientY };
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    try {
+      (e.currentTarget as HTMLElement)?.releasePointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
     touchStartRef.current = null;
     swipeHandledRef.current = false;
   };

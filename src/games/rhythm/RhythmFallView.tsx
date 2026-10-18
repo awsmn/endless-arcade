@@ -81,27 +81,53 @@ export const RhythmFallView: React.FC<RhythmFallViewProps> = ({
     }
   }, [isPaused]);
 
+  const handleContainerPointerDown = (e: React.PointerEvent) => {
+    if (!containerRef.current || !engineRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const lane = Math.floor((x / rect.width) * 4);
+    if (lane >= 0 && lane <= 3) {
+      engineRef.current.hitLane(lane);
+    }
+  };
+
+  const handleContainerPointerUp = (e: React.PointerEvent) => {
+    if (!containerRef.current || !engineRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const lane = Math.floor((x / rect.width) * 4);
+    if (lane >= 0 && lane <= 3) {
+      engineRef.current.releaseLane(lane);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full overflow-hidden select-none touch-none"
+      onPointerDown={handleContainerPointerDown}
+      onPointerUp={handleContainerPointerUp}
+      onPointerCancel={handleContainerPointerUp}
+      className="relative w-full h-full overflow-hidden select-none touch-none cursor-pointer"
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* Bottom 4 Lane Touch Buttons */}
-      <div className="absolute bottom-2 left-0 right-0 px-2 flex space-x-2 z-20">
+      <div className="absolute bottom-2 left-0 right-0 px-2 flex space-x-2 z-20 pointer-events-auto">
         {LANES.map((lane) => (
           <button
             key={lane.id}
             onPointerDown={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               engineRef.current?.hitLane(lane.id);
             }}
             onPointerUp={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               engineRef.current?.releaseLane(lane.id);
             }}
-            onPointerCancel={() => {
+            onPointerCancel={(e) => {
+              e.stopPropagation();
               engineRef.current?.releaseLane(lane.id);
             }}
             className={`flex-1 h-14 rounded-2xl ${lane.color} border-2 border-black shadow-pop font-pop font-black text-sm flex flex-col items-center justify-center active:translate-y-1 active:shadow-none transition-all`}

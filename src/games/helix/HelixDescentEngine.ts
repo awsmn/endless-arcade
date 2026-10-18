@@ -61,6 +61,7 @@ export class HelixDescentEngine implements GameEngine {
   private isPaused = false;
   private isGameOver = false;
   private screenShake = 0;
+  private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Visual effects
   private particles: Particle[] = [];
@@ -138,20 +139,29 @@ export class HelixDescentEngine implements GameEngine {
     const ringColor = colors[id % colors.length];
 
     if (isFirst) {
-      // First ring has a wide gap in back, safe at front
-      segments.push({ type: 'safe', startAngle: -Math.PI * 0.7, endAngle: Math.PI * 0.7 });
-      segments.push({ type: 'gap', startAngle: Math.PI * 0.7, endAngle: Math.PI * 1.3 });
+      // First ring has a wide gap in back (away from camera), safe at front
+      const sliceCount = 12;
+      for (let s = 0; s < sliceCount; s++) {
+        const a1 = (s / sliceCount) * Math.PI * 2;
+        const a2 = ((s + 1) / sliceCount) * Math.PI * 2;
+        // Slices 8-10 are in the back gap
+        if (s >= 8 && s <= 10) {
+          segments.push({ type: 'gap', startAngle: a1, endAngle: a2 });
+        } else {
+          segments.push({ type: 'safe', startAngle: a1, endAngle: a2 });
+        }
+      }
     } else {
-      // Random gap of size 60deg to 100deg
-      const gapAngle = (Math.PI / 180) * (65 + Math.random() * 35);
+      // Random gap of size 65deg to 95deg
+      const gapAngle = (Math.PI / 180) * (65 + Math.random() * 30);
       const gapCenter = Math.random() * Math.PI * 2;
       const gapStart = (gapCenter - gapAngle / 2 + Math.PI * 2) % (Math.PI * 2);
       const gapEnd = (gapCenter + gapAngle / 2 + Math.PI * 2) % (Math.PI * 2);
 
-      // Add hazard blocks on later rings
-      const hasHazard = id > 1 && Math.random() > 0.3;
-      const hazardAngle = (Math.PI / 180) * (35 + Math.random() * 25);
-      let hazardCenter = (gapCenter + Math.PI + (Math.random() - 0.5) * 0.5) % (Math.PI * 2);
+      // Add hazard blocks on later rings with progressive ramp-up
+      const hasHazard = id > 1 && Math.random() > Math.max(0.2, 0.45 - id * 0.02);
+      const hazardAngle = (Math.PI / 180) * Math.min(80, 35 + Math.min(30, id * 2));
+      const hazardCenter = (gapCenter + Math.PI + (Math.random() - 0.5) * 0.4 + Math.PI * 2) % (Math.PI * 2);
 
       // Subdivide circle into 12 slices for neat rendering
       const sliceCount = 12;
@@ -161,7 +171,7 @@ export class HelixDescentEngine implements GameEngine {
         const mid = (a1 + a2) / 2;
 
         const inGap = this.isAngleBetween(mid, gapStart, gapEnd);
-        const inHazard = hasHazard && this.isAngleBetween(mid, hazardCenter - hazardAngle / 2, hazardCenter + hazardAngle / 2);
+        const inHazard = hasHazard && !inGap && this.isAngleBetween(mid, hazardCenter - hazardAngle / 2, hazardCenter + hazardAngle / 2);
 
         if (inGap) {
           segments.push({ type: 'gap', startAngle: a1, endAngle: a2 });
@@ -210,6 +220,10 @@ export class HelixDescentEngine implements GameEngine {
 
   public destroy() {
     this.isRunning = false;
+    if (this.gameOverTimer) {
+      clearTimeout(this.gameOverTimer);
+      this.gameOverTimer = null;
+    }
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -395,8 +409,9 @@ export class HelixDescentEngine implements GameEngine {
       });
     }
 
-    setTimeout(() => {
-      this.onGameOver?.(this.score, false);
+    const stars = this.score >= 500 ? 3 : this.score >= 250 ? 2 : this.score >= 80 ? 1 : 0;
+    this.gameOverTimer = setTimeout(() => {
+      this.onGameOver?.(this.score, false, stars);
     }, 650);
   }
 

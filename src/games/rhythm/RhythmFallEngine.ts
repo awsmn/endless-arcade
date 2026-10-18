@@ -62,6 +62,7 @@ export class RhythmFallEngine implements GameEngine {
   private isRunning = false;
   private isPaused = false;
   private isGameOver = false;
+  private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
 
   private lastTime = 0;
   private animationFrameId = 0;
@@ -195,6 +196,10 @@ export class RhythmFallEngine implements GameEngine {
 
   public destroy() {
     this.isRunning = false;
+    if (this.gameOverTimer) {
+      clearTimeout(this.gameOverTimer);
+      this.gameOverTimer = null;
+    }
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -231,11 +236,11 @@ export class RhythmFallEngine implements GameEngine {
       this.beatTimer -= this.beatInterval;
       this.spawnRhythmBeat();
 
-      // Slightly increase tempo over time
+      // Smooth, fair tempo ramp-up over time
       if (this.bpm < 185) {
-        this.bpm += 0.4;
+        this.bpm += 0.12;
         this.beatInterval = 60 / this.bpm;
-        this.noteSpeed += 0.8;
+        this.noteSpeed += 0.25;
       }
     }
 
@@ -342,8 +347,9 @@ export class RhythmFallEngine implements GameEngine {
     sounds.playGameOver();
     haptics.failure();
 
-    setTimeout(() => {
-      this.onGameOver?.(this.score, false);
+    const stars = this.score >= 3500 ? 3 : this.score >= 1800 ? 2 : this.score >= 600 ? 1 : 0;
+    this.gameOverTimer = setTimeout(() => {
+      this.onGameOver?.(this.score, false, stars);
     }, 600);
   }
 

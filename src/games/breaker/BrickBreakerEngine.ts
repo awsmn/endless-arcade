@@ -75,7 +75,7 @@ export class BrickBreakerEngine implements GameEngine {
   private animationFrameId = 0;
 
   public onScoreUpdate?: (update: GameScoreUpdate) => void;
-  public onGameOver?: (finalScore: number, isNewHighScore: boolean) => void;
+  public onGameOver?: (finalScore: number, isNewHighScore: boolean, stars?: number) => void;
   public onStateChange?: (isShooting: boolean, ballsRemaining: number, totalBalls: number) => void;
 
   public init(canvas: HTMLCanvasElement, container: HTMLElement) {
@@ -121,7 +121,7 @@ export class BrickBreakerEngine implements GameEngine {
     this.bricks = [];
     this.balls = [];
     this.particles = [];
-    this.totalBalls = 20;
+    this.totalBalls = 8; // Balanced start
     this.turn = 1;
     this.score = 0;
     this.isShooting = false;
@@ -157,11 +157,21 @@ export class BrickBreakerEngine implements GameEngine {
 
   public setAim(targetX: number, targetY: number) {
     if (this.isShooting || this.isPaused || this.isGameOver) return;
-    const dx = targetX - this.launchX;
-    const dy = targetY - this.launchY;
-    if (dy >= -10) return; // Cannot shoot horizontally or downwards
+    let dx = targetX - this.launchX;
+    let dy = targetY - this.launchY;
 
-    this.aimAngle = Math.atan2(dy, dx);
+    // Support both direct forward aim and backward slingshot aim
+    if (dy > 0) {
+      dy = -dy;
+      dx = -dx;
+    }
+    if (dy > -15) dy = -15;
+
+    const angle = Math.atan2(dy, dx);
+    // Clamp angle away from pure horizontal to avoid ball trapping
+    const minUpAngle = -Math.PI + 0.16;
+    const maxUpAngle = -0.16;
+    this.aimAngle = Math.max(minUpAngle, Math.min(maxUpAngle, angle));
     this.isAiming = true;
   }
 
@@ -381,11 +391,18 @@ export class BrickBreakerEngine implements GameEngine {
 
     // Descend all bricks
     let hitBottom = false;
-    for (const b of this.bricks) {
+    for (let i = this.bricks.length - 1; i >= 0; i--) {
+      const b = this.bricks[i];
       b.row++;
       const brickBottomY = this.arenaY + (b.row + 1) * this.cellHeight;
       if (brickBottomY >= this.launchY - 10) {
-        hitBottom = true;
+        if (b.isBonusBall) {
+          // Bonus balls are collected at ground line
+          this.totalBalls++;
+          this.bricks.splice(i, 1);
+        } else {
+          hitBottom = true;
+        }
       }
     }
 
@@ -393,7 +410,8 @@ export class BrickBreakerEngine implements GameEngine {
       this.isGameOver = true;
       sounds.playGameOver();
       haptics.gameOver();
-      this.onGameOver?.(this.score, false);
+      const stars = this.score >= 400 ? 3 : this.score >= 200 ? 2 : this.score >= 80 ? 1 : 0;
+      this.onGameOver?.(this.score, false, stars);
       return;
     }
 

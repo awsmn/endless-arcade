@@ -63,6 +63,9 @@ export class ChromaJumpEngine implements GameEngine {
   private isRunning = false;
   private isPaused = false;
   private isGameOver = false;
+  private hasStarted = false;
+  private hoverTimer = 0;
+  private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
   private screenShake = 0;
 
   private lastTime = 0;
@@ -99,16 +102,23 @@ export class ChromaJumpEngine implements GameEngine {
   }
 
   public start(_mode: GameMode = 'endless', _level = 1) {
+    if (this.gameOverTimer) {
+      clearTimeout(this.gameOverTimer);
+      this.gameOverTimer = null;
+    }
     const rect = this.container.getBoundingClientRect();
     this.ballX = rect.width / 2;
     this.ballY = 400;
-    this.ballVy = -200;
+    this.ballVy = 0;
+    this.hasStarted = false;
+    this.hoverTimer = 0;
     this.cameraY = 400 - rect.height * 0.2;
     this.currentColorIndex = Math.floor(Math.random() * 4);
     this.obstacles = [];
     this.particles = [];
     this.score = 0;
     this.screenShake = 0;
+    this.nextObstacleId = 1;
     this.nextObstacleWorldY = 220;
 
     // Spawn first few obstacles
@@ -140,11 +150,16 @@ export class ChromaJumpEngine implements GameEngine {
 
   public destroy() {
     this.isRunning = false;
+    if (this.gameOverTimer) {
+      clearTimeout(this.gameOverTimer);
+      this.gameOverTimer = null;
+    }
     cancelAnimationFrame(this.animationFrameId);
   }
 
   public jump() {
     if (this.isPaused || this.isGameOver) return;
+    this.hasStarted = true;
     this.ballVy = this.jumpForce;
     sounds.playBounce();
     haptics.tap();
@@ -166,16 +181,21 @@ export class ChromaJumpEngine implements GameEngine {
   }
 
   private spawnNextObstacle() {
-    const types: ObstacleType[] = ['circle', 'cross', 'double_circle'];
-    const type = types[Math.floor(Math.random() * types.length)];
+    let type: ObstacleType = 'circle';
+    if (this.nextObstacleId > 2) {
+      const types: ObstacleType[] = ['circle', 'cross', 'double_circle'];
+      type = types[Math.floor(Math.random() * types.length)];
+    }
     const dir = Math.random() < 0.5 ? 1 : -1;
-    const rotSpeed = (1.2 + Math.random() * 0.8) * dir;
+    const baseSpeed = Math.min(1.5, 0.85 + Math.floor(this.score / 5) * 0.1);
+    const rotSpeed = (baseSpeed + Math.random() * 0.25) * dir;
+    const radius = type === 'double_circle' ? 95 : type === 'cross' ? 70 : 80;
 
     this.obstacles.push({
       id: this.nextObstacleId++,
       y: this.nextObstacleWorldY,
       type,
-      radius: type === 'cross' ? 70 : 80,
+      radius,
       angle: Math.random() * Math.PI * 2,
       rotSpeed,
       starCollected: false,
@@ -201,6 +221,14 @@ export class ChromaJumpEngine implements GameEngine {
 
   private update(dt: number) {
     const rect = this.container.getBoundingClientRect();
+
+    // Hover gracefully until player taps jump
+    if (!this.hasStarted) {
+      this.hoverTimer += dt;
+      this.ballY = 400 + Math.sin(this.hoverTimer * 3.5) * 8;
+      this.ballVy = 0;
+      return;
+    }
 
     // Apply gravity
     this.ballVy += this.gravity * dt;
@@ -316,11 +344,11 @@ export class ChromaJumpEngine implements GameEngine {
         }
       }
 
-      // Inner ring (counter-rotating at -obs.angle * 1.2)
-      const innerRadius = 55;
+      // Inner ring (counter-rotating at -obs.angle * 1.1)
+      const innerRadius = 46;
       if (Math.abs(dist - innerRadius) < (this.ballRadius + ringThickness / 2)) {
         const impactAngle = Math.atan2(dy, dx);
-        const innerAngle = -obs.angle * 1.2;
+        const innerAngle = -obs.angle * 1.1;
         const relAngle = ((impactAngle - innerAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
         const quadrant = Math.floor(relAngle / (Math.PI / 2)) % 4;
         if (quadrant !== this.currentColorIndex) {
@@ -367,8 +395,8 @@ export class ChromaJumpEngine implements GameEngine {
     this.spawnParticles(this.ballX, this.ballY, CHROMA_COLORS[this.currentColorIndex].hex, 25);
     this.spawnParticles(this.ballX, this.ballY, '#ffffff', 15);
 
-    const stars = this.score >= 25 ? 3 : this.score >= 12 ? 2 : this.score >= 4 ? 1 : 0;
-    setTimeout(() => {
+    const stars = this.score >= 30 ? 3 : this.score >= 15 ? 2 : this.score >= 5 ? 1 : 0;
+    this.gameOverTimer = setTimeout(() => {
       this.onGameOver?.(this.score, false, stars);
     }, 650);
   }
@@ -450,10 +478,10 @@ export class ChromaJumpEngine implements GameEngine {
         // Inner counter-rotating ring
         ctx.save();
         ctx.translate(centerX, obs.y);
-        ctx.rotate(-obs.angle * 1.2);
+        ctx.rotate(-obs.angle * 1.1);
         for (let i = 0; i < 4; i++) {
           ctx.beginPath();
-          ctx.arc(0, 0, 55, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+          ctx.arc(0, 0, 46, i * Math.PI / 2, (i + 1) * Math.PI / 2);
           ctx.strokeStyle = CHROMA_COLORS[i].hex;
           ctx.lineWidth = ringWidth;
           ctx.stroke();
@@ -535,6 +563,19 @@ export class ChromaJumpEngine implements GameEngine {
       ctx.arc(0, 0, this.ballRadius * 0.45, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+
+      // Tap to jump prompt
+      if (!this.hasStarted) {
+        ctx.save();
+        ctx.font = 'bold 15px Inter, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = curColor.hex;
+        ctx.shadowBlur = 10;
+        const bounce = Math.sin(this.hoverTimer * 4) * 4;
+        ctx.fillText('TAP TO JUMP', this.ballX, this.ballY + 45 + bounce);
+        ctx.restore();
+      }
     }
 
     ctx.restore(); // restore camera offset

@@ -9,7 +9,7 @@ interface SnakeViewProps {
   level?: number;
   isPaused: boolean;
   onScoreUpdate: (update: GameScoreUpdate) => void;
-  onGameOver: (finalScore: number, isNewHighScore: boolean) => void;
+  onGameOver: (finalScore: number, isNewHighScore: boolean, stars?: number) => void;
 }
 
 export const SnakeView: React.FC<SnakeViewProps> = ({
@@ -98,13 +98,13 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!pointerStartRef.current || pointerStartRef.current.swiped) return;
+    if (!pointerStartRef.current) return;
     const dx = e.clientX - pointerStartRef.current.x;
     const dy = e.clientY - pointerStartRef.current.y;
-    const minSwipeDistance = 20;
+    const minSwipeDistance = 18;
 
     if (Math.abs(dx) > minSwipeDistance || Math.abs(dy) > minSwipeDistance) {
-      pointerStartRef.current.swiped = true;
+      pointerStartRef.current = { x: e.clientX, y: e.clientY, swiped: true };
       haptics.tap();
       if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 0) engineRef.current?.setDirection(1, 0);

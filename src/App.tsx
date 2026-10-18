@@ -151,9 +151,11 @@ export const App: React.FC = () => {
     setGameScore(update.score);
   };
 
-  const handleGameOver = (finalScore: number) => {
+  const handleGameOver = (finalScore: number, _isNewHighScore?: boolean, stars?: number) => {
     if (!activeGame) return;
-    const result = storage.saveScore(activeGame.id, finalScore, gameStars, 1);
+    const earnedStars = stars ?? 0;
+    setGameStars(earnedStars);
+    const result = storage.saveScore(activeGame.id, finalScore, earnedStars, 1);
     setHighScore(result.progress.highScore);
     setIsNewHighScore(result.isNewHighScore);
     setIsGameOver(true);

@@ -21,7 +21,6 @@ export const CrossyLaneView: React.FC<CrossyLaneViewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<CrossyLaneEngine | null>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;

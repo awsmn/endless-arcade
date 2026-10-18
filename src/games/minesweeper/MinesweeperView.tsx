@@ -218,17 +218,28 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
   const pointerStartRef = useRef<{ r: number; c: number } | null>(null);
 
   const handlePointerDownCell = (r: number, c: number, e: React.PointerEvent) => {
-    (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    try {
+      (e.currentTarget as HTMLElement)?.setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
     pointerStartRef.current = { r, c };
     didLongPressRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
       didLongPressRef.current = true;
       toggleFlag(r, c);
       longPressTimerRef.current = null;
-    }, 350);
+    }, 320);
   };
 
-  const handlePointerUpCell = (r: number, c: number) => {
+  const handlePointerUpCell = (r: number, c: number, e?: React.PointerEvent) => {
+    if (e) {
+      try {
+        (e.currentTarget as HTMLElement)?.releasePointerCapture?.(e.pointerId);
+      } catch {
+        // ignore
+      }
+    }
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;

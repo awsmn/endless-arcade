@@ -97,13 +97,13 @@ export const CyberSprintView: React.FC<CyberSprintViewProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!pointerStartRef.current || pointerStartRef.current.swiped || !engineRef.current) return;
+    if (!pointerStartRef.current || !engineRef.current) return;
     const dx = e.clientX - pointerStartRef.current.x;
     const dy = e.clientY - pointerStartRef.current.y;
     const minDistance = 20;
 
     if (Math.abs(dx) > minDistance || Math.abs(dy) > minDistance) {
-      pointerStartRef.current.swiped = true;
+      pointerStartRef.current = { x: e.clientX, y: e.clientY, swiped: true };
       if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 0) engineRef.current.shiftLane(1);
         else engineRef.current.shiftLane(-1);

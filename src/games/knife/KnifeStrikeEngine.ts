@@ -59,6 +59,7 @@ export class KnifeStrikeEngine implements GameEngine {
   private particles: Particle[] = [];
   private lastTime = 0;
   private animationFrameId = 0;
+  private stageClearTimer: ReturnType<typeof setTimeout> | null = null;
 
   public onScoreUpdate?: (update: GameScoreUpdate) => void;
   public onGameOver?: (finalScore: number, isNewHighScore: boolean, stars?: number) => void;
@@ -120,27 +121,34 @@ export class KnifeStrikeEngine implements GameEngine {
   public destroy() {
     this.isRunning = false;
     cancelAnimationFrame(this.animationFrameId);
+    if (this.stageClearTimer) {
+      clearTimeout(this.stageClearTimer);
+      this.stageClearTimer = null;
+    }
   }
 
   private setupStage(stageNum: number) {
     this.flyingKnife = null;
-    this.totalKnives = 6 + (stageNum % 4);
+    // Fair knive count progression: 5 knives at stage 1, up to 8
+    this.totalKnives = 5 + Math.min(3, Math.floor((stageNum - 1) / 2));
     this.remainingKnives = this.totalKnives;
     this.embeddedKnives = [];
     this.apples = [];
 
-    // Pre-embedded knives based on stage
-    const initialHazards = Math.min(4, Math.floor(stageNum / 2));
+    // Pre-embedded knives based on stage (max 3 hazards so wheel never gets overcrowded)
+    const initialHazards = Math.min(3, Math.floor((stageNum - 1) / 3));
     for (let i = 0; i < initialHazards; i++) {
-      this.embeddedKnives.push((i * Math.PI * 2) / initialHazards + 0.3);
+      this.embeddedKnives.push((i * Math.PI * 2) / initialHazards + 0.35);
     }
 
-    // Apples
+    // Apples for bonus points
     if (Math.random() < 0.7) {
       this.apples.push({ angle: Math.random() * Math.PI * 2, sliced: false });
     }
 
-    this.wheelSpeed = (1.5 + (stageNum % 5) * 0.4) * (stageNum % 2 === 0 ? -1 : 1);
+    // Smooth speed progression
+    const baseSpeed = 1.3 + Math.min(10, stageNum) * 0.12;
+    this.wheelSpeed = baseSpeed * (stageNum % 2 === 0 ? -1 : 1);
     this.onStageChange?.(this.stage, this.remainingKnives, this.totalKnives);
     this.onScoreUpdate?.({ score: this.score, level: this.stage });
   }
@@ -175,11 +183,11 @@ export class KnifeStrikeEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    // Dynamic wheel rotation speed variation
+    // Dynamic wheel rotation speed variation (gentle, uniform scaling)
     this.speedTimer += dt;
-    if (this.stage > 2) {
-      // Oscillating or reversing wheel
-      this.wheelAngle += this.wheelSpeed * (1 + 0.4 * Math.sin(this.speedTimer * 2.5)) * dt;
+    if (this.stage >= 4) {
+      const variationStrength = Math.min(0.35, 0.15 + (this.stage - 4) * 0.03);
+      this.wheelAngle += this.wheelSpeed * (1 + variationStrength * Math.sin(this.speedTimer * 2.2)) * dt;
     } else {
       this.wheelAngle += this.wheelSpeed * dt;
     }
@@ -215,7 +223,8 @@ export class KnifeStrikeEngine implements GameEngine {
           this.isGameOver = true;
           sounds.playGameOver();
           haptics.gameOver();
-          this.onGameOver?.(this.score, false, Math.min(3, Math.floor(this.stage / 2)));
+          const stars = this.stage >= 10 ? 3 : this.stage >= 5 ? 2 : this.stage >= 2 ? 1 : 0;
+          this.onGameOver?.(this.score, false, stars);
         }
       }
     }
@@ -240,8 +249,8 @@ export class KnifeStrikeEngine implements GameEngine {
     const hitAngle = Math.PI / 2 - this.wheelAngle;
     const normalizedHit = ((hitAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
-    // Check collision with embedded knives
-    const collisionThreshold = 0.22; // ~12 degrees
+    // Check collision with embedded knives (0.15 rad matches visual knife thickness)
+    const collisionThreshold = 0.15;
     let collided = false;
 
     for (const knifeAngle of this.embeddedKnives) {
@@ -308,9 +317,10 @@ export class KnifeStrikeEngine implements GameEngine {
     this.spawnParticles(this.centerX, this.centerY, '#8b5cf6', 30);
     this.spawnParticles(this.centerX, this.centerY, '#f59e0b', 20);
 
-    setTimeout(() => {
+    this.stageClearTimer = setTimeout(() => {
       this.stage++;
       this.setupStage(this.stage);
+      this.stageClearTimer = null;
     }, 600);
   }
 

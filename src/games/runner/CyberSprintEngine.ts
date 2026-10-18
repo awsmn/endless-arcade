@@ -186,9 +186,9 @@ export class CyberSprintEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    // Gradually scale speed
-    this.worldSpeed = Math.min(1.1, 0.55 + this.distance * 0.0004);
-    this.spawnInterval = Math.max(0.65, 1.1 - this.distance * 0.0003);
+    // Gradually scale speed (balanced uniform progression)
+    this.worldSpeed = Math.min(0.95, 0.52 + this.distance * 0.00025);
+    this.spawnInterval = Math.max(0.75, 1.2 - this.distance * 0.0002);
 
     this.distance += dt * 45;
     this.score = Math.floor(this.distance + this.coins * 10);
@@ -235,10 +235,10 @@ export class CyberSprintEngine implements GameEngine {
       const obs = this.obstacles[i];
       obs.z -= this.worldSpeed * dt;
 
-      // Collision zone: z roughly between 0.04 and 0.16
-      if (obs.z >= 0.04 && obs.z <= 0.16 && !obs.collected && !obs.cleared) {
+      // Accurate collision zone around playerZ (0.08)
+      if (obs.z >= 0.05 && obs.z <= 0.11 && !obs.collected && !obs.cleared) {
         const laneDiff = Math.abs(this.currentLaneX - obs.lane);
-        if (laneDiff < 0.45) {
+        if (laneDiff < 0.38) {
           if (obs.type === 'coin') {
             obs.collected = true;
             this.coins++;

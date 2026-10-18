@@ -39,7 +39,7 @@ export class NeonSnakeEngine implements GameEngine {
   // Game state
   private snake: Point[] = [];
   private direction: Point = { x: 1, y: 0 };
-  private nextDirection: Point = { x: 1, y: 0 };
+  private inputQueue: Point[] = [];
   private food: Point = { x: 10, y: 10 };
   private bonusFood: BonusFood | null = null;
   private score = 0;
@@ -51,9 +51,10 @@ export class NeonSnakeEngine implements GameEngine {
 
   // Timing & Speed
   private lastTick = 0;
-  private tickInterval = 140; // ms per step
-  private minInterval = 65;   // top speed limit
+  private tickInterval = 155; // ms per step (fair starting speed)
+  private minInterval = 75;   // top speed limit
   private animationFrameId = 0;
+  private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Visual effects
   private particles: Particle[] = [];
@@ -125,25 +126,32 @@ export class NeonSnakeEngine implements GameEngine {
       { x: startX - 2, y: startY }
     ];
     this.direction = { x: 1, y: 0 };
-    this.nextDirection = { x: 1, y: 0 };
+    this.inputQueue = [];
 
-    this.tickInterval = Math.max(this.minInterval, 140 - (level - 1) * 6);
+    this.tickInterval = Math.max(this.minInterval, 155 - (level - 1) * 5);
     this.spawnFood();
 
     this.onScoreUpdate?.({ score: this.score, level: this.level });
 
     this.lastTick = performance.now();
     cancelAnimationFrame(this.animationFrameId);
+    if (this.gameOverTimer) clearTimeout(this.gameOverTimer);
     this.loop(performance.now());
   }
 
   public setDirection(x: number, y: number) {
     if (!this.isRunning || this.isPaused || this.isGameOver) return;
-    // Prevent 180-degree instant reversal into own neck
-    if (x !== 0 && this.direction.x !== 0) return;
-    if (y !== 0 && this.direction.y !== 0) return;
+    
+    // Compare against the latest intended direction (queued or current)
+    const last = this.inputQueue.length > 0 ? this.inputQueue[this.inputQueue.length - 1] : this.direction;
+    // Prevent 180-degree reversal
+    if (last.x + x === 0 && last.y + y === 0) return;
+    // Prevent duplicate commands
+    if (last.x === x && last.y === y) return;
 
-    this.nextDirection = { x, y };
+    if (this.inputQueue.length < 2) {
+      this.inputQueue.push({ x, y });
+    }
   }
 
   public pause() {
@@ -160,6 +168,10 @@ export class NeonSnakeEngine implements GameEngine {
   public destroy() {
     this.isRunning = false;
     cancelAnimationFrame(this.animationFrameId);
+    if (this.gameOverTimer) {
+      clearTimeout(this.gameOverTimer);
+      this.gameOverTimer = null;
+    }
   }
 
   private loop = (timestamp: number) => {
@@ -183,7 +195,9 @@ export class NeonSnakeEngine implements GameEngine {
   };
 
   private step() {
-    this.direction = { ...this.nextDirection };
+    if (this.inputQueue.length > 0) {
+      this.direction = this.inputQueue.shift()!;
+    }
     const head = { ...this.snake[0] };
     head.x += this.direction.x;
     head.y += this.direction.y;
@@ -214,8 +228,8 @@ export class NeonSnakeEngine implements GameEngine {
       this.spawnExplosion(head.x, head.y, '#10b981');
       this.spawnFood();
 
-      // Speed up gradually
-      this.tickInterval = Math.max(this.minInterval, this.tickInterval - 1.5);
+      // Speed up gradually (smooth, uniform progression)
+      this.tickInterval = Math.max(this.minInterval, this.tickInterval - 1.2);
 
       // Random chance to spawn bonus gold orb
       if (!this.bonusFood && Math.random() < 0.35) {
@@ -255,8 +269,9 @@ export class NeonSnakeEngine implements GameEngine {
     haptics.impact();
     this.spawnExplosion(this.snake[0].x, this.snake[0].y, '#f43f5e', 30);
 
-    setTimeout(() => {
-      this.onGameOver?.(this.score, false);
+    const stars = this.score >= 200 ? 3 : this.score >= 100 ? 2 : this.score >= 40 ? 1 : 0;
+    this.gameOverTimer = setTimeout(() => {
+      this.onGameOver?.(this.score, false, stars);
     }, 400);
   }
 
