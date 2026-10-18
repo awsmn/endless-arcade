@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { NeonSnakeEngine } from './NeonSnake';
 import { GameMode, GameScoreUpdate } from '../../types/game';
 import { haptics } from '../../engine/haptics';
@@ -123,11 +122,6 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
     pointerStartRef.current = null;
   };
 
-  const handleDPadPress = (x: number, y: number) => {
-    haptics.tap();
-    engineRef.current?.setDirection(x, y);
-  };
-
   return (
     <div
       ref={containerRef}
@@ -139,67 +133,6 @@ export const SnakeView: React.FC<SnakeViewProps> = ({
     >
       {/* Game Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
-
-      {/* Mobile Virtual D-Pad for thumb controls */}
-      <div 
-        className="absolute bottom-3 left-0 right-0 flex flex-col items-center space-y-1.5 px-4 z-20 pointer-events-auto"
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        {/* Up Button */}
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleDPadPress(0, -1);
-          }}
-          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
-          aria-label="Up"
-        >
-          <ArrowUp className="w-6 h-6 stroke-[3]" />
-        </button>
-
-        {/* Left, Center Indicator, Right */}
-        <div className="flex items-center space-x-6">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDPadPress(-1, 0);
-            }}
-            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
-            aria-label="Left"
-          >
-            <ArrowLeft className="w-6 h-6 stroke-[3]" />
-          </button>
-
-          <div className="w-4 h-4 rounded-full bg-pop-pink border-2 border-black shadow-[1px_1px_0px_#000]" />
-
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDPadPress(1, 0);
-            }}
-            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
-            aria-label="Right"
-          >
-            <ArrowRight className="w-6 h-6 stroke-[3]" />
-          </button>
-        </div>
-
-        {/* Down Button */}
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleDPadPress(0, 1);
-          }}
-          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all"
-          aria-label="Down"
-        >
-          <ArrowDown className="w-6 h-6 stroke-[3]" />
-        </button>
-      </div>
     </div>
   );
 };

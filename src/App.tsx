@@ -269,11 +269,11 @@ export const App: React.FC = () => {
   const isLight = settings.theme === 'light';
 
   return (
-    <div className={`min-h-screen ${isLight ? 'bg-[#f1f3f9] text-slate-900' : 'bg-[#0b0e1b] text-white'} flex flex-col justify-between relative overflow-hidden pop-dots-bg transition-colors duration-200`}>
-      {/* Active Game View (Full Screen on Mobile, Centered Arcade Cabinet on Desktop) */}
+    <div className={`min-h-screen ${isLight ? 'bg-[#f8fafc] text-slate-900' : 'bg-[#0b0f19] text-white'} flex flex-col justify-between relative overflow-hidden pop-dots-bg transition-colors duration-200`}>
+      {/* Active Game View (Expansive viewport on all devices) */}
       {activeGame ? (
-        <div className="fixed inset-0 z-50 bg-[#05070e] flex items-center justify-center touch-none overscroll-none select-none">
-          <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c1020] shadow-2xl border-x-2 border-black touch-none select-none">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center touch-none overscroll-none select-none transition-colors duration-200 ${isLight ? 'bg-slate-200/60' : 'bg-[#080b14]'}`}>
+          <div className={`relative w-full max-w-4xl h-full flex flex-col overflow-hidden transition-colors duration-200 shadow-2xl border-x ${isLight ? 'bg-slate-50 border-slate-200/90' : 'bg-[#0c101c] border-slate-800/80'} touch-none select-none`}>
             {/* In-Game HUD Overlay */}
             <InGameOverlay
               difficulty={activeGame.id === '2048-unlimited' ? 'Classic rules' : DIFFICULTIES[settings.difficulty].label}
@@ -282,6 +282,8 @@ export const App: React.FC = () => {
               highScore={highScore}
               soundEnabled={settings.soundEnabled}
               onToggleSound={handleToggleSound}
+              theme={settings.theme}
+              onToggleTheme={handleToggleTheme}
               onPause={() => { if (!gameEndedRef.current) setIsPaused(true); }}
               onExit={handleExitGame}
             />
@@ -524,14 +526,14 @@ export const App: React.FC = () => {
                 {/* Search Bar */}
                 <div className="px-4 pt-3">
                   <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pop-pink dark:text-pop-yellow stroke-[2.5]" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500 dark:text-amber-400 stroke-[2.2]" />
                     <input
                       type="text"
                       aria-label="Search games"
                       placeholder="Find your next obsession..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-[#14192b] border-2 border-black shadow-pop-sm text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-pop-yellow focus:shadow-pop transition-all font-medium"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-[#14192b] border border-slate-200 dark:border-slate-700/80 shadow-sm text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 dark:focus:border-amber-400 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -561,7 +563,7 @@ export const App: React.FC = () => {
                         ? 'THE GAME ROOM'
                         : `${selectedCategory.toUpperCase()} GAMES`}
                     </h3>
-                    <span className="text-[10px] font-bungee text-pop-pink dark:text-pop-yellow bg-white dark:bg-[#14192b] px-2 py-0.5 rounded border-2 border-black shadow-pop-xs">
+                    <span className="text-[10px] font-bungee text-amber-600 dark:text-amber-400 bg-white dark:bg-[#14192b] px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
                       {filteredGames.length} GAMES
                     </span>
                   </div>
@@ -581,14 +583,14 @@ export const App: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 space-y-2 bg-white dark:bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
+                    <div className="text-center py-12 space-y-2 bg-white dark:bg-[#14192b] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm">
                       <p className="text-slate-800 dark:text-slate-300 text-sm font-pop font-bold">NO GAMES FOUND</p>
                       <button
                         onClick={() => {
                           setSelectedCategory('all');
                           setSearchQuery('');
                         }}
-                        className="text-xs font-pop font-black text-pop-pink dark:text-pop-yellow hover:underline"
+                        className="text-xs font-pop font-black text-amber-600 dark:text-amber-400 hover:underline"
                       >
                         RESET FILTERS
                       </button>
@@ -621,8 +623,8 @@ export const App: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 space-y-3 bg-white dark:bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
-                    <Heart className="w-12 h-12 mx-auto text-pop-pink" strokeWidth={1.5} />
+                  <div className="text-center py-16 space-y-3 bg-white dark:bg-[#14192b] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm">
+                    <Heart className="w-12 h-12 mx-auto text-rose-400" strokeWidth={1.5} />
                     <p className="text-slate-900 dark:text-white text-base font-pop font-black">NO FAVORITES YET</p>
                     <p className="text-xs text-slate-600 dark:text-slate-300 max-w-[220px] mx-auto">
                       Tap the heart icon on any game card to pin it to your favorites!

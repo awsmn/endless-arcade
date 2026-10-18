@@ -368,25 +368,25 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
       onPointerCancel={() => {
         setDraggingShapeIndex(null); setDragOffset(null); setHoverCell(null); pointerStartRef.current = null;
       }}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
+      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
     >
       {/* Top Score HUD */}
-      <div className="w-full max-w-xs px-4 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Trophy className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">{score}</span>
+      <div className="w-full max-w-md px-4 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Trophy className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{score}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-pop-pink fill-pop-pink" />
-          <span className="text-xs font-pop font-black text-pop-pink uppercase">POP 1010</span>
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+          <span className="text-xs font-bold text-rose-400 uppercase">BLOCK MATRIX</span>
         </div>
       </div>
 
-      {/* 8x8 Board */}
+      {/* 8x8 Board - Maximized */}
       <div
         ref={boardRef}
-        className="w-[min(340px,86vw,44vh)] aspect-square p-2 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto relative"
+        className="w-[min(460px,94vw,56vh)] aspect-square p-2 sm:p-3 bg-slate-900/85 dark:bg-slate-950/85 rounded-3xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto relative"
       >
         {board.map((row, r) => (
           <div key={r} className="flex-1 flex space-x-1 my-0.5">
@@ -432,7 +432,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
       </div>
 
       {/* Bottom Tray with 3 Pieces */}
-      <div className="w-full max-w-xs px-2 py-3 flex items-center justify-around z-20 bg-[#14192b] rounded-2xl border-2 border-black shadow-pop">
+      <div className="w-full max-w-md px-3 py-2 flex items-center justify-around z-20 glass-panel rounded-2xl border border-slate-700/40 shadow-sm">
         {tray.map((shape, idx) => {
           const isSelected = selectedShapeIndex === idx;
           const isDragging = draggingShapeIndex === idx;
@@ -449,7 +449,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
                 }
               }}
               className={`w-20 h-20 flex items-center justify-center cursor-grab active:cursor-grabbing rounded-xl transition-all ${
-                isSelected ? 'ring-2 ring-pop-yellow bg-white/5 scale-105 shadow-md' : ''
+                isSelected ? 'ring-2 ring-amber-400 bg-white/5 scale-105 shadow-md' : ''
               }`}
               onPointerDown={(e) => handlePointerDown(idx, e)}
             >

@@ -130,14 +130,7 @@ export const GalaxiaVoidView: React.FC<GalaxiaVoidViewProps> = ({
       {/* Top HUD Pill */}
       <div className="absolute top-16 left-4 z-20 glass-pill px-3 py-1 flex items-center space-x-1.5 border border-cyan-500/30 pointer-events-none">
         <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
-        <span className="text-[10px] font-black uppercase text-cyan-300">AUTO-FIRE ACTIVE</span>
-      </div>
-
-      {/* Bottom Hint */}
-      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-none">
-        <div className="glass-panel py-1.5 px-4 rounded-xl text-[11px] text-slate-400 font-semibold border border-white/5">
-          DRAG TO STEER STARSHIP
-        </div>
+        <span className="text-[10px] font-bold uppercase text-cyan-300">AUTO-FIRE ACTIVE</span>
       </div>
     </div>
   );

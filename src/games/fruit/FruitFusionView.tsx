@@ -2,7 +2,6 @@ import { FruitAsset } from '../../components/FruitAsset';
 import React, { useEffect, useRef, useState } from 'react';
 import { FruitFusionEngine, FRUIT_TIERS } from './FruitFusionEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { ChevronDown } from 'lucide-react';
 
 interface FruitFusionViewProps {
   mode: GameMode;
@@ -103,10 +102,6 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
     engineRef.current.drop();
   };
 
-  const handleManualDrop = () => {
-    engineRef.current?.drop();
-  };
-
   const nextFruitDef = FRUIT_TIERS[nextTier];
 
   return (
@@ -125,23 +120,6 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
       <div className="absolute top-16 right-4 z-20 glass-pill rounded-2xl px-3 py-1.5 flex items-center space-x-2 border border-pink-500/30 pointer-events-none">
         <span className="text-[10px] uppercase font-black text-slate-400">Next</span>
         <FruitAsset tier={nextTier} name={nextFruitDef.name} />
-      </div>
-
-      {/* Bottom Drop Control Button */}
-      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
-        <div className="w-full max-w-xs">
-          <button
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              handleManualDrop();
-            }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-600 to-pink-700 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20 active:scale-95 transition-transform cursor-pointer"
-          >
-            <ChevronDown className="w-5 h-5 animate-bounce" />
-            <span>TAP TO DROP</span>
-          </button>
-        </div>
       </div>
     </div>
   );

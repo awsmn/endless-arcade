@@ -293,24 +293,44 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense">
-      {/* Top HUD: Flag & Time counter */}
-      <div className="w-full max-w-xs px-4 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Flag className="w-3.5 h-3.5 text-pop-pink fill-pop-pink" />
-          <span className="text-xs font-bungee text-white">{remainingFlags}</span>
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16">
+      {/* Top HUD: Flag counter, mode toggle & Time counter */}
+      <div className="w-full max-w-lg px-4 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Flag className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{remainingFlags}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">{timer}s</span>
+        {/* Compact Mode Switcher */}
+        <button
+          type="button"
+          onClick={() => {
+            setFlagMode(!flagMode);
+            sounds.playTap();
+            haptics.tap();
+          }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center space-x-1.5 active:scale-95 ${
+            flagMode
+              ? 'bg-rose-500/20 border-rose-500/60 text-rose-400 shadow-sm'
+              : 'glass-panel border-slate-700/40 text-slate-300 dark:text-slate-200 hover:text-white'
+          }`}
+          title="Tap to switch between Reveal and Flag modes"
+          aria-label="Toggle flag mode"
+        >
+          {flagMode ? <Flag className="w-3.5 h-3.5 fill-current" /> : <Shield className="w-3.5 h-3.5" />}
+          <span>{flagMode ? 'FLAG' : 'REVEAL'}</span>
+        </button>
+
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{timer}s</span>
         </div>
       </div>
 
-      {/* Minesweeper Grid Board */}
-      <div className="w-[min(340px,85vw,44vh)] aspect-square p-2 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto">
+      {/* Minesweeper Grid Board - Expanded for full touch canvas */}
+      <div className="w-[min(480px,94vw,70vh)] aspect-square p-2 sm:p-3 bg-slate-900/85 dark:bg-slate-950/85 rounded-3xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto">
         {grid.map((row, r) => (
-          <div key={r} className="flex-1 flex space-x-1 my-0.5">
+          <div key={r} className="flex-1 flex space-x-1 sm:space-x-1.5 my-0.5">
             {row.map((cell, c) => (
               <button
                 key={c}
@@ -338,63 +358,26 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
                 className={`flex-1 rounded-xl flex items-center justify-center transition-all duration-100 cursor-pointer ${
                   cell.isRevealed
                     ? cell.isMine
-                    ? 'bg-pop-red text-white shadow-inner animate-pulse'
-                    : 'bg-[#13182b] border border-black/40'
-                  : 'bg-[#1e2744] hover:bg-[#283458] active:scale-95 border-2 border-black/80 shadow-[1px_1px_0px_#000]'
+                    ? 'bg-rose-600 text-white shadow-inner animate-pulse'
+                    : 'bg-slate-800/40 dark:bg-slate-900/50 border border-slate-700/30'
+                  : 'bg-slate-800/80 hover:bg-slate-700/80 active:scale-95 border border-slate-700/50 shadow-sm'
                 }`}
               >
                 {cell.isRevealed ? (
                   cell.isMine ? (
-                    <Bomb className="w-4 h-4 text-white fill-current" />
+                    <Bomb className="w-5 h-5 text-white fill-current" />
                   ) : cell.neighborMines > 0 ? (
-                    <span className={`text-sm font-bungee ${getNumberColor(cell.neighborMines)}`}>
+                    <span className={`text-base font-bold ${getNumberColor(cell.neighborMines)}`}>
                       {cell.neighborMines}
                     </span>
                   ) : null
                 ) : cell.isFlagged ? (
-                  <Flag className="w-4 h-4 text-pop-pink fill-pop-pink drop-shadow" />
+                  <Flag className="w-5 h-5 text-rose-400 fill-rose-400 drop-shadow-sm" />
                 ) : null}
               </button>
             ))}
           </div>
         ))}
-      </div>
-
-      {/* Mode Switcher Buttons */}
-      <div className="w-full max-w-xs px-4 pb-2 z-20 flex space-x-3">
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setFlagMode(false);
-            sounds.playTap();
-            haptics.tap();
-          }}
-          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-            !flagMode
-              ? 'bg-pop-yellow text-black border-2 border-black shadow-pop-xs -translate-y-0.5'
-              : 'bg-[#14192b] text-slate-300 border-2 border-black/80'
-          }`}
-        >
-          <Shield className="w-4 h-4 stroke-[2.5]" />
-          <span>REVEAL</span>
-        </button>
-
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setFlagMode(true);
-            sounds.playTap();
-            haptics.tap();
-          }}
-          className={`flex-1 py-3 rounded-2xl font-pop font-black text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer ${
-            flagMode
-              ? 'bg-pop-pink text-white border-2 border-black shadow-pop-xs -translate-y-0.5'
-              : 'bg-[#14192b] text-slate-300 border-2 border-black/80'
-          }`}
-        >
-          <Flag className="w-4 h-4 stroke-[2.5]" />
-          <span>FLAG ({remainingFlags})</span>
-        </button>
       </div>
     </div>
   );

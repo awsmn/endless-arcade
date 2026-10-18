@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StackSliceEngine } from './StackSliceEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { Layers } from 'lucide-react';
 
 interface StackSliceViewProps {
   mode: GameMode;
@@ -89,29 +88,12 @@ export const StackSliceView: React.FC<StackSliceViewProps> = ({
 
       {/* Floating Combo Indicator */}
       {combo > 1 && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 animate-bounce glass-pill px-4 py-1.5 border border-fuchsia-400 bg-fuchsia-500/20 shadow-neon-pink pointer-events-none">
-          <span className="text-xs font-black text-fuchsia-300">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 animate-bounce glass-pill px-4 py-1.5 border border-rose-400/50 bg-rose-500/20 shadow-sm pointer-events-none">
+          <span className="text-xs font-bold text-rose-300">
             PERFECT x{combo}!
           </span>
         </div>
       )}
-
-      {/* Bottom Drop Control Button */}
-      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
-        <div className="w-full max-w-xs">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDrop();
-            }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-pink-600 to-rose-600 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20 active:scale-95 transition-transform"
-          >
-            <Layers className="w-5 h-5 text-fuchsia-200" />
-            <span>TAP ANYWHERE TO STACK</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

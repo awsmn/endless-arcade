@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { HelixDescentEngine } from './HelixDescentEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { RotateCw } from 'lucide-react';
 
 interface HelixDescentViewProps {
   mode: GameMode;
@@ -107,14 +106,6 @@ export const HelixDescentView: React.FC<HelixDescentViewProps> = ({
       className="relative w-full h-full overflow-hidden select-none touch-none cursor-grab active:cursor-grabbing"
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
-
-      {/* Floating Control Tip */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none z-20">
-        <div className="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-pop font-bold text-white/90 flex items-center space-x-1.5 shadow-pop-xs">
-          <RotateCw className="w-3.5 h-3.5 text-pop-yellow animate-spin" style={{ animationDuration: '6s' }} />
-          <span>DRAG OR USE A/D TO ROTATE HELIX</span>
-        </div>
-      </div>
     </div>
   );
 };

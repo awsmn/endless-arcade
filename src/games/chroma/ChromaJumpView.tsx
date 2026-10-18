@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChromaJumpEngine, CHROMA_COLORS } from './ChromaJumpEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { CircleDot } from 'lucide-react';
 
 interface ChromaJumpViewProps {
   mode: GameMode;
@@ -85,28 +84,12 @@ export const ChromaJumpView: React.FC<ChromaJumpViewProps> = ({
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* Top Active Color Indicator HUD */}
-      <div className="absolute top-16 left-4 z-20 glass-pill px-3 py-1 flex items-center space-x-2 border border-white/10 pointer-events-none">
-        <span className="text-[10px] font-black uppercase text-slate-400">Match</span>
+      <div className="absolute top-16 left-4 z-20 glass-pill px-3 py-1 flex items-center space-x-2 border border-slate-700/40 dark:border-slate-800 pointer-events-none">
+        <span className="text-[10px] font-bold uppercase text-slate-400">Match</span>
         <div
           className="w-4 h-4 rounded-full shadow-md animate-pulse border border-white/40"
           style={{ backgroundColor: activeColor }}
         />
-      </div>
-
-      {/* Bottom Jump Button */}
-      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
-        <div className="w-full max-w-xs">
-          <button
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              handleJump();
-            }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/20 active:scale-95 transition-transform"
-          >
-            <CircleDot className="w-5 h-5 text-white animate-spin" />
-            <span>TAP ANYWHERE TO JUMP</span>
-          </button>
-        </div>
       </div>
     </div>
   );

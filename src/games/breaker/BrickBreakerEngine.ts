@@ -107,10 +107,10 @@ export class BrickBreakerEngine implements GameEngine {
     this.ctx.scale(dpr, dpr);
 
     const padX = 16;
-    this.arenaWidth = Math.min(rect.width - padX * 2, 380);
-    const topPad = 70;
-    const bottomPad = 60;
-    this.arenaHeight = Math.min(rect.height - topPad - bottomPad, 520);
+    this.arenaWidth = Math.min(rect.width - padX * 2, 540);
+    const topPad = 68;
+    const bottomPad = 24;
+    this.arenaHeight = Math.min(rect.height - topPad - bottomPad, 720);
     this.arenaX = Math.floor((rect.width - this.arenaWidth) / 2);
     this.arenaY = topPad;
 

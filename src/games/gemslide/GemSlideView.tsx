@@ -148,40 +148,38 @@ export const GemSlideView: React.FC<GemSlideViewProps> = ({
   }, [board, isPaused, slideTile]);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-14 pop-dots-dense">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-14">
       {/* Top HUD */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Footprints className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-xs font-bungee text-white">MOVES: {moves}</span>
+      <div className="w-full max-w-md px-3 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Footprints className="w-3.5 h-3.5 text-sky-400" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">MOVES: {moves}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Clock className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">{timer}s</span>
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Clock className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{timer}s</span>
         </div>
 
         <button
-          onPointerDown={e => {
-            e.preventDefault();
-            handleReset();
-          }}
-          className="bg-[#14192b] border-2 border-black rounded-xl p-1.5 shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5"
+          type="button"
+          onClick={handleReset}
+          className="glass-panel border border-slate-700/40 rounded-xl p-2 active:scale-95 shadow-sm text-rose-400"
           aria-label="Restart"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-pop-pink" />
+          <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* 4x4 Sliding Tile Grid */}
-      <div className="w-[min(340px,86vw,44vh)] aspect-square p-2.5 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto z-20">
-        <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-2">
+      {/* 4x4 Sliding Tile Grid - Maximized */}
+      <div className="w-[min(480px,94vw,66vh)] aspect-square p-3 sm:p-4 bg-slate-900/85 dark:bg-slate-950/85 rounded-3xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto z-20">
+        <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-2 sm:gap-2.5">
           {board.map((val, idx) => {
             if (val === null) {
               return (
                 <div
                   key="empty"
-                  className="rounded-2xl border-2 border-dashed border-slate-800 bg-[#070a14]/60"
+                  className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40"
                 />
               );
             }
@@ -197,10 +195,10 @@ export const GemSlideView: React.FC<GemSlideViewProps> = ({
                   e.preventDefault();
                   slideTile(idx);
                 }}
-                className={`rounded-2xl border-2 border-black flex items-center justify-center font-bungee text-xl transition-all duration-100 shadow-pop-xs active:scale-95 cursor-pointer ${
+                className={`rounded-2xl border flex items-center justify-center font-bold text-xl sm:text-2xl transition-all duration-100 active:scale-95 cursor-pointer ${
                   isCorrectPosition
-                    ? 'bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 shadow-neon-emerald'
-                    : 'bg-gradient-to-br from-[#1e2744] to-[#283458] text-white hover:from-[#283458] hover:to-[#34426d]'
+                    ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/50 shadow-sm'
+                    : 'bg-slate-800/80 hover:bg-slate-700/80 text-white border-slate-700/40 shadow-sm'
                 }`}
               >
                 {val}
@@ -211,10 +209,10 @@ export const GemSlideView: React.FC<GemSlideViewProps> = ({
       </div>
 
       {/* Target Preview Hint */}
-      <div className="w-full max-w-xs px-3 pb-2 z-20 flex justify-center">
-        <div className="bg-[#14192b] border-2 border-black rounded-2xl px-4 py-2 shadow-pop-xs flex items-center space-x-2">
-          <Trophy className="w-4 h-4 text-pop-yellow fill-pop-yellow" />
-          <span className="text-[10px] font-pop font-black text-slate-300">
+      <div className="w-full max-w-md px-3 pb-2 z-20 flex justify-center">
+        <div className="glass-panel border border-slate-700/40 rounded-2xl px-4 py-2 shadow-sm flex items-center space-x-2">
+          <Trophy className="w-4 h-4 text-amber-500 fill-amber-500" />
+          <span className="text-[11px] font-semibold text-slate-400">
             ARRANGE NUMBERS 1 THROUGH 15 IN ORDER
           </span>
         </div>

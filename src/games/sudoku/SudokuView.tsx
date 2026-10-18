@@ -301,39 +301,39 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
   const selectedValue = selectedCell ? grid[selectedCell.r][selectedCell.c].value : null;
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-2 pt-14 pop-dots-dense">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-2 pt-14">
       {/* Top HUD Stats */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Trophy className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">{score}</span>
+      <div className="w-full max-w-md px-3 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Trophy className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{score}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1">
-          <Clock className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-xs font-bungee text-white">{timer}s</span>
+        <div className="glass-pill px-3 py-1 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1">
+          <Clock className="w-3.5 h-3.5 text-sky-400" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{timer}s</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1">
+        <div className="glass-pill px-3 py-1 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1">
           <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
-          <span className="text-xs font-bungee text-white">{mistakes}/3</span>
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{mistakes}/3</span>
         </div>
       </div>
 
       {/* Difficulty Switcher Bar */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-center space-x-2 z-20">
+      <div className="w-full max-w-md px-3 flex items-center justify-center space-x-2 z-20">
         {(['easy', 'medium', 'hard'] as Difficulty[]).map(d => (
           <button
             key={d}
-            onPointerDown={e => {
-              e.preventDefault();
+            type="button"
+            onClick={() => {
               startNewGame(d);
               sounds.playTap();
             }}
-            className={`flex-1 py-1 rounded-xl text-[10px] font-pop font-black border-2 border-black uppercase transition-all ${
+            className={`flex-1 py-1 rounded-xl text-[11px] font-bold uppercase transition-all border ${
               difficulty === d
-                ? 'bg-pop-yellow text-black shadow-pop-xs -translate-y-0.5'
-                : 'bg-[#14192b] text-slate-400'
+                ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm'
+                : 'glass-panel border-slate-700/40 text-slate-400 dark:text-slate-500'
             }`}
           >
             {d}
@@ -341,8 +341,8 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
         ))}
       </div>
 
-      {/* 9x9 Sudoku Board */}
-      <div className="w-[min(340px,90vw,42vh)] aspect-square p-1.5 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto z-20">
+      {/* 9x9 Sudoku Board - Expanded */}
+      <div className="w-[min(460px,94vw,56vh)] aspect-square p-2 bg-slate-900/85 dark:bg-slate-950/85 rounded-2xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto z-20">
         {grid.map((row, r) => (
           <div key={r} className="flex-1 flex space-x-0.5 my-[1px]">
             {row.map((cell, c) => {
@@ -356,8 +356,8 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
               const isError = cell.value !== null && cell.value !== cell.solution;
 
               // Border accents for 3x3 blocks
-              const borderRight = (c + 1) % 3 === 0 && c !== 8 ? 'border-r-2 border-r-cyan-400/60' : '';
-              const borderBottom = (r + 1) % 3 === 0 && r !== 8 ? 'border-b-2 border-b-cyan-400/60' : '';
+              const borderRight = (c + 1) % 3 === 0 && c !== 8 ? 'border-r-2 border-r-sky-500/40' : '';
+              const borderBottom = (r + 1) % 3 === 0 && r !== 8 ? 'border-b-2 border-b-sky-500/40' : '';
 
               return (
                 <button
@@ -369,20 +369,20 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
                     sounds.playTap();
                     haptics.tap();
                   }}
-                  className={`flex-1 rounded-lg flex items-center justify-center relative font-bungee text-sm transition-all duration-75 ${borderRight} ${borderBottom} ${
+                  className={`flex-1 rounded-md flex items-center justify-center relative font-bold text-sm sm:text-base transition-all duration-75 ${borderRight} ${borderBottom} ${
                     isSelected
-                      ? 'bg-pop-yellow text-black scale-105 z-10 shadow-pop-xs'
+                      ? 'bg-amber-400/30 text-amber-300 border border-amber-400/60 z-10 scale-105'
                       : isError
                       ? 'bg-rose-500/30 text-rose-400 border border-rose-500 animate-pulse'
                       : isSameNumber
-                      ? 'bg-amber-400/25 text-pop-yellow'
+                      ? 'bg-amber-500/15 text-amber-300'
                       : isSameRowCol || isSameBox
-                      ? 'bg-[#1e2744]'
-                      : 'bg-[#14192b]'
+                      ? 'bg-slate-800/60 dark:bg-slate-800/40'
+                      : 'bg-slate-800/30 dark:bg-slate-900/40'
                   }`}
                 >
                   {cell.value ? (
-                    <span className={cell.isInitial ? 'text-white' : 'text-cyan-400'}>
+                    <span className={cell.isInitial ? 'text-slate-100 font-black' : 'text-sky-400 font-bold'}>
                       {cell.value}
                     </span>
                   ) : cell.notes.length > 0 ? (
@@ -402,17 +402,15 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
       </div>
 
       {/* Control Actions (Notes, Erase, Undo) */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-around space-x-2 z-20">
+      <div className="w-full max-w-md px-3 flex items-center justify-around space-x-2 z-20">
         <button
-          onPointerDown={e => {
-            e.preventDefault();
-            undoMove();
-          }}
+          type="button"
+          onClick={undoMove}
           disabled={history.length === 0}
-          className={`flex-1 py-1.5 rounded-xl border-2 border-black flex items-center justify-center space-x-1 text-xs font-pop font-black ${
+          className={`flex-1 py-1.5 rounded-xl border flex items-center justify-center space-x-1 text-xs font-bold transition-all active:scale-95 ${
             history.length > 0
-              ? 'bg-[#14192b] text-white shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5'
-              : 'bg-[#14192b]/40 text-slate-600'
+              ? 'glass-panel border-slate-700/40 text-slate-200'
+              : 'opacity-30 border-slate-800 text-slate-600'
           }`}
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -420,24 +418,24 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
         </button>
 
         <button
-          onPointerDown={e => {
-            e.preventDefault();
-            eraseCell();
-          }}
-          className="flex-1 py-1.5 rounded-xl bg-[#14192b] text-rose-400 border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center space-x-1 text-xs font-pop font-black"
+          type="button"
+          onClick={eraseCell}
+          className="flex-1 py-1.5 rounded-xl glass-panel border border-slate-700/40 text-rose-400 active:scale-95 flex items-center justify-center space-x-1 text-xs font-bold"
         >
           <Eraser className="w-3.5 h-3.5" />
           <span>ERASE</span>
         </button>
 
         <button
-          onPointerDown={e => {
-            e.preventDefault();
+          type="button"
+          onClick={() => {
             setNotesMode(m => !m);
             sounds.playTap();
           }}
-          className={`flex-1 py-1.5 rounded-xl border-2 border-black flex items-center justify-center space-x-1 text-xs font-pop font-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 ${
-            notesMode ? 'bg-pop-pink text-white' : 'bg-[#14192b] text-slate-300'
+          className={`flex-1 py-1.5 rounded-xl border flex items-center justify-center space-x-1 text-xs font-bold active:scale-95 transition-all ${
+            notesMode
+              ? 'bg-rose-500/20 border-rose-500/60 text-rose-400'
+              : 'glass-panel border-slate-700/40 text-slate-300'
           }`}
         >
           <Pencil className="w-3.5 h-3.5" />
@@ -446,15 +444,16 @@ export const SudokuView: React.FC<SudokuViewProps> = ({
       </div>
 
       {/* 1-9 Number Keypad */}
-      <div className="w-full max-w-xs px-3 pb-2 flex items-center justify-between space-x-1 z-20">
+      <div className="w-full max-w-md px-3 pb-2 flex items-center justify-between space-x-1 sm:space-x-1.5 z-20">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
           <button
             key={num}
+            type="button"
             onPointerDown={e => {
               e.preventDefault();
               enterNumber(num);
             }}
-            className="flex-1 h-11 rounded-xl bg-[#1e2744] hover:bg-[#283458] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none font-bungee text-base text-pop-yellow flex items-center justify-center transition-all"
+            className="flex-1 h-11 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/50 active:scale-95 font-bold text-base text-amber-400 flex items-center justify-center transition-all shadow-sm"
           >
             {num}
           </button>

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { KnifeStrikeEngine } from './KnifeStrikeEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { Crosshair } from 'lucide-react';
 
 interface KnifeStrikeViewProps {
   mode: GameMode;
@@ -108,23 +107,6 @@ export const KnifeStrikeView: React.FC<KnifeStrikeViewProps> = ({
             }`}
           />
         ))}
-      </div>
-
-      {/* Bottom Action Prompt */}
-      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
-        <div className="w-full max-w-xs">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleThrow();
-            }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 text-white font-black text-sm flex items-center justify-center space-x-2 shadow-lg shadow-violet-500/20 active:scale-95 transition-transform"
-          >
-            <Crosshair className="w-5 h-5 text-violet-200" />
-            <span>TAP ANYWHERE TO THROW</span>
-          </button>
-        </div>
       </div>
     </div>
   );

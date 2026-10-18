@@ -128,10 +128,10 @@ export class FruitFusionEngine implements GameEngine {
     this.ctx.scale(dpr, dpr);
 
     const padX = 16;
-    this.jarWidth = Math.min(rect.width - padX * 2, 380);
-    const topPad = 170;
-    const bottomPad = 80;
-    this.jarHeight = Math.min(rect.height - topPad - bottomPad, 520);
+    this.jarWidth = Math.min(rect.width - padX * 2, 480);
+    const topPad = 130;
+    const bottomPad = 24;
+    this.jarHeight = Math.min(rect.height - topPad - bottomPad, 680);
     this.jarX = Math.floor((rect.width - this.jarWidth) / 2);
     this.jarY = topPad;
     this.dangerLineY = this.jarY + 50;

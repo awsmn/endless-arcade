@@ -93,9 +93,9 @@ export class NeonSnakeEngine implements GameEngine {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
-    // Compute square grid centered between top HUD and bottom D-Pad
-    const topPad = 68;
-    const bottomPad = 175;
+    // Compute square grid centered between top HUD and bottom
+    const topPad = 64;
+    const bottomPad = 20;
     const availableWidth = rect.width - 24;
     const availableHeight = Math.max(160, rect.height - topPad - bottomPad);
     const availableSize = Math.min(availableWidth, availableHeight);
@@ -390,9 +390,11 @@ export class NeonSnakeEngine implements GameEngine {
     const gridPixelW = this.gridWidth * this.cellSize;
     const gridPixelH = this.gridHeight * this.cellSize;
 
+    const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
     // 1. Draw Grid Arena Background
-    this.ctx.fillStyle = '#0f172a';
-    this.ctx.strokeStyle = '#1e293b';
+    this.ctx.fillStyle = isLight ? '#e8ecf4' : '#0f172a';
+    this.ctx.strokeStyle = isLight ? '#cbd5e1' : '#1e293b';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     this.ctx.roundRect(this.offsetX, this.offsetY, gridPixelW, gridPixelH, 16);
@@ -400,7 +402,7 @@ export class NeonSnakeEngine implements GameEngine {
     this.ctx.stroke();
 
     // Subtle Grid Lines
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    this.ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.03)';
     this.ctx.lineWidth = 1;
     for (let x = 1; x < this.gridWidth; x++) {
       const lineX = this.offsetX + x * this.cellSize;

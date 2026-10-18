@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BrickBreakerEngine } from './BrickBreakerEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { FastForward, Play } from 'lucide-react';
+import { FastForward } from 'lucide-react';
 
 interface BrickBreakerViewProps {
   mode: GameMode;
@@ -126,22 +126,6 @@ export const BrickBreakerView: React.FC<BrickBreakerViewProps> = ({
             <span>{isFastForward ? '2X SPEED' : 'FAST'}</span>
           </button>
         )}
-      </div>
-
-      {/* Guide prompt at bottom */}
-      <div className="absolute bottom-3 left-0 right-0 px-4 z-20 flex justify-center pointer-events-none">
-        <div className="w-full max-w-xs text-center">
-          {!isShooting ? (
-            <div className="glass-panel py-2 px-4 rounded-xl text-xs text-slate-300 font-bold border border-white/10 flex items-center justify-center space-x-1.5">
-              <Play className="w-3 h-3 text-indigo-400 fill-current" />
-              <span>DRAG & AIM TO FIRE BALLS</span>
-            </div>
-          ) : (
-            <div className="py-2 text-xs text-slate-400 font-semibold">
-              Volley in progress...
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

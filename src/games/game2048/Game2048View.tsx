@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 interface Game2048ViewProps {
   mode: GameMode;
@@ -295,41 +295,39 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
+      className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16"
     >
-      {/* Top Undo Bar */}
-      <div className="w-full max-w-xs px-4 flex justify-end z-20">
+      {/* Top Controls Bar */}
+      <div className="w-full max-w-lg px-4 flex justify-between items-center z-20">
+        <span className="text-xs font-semibold text-slate-400">Swipe anywhere to merge</span>
         <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleUndo();
-          }}
+          type="button"
+          onClick={handleUndo}
           disabled={!history}
-          className={`px-3 py-1.5 rounded-xl text-xs font-pop font-black flex items-center space-x-1.5 border-2 border-black transition-all ${
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 border transition-all ${
             history
-              ? 'bg-pop-yellow text-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer'
-              : 'opacity-40 bg-[#14192b] text-slate-500 cursor-not-allowed'
+              ? 'glass-panel border-amber-500/40 text-amber-500 hover:text-amber-400 active:scale-95 cursor-pointer shadow-sm'
+              : 'opacity-30 border-slate-700/40 text-slate-500 cursor-not-allowed'
           }`}
         >
-          <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
+          <RotateCcw className="w-3.5 h-3.5" />
           <span>UNDO</span>
         </button>
       </div>
 
-      {/* 2048 4x4 Grid Board */}
-      <div className="w-[min(340px,84vw,42vh)] aspect-square p-3 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto">
+      {/* 2048 4x4 Grid Board - Maximized for touch screen and canvas space */}
+      <div className="w-[min(500px,94vw,70vh)] aspect-square p-3 sm:p-4 bg-slate-900/80 dark:bg-slate-950/80 rounded-3xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto">
         {board.map((row, rIdx) => (
-          <div key={rIdx} className="flex-1 flex space-x-2 my-1">
+          <div key={rIdx} className="flex-1 flex space-x-2 sm:space-x-3 my-1">
             {row.map((cell, cIdx) => (
               <div
                 key={cIdx}
-                className={`flex-1 rounded-2xl flex items-center justify-center border-2 border-black/80 transition-all duration-150 transform ${getTileStyle(
+                className={`flex-1 rounded-2xl flex items-center justify-center border border-black/20 transition-all duration-150 transform ${getTileStyle(
                   cell
                 )}`}
               >
                 {cell && (
-                  <span className={`${getFontSize(cell)} select-none font-bungee drop-shadow`}>
+                  <span className={`${getFontSize(cell)} select-none font-bold drop-shadow-sm`}>
                     {cell}
                   </span>
                 )}
@@ -337,61 +335,6 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
             ))}
           </div>
         ))}
-      </div>
-
-      {/* Mobile Virtual D-Pad for one-handed thumb navigation */}
-      <div className="w-full max-w-xs flex flex-col items-center space-y-1.5 px-4 pb-2 z-20">
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            move('up');
-          }}
-          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
-          aria-label="Up"
-        >
-          <ArrowUp className="w-6 h-6 stroke-[3]" />
-        </button>
-
-        <div className="flex items-center space-x-6">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              move('left');
-            }}
-            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
-            aria-label="Left"
-          >
-            <ArrowLeft className="w-6 h-6 stroke-[3]" />
-          </button>
-
-          <div className="w-4 h-4 rounded-full bg-pop-pink border-2 border-black shadow-[1px_1px_0px_#000]" />
-
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              move('right');
-            }}
-            className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
-            aria-label="Right"
-          >
-            <ArrowRight className="w-6 h-6 stroke-[3]" />
-          </button>
-        </div>
-
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            move('down');
-          }}
-          className="w-12 h-12 rounded-2xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow transition-all cursor-pointer"
-          aria-label="Down"
-        >
-          <ArrowDown className="w-6 h-6 stroke-[3]" />
-        </button>
       </div>
     </div>
   );

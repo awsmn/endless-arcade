@@ -29,29 +29,29 @@ export const Header: React.FC<HeaderProps> = ({
   const isLight = theme === 'light';
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#0d111f]/90 backdrop-blur-md border-b-2 border-black safe-top px-4 py-3 shadow-[0_4px_0_rgba(0,0,0,0.25)] dark:shadow-[0_4px_0_rgba(0,0,0,0.4)] pop-dots-bg transition-colors duration-200">
+    <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-[#0c101c]/90 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm safe-top px-4 py-3 transition-colors duration-200">
       <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Brand Logo & Title */}
         <div className="flex items-center space-x-2.5">
           <div className="relative group cursor-pointer">
-            <div className="w-10 h-10 rounded-xl bg-pop-yellow border-2 border-black shadow-pop-sm flex items-center justify-center transform -rotate-3 transition-transform group-hover:rotate-0">
-              <span className="font-bungee text-black text-xl leading-none">
+            <div className="w-10 h-10 rounded-xl bg-amber-400 dark:bg-amber-500 shadow-sm flex items-center justify-center transform -rotate-2 transition-transform group-hover:rotate-0">
+              <span className="font-bungee text-slate-950 text-xl leading-none">
                 ∞
               </span>
             </div>
-            <span className="absolute -top-1.5 -right-2 bg-pop-pink text-white font-bungee text-[8px] px-1 rounded border border-black shadow-[1px_1px_0px_#000] rotate-12">
-              POP!
+            <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white font-bungee text-[8px] px-1.5 py-0.5 rounded-full shadow-sm rotate-12">
+              POP
             </span>
           </div>
 
           <div>
             <div className="flex items-center space-x-1.5">
-              <h1 className="text-base font-pop tracking-wider leading-none uppercase text-slate-900 dark:text-white pop-text-shadow">
-                Endless <span className="text-pop-yellow">Arcade</span>
+              <h1 className="text-base font-pop tracking-wider leading-none uppercase text-slate-900 dark:text-white">
+                Endless <span className="text-amber-500 dark:text-amber-400">Arcade</span>
               </h1>
             </div>
-            <span className="text-[9px] font-black tracking-widest text-pop-purple dark:text-pop-cyan uppercase block mt-0.5">
-              ART POP EDITION
+            <span className="text-[9px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase block mt-0.5">
+              SOOTHING EDITION
             </span>
           </div>
         </div>
@@ -59,8 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right Action Icons */}
         <div className="flex items-center space-x-1.5">
           {/* Star Counter */}
-          <div className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-pop-yellow text-black border-2 border-black shadow-pop-xs">
-            <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
+          <div className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-400/30 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 fill-current text-amber-500" />
             <span className="text-xs font-bungee leading-none">{totalStars}</span>
           </div>
 
@@ -70,18 +70,18 @@ export const Header: React.FC<HeaderProps> = ({
               onToggleTheme();
               haptics.tap();
             }}
-            className={`w-8 h-8 rounded-xl border-2 border-black flex items-center justify-center transition-all ${
+            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all ${
               isLight
-                ? 'bg-pop-yellow text-black shadow-pop-xs hover:bg-yellow-300'
-                : 'bg-[#151b30] text-slate-300 hover:text-white shadow-[1px_1px_0px_#000]'
-            } active:translate-x-0.5 active:translate-y-0.5 active:shadow-none`}
+                ? 'bg-amber-100 text-amber-800 border-amber-300/80 hover:bg-amber-200'
+                : 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
+            } active:scale-95 shadow-sm`}
             aria-label="Toggle Light/Dark Theme"
-            title={isLight ? 'Switch to Dark Arcade Theme' : 'Switch to Light Arcade Theme'}
+            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {isLight ? (
-              <Sun className="w-4 h-4 stroke-[2.5]" />
+              <Sun className="w-4 h-4 stroke-[2.2]" />
             ) : (
-              <Moon className="w-4 h-4 stroke-[2.5]" />
+              <Moon className="w-4 h-4 stroke-[2.2]" />
             )}
           </button>
 
@@ -93,11 +93,11 @@ export const Header: React.FC<HeaderProps> = ({
                 haptics.tap();
                 onInstall();
               }}
-              className="px-2 py-1 rounded-full bg-pop-pink hover:bg-pink-400 text-white text-xs font-pop flex items-center space-x-1 border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              className="px-2.5 py-1 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-pop flex items-center space-x-1 shadow-sm active:scale-95 transition-all"
               title="Install Endless Arcade App"
             >
-              <Download className="w-3 h-3 stroke-[3]" />
-              <span className="font-black text-[10px]">APP</span>
+              <Download className="w-3 h-3 stroke-[2.5]" />
+              <span className="font-bold text-[10px]">APP</span>
             </button>
           )}
 
@@ -107,16 +107,16 @@ export const Header: React.FC<HeaderProps> = ({
               onToggleSound();
               haptics.tap();
             }}
-            className={`w-8 h-8 rounded-xl border-2 border-black flex items-center justify-center transition-all ${
+            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all ${
               soundEnabled
-                ? 'bg-pop-cyan text-black shadow-pop-xs'
-                : 'bg-slate-100 dark:bg-[#151b30] text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-[1px_1px_0px_#000]'
-            } active:translate-x-0.5 active:translate-y-0.5 active:shadow-none`}
+                ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-400/40 hover:bg-sky-500/25'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-600 dark:hover:text-slate-200'
+            } active:scale-95 shadow-sm`}
             aria-label="Toggle Sound"
             title="Toggle Sound Effects"
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 stroke-[2.5]" />
+              <Volume2 className="w-4 h-4 stroke-[2.2]" />
             ) : (
               <VolumeX className="w-4 h-4 stroke-[2]" />
             )}
@@ -129,15 +129,15 @@ export const Header: React.FC<HeaderProps> = ({
                 onToggleHaptics();
                 haptics.tap();
               }}
-              className={`w-8 h-8 rounded-xl border-2 border-black flex items-center justify-center transition-all ${
+              className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all ${
                 hapticsEnabled
-                  ? 'bg-pop-pink text-white shadow-pop-xs'
-                  : 'bg-slate-100 dark:bg-[#151b30] text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-[1px_1px_0px_#000]'
-              } active:translate-x-0.5 active:translate-y-0.5 active:shadow-none`}
+                  ? 'bg-rose-500 text-white border-rose-400 shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-600 dark:hover:text-slate-200'
+              } active:scale-95 shadow-sm`}
               aria-label="Toggle Haptics"
               title="Toggle Haptic Feedback"
             >
-              <Smartphone className={`w-4 h-4 stroke-[2.5]`} />
+              <Smartphone className="w-4 h-4 stroke-[2.2]" />
             </button>
           )}
         </div>

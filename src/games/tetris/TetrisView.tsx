@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
-import { ArrowLeft, ArrowRight, ArrowDown, RotateCw, ChevronsDown, Shield, Sparkles } from 'lucide-react';
+import { Shield, Sparkles } from 'lucide-react';
 
 interface TetrisViewProps {
   mode: GameMode;
@@ -370,6 +370,77 @@ export const TetrisView: React.FC<TetrisViewProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [hardDrop, holdCurrentPiece, isPaused, moveLeft, moveRight, rotatePiece, softDrop]);
 
+  // Touch gesture handling for matrix
+  const touchStartRef = useRef<{ x: number; y: number; time: number; lastX: number; lastY: number; moved: boolean } | null>(null);
+  const lastTapTimeRef = useRef<number>(0);
+
+  const handleMatrixPointerDown = (e: React.PointerEvent) => {
+    if (isPaused || isGameOverRef.current) return;
+    touchStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      time: performance.now(),
+      moved: false,
+    };
+  };
+
+  const handleMatrixPointerMove = (e: React.PointerEvent) => {
+    if (!touchStartRef.current || isPaused || isGameOverRef.current) return;
+    const current = touchStartRef.current;
+    const dx = e.clientX - current.lastX;
+    const dy = e.clientY - current.lastY;
+    const cellThresholdX = 22;
+    const cellThresholdY = 28;
+
+    if (Math.abs(e.clientX - current.x) > 8 || Math.abs(e.clientY - current.y) > 8) {
+      current.moved = true;
+    }
+
+    if (Math.abs(dx) >= cellThresholdX) {
+      if (dx > 0) {
+        moveRight();
+      } else {
+        moveLeft();
+      }
+      current.lastX = e.clientX;
+    }
+
+    if (dy >= cellThresholdY) {
+      softDrop();
+      current.lastY = e.clientY;
+    }
+  };
+
+  const handleMatrixPointerUp = (e: React.PointerEvent) => {
+    if (!touchStartRef.current || isPaused || isGameOverRef.current) return;
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    const totalDy = e.clientY - start.y;
+    const totalDx = Math.abs(e.clientX - start.x);
+    const duration = performance.now() - start.time;
+
+    // Fast downward flick -> hard drop
+    if (totalDy > 70 && totalDy > totalDx * 1.4 && duration < 320) {
+      hardDrop();
+      return;
+    }
+
+    // Tap or double tap
+    if (!start.moved && duration < 280) {
+      const now = performance.now();
+      if (now - lastTapTimeRef.current < 260) {
+        // Double tap -> hard drop
+        hardDrop();
+        lastTapTimeRef.current = 0;
+      } else {
+        lastTapTimeRef.current = now;
+        rotatePiece();
+      }
+    }
+  };
+
   // Render combined grid (landed blocks + active piece + ghost projection)
   const ghost = getGhostPiece(currentPiece, grid);
   const displayGrid = grid.map(row => [...row]);
@@ -401,25 +472,31 @@ export const TetrisView: React.FC<TetrisViewProps> = ({
   }
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-3 pt-14 pop-dots-dense">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-14">
       {/* Top HUD stats */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">{score}</span>
+      <div className="w-full max-w-md px-4 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{score}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Shield className="w-3.5 h-3.5 text-pop-pink fill-pop-pink" />
-          <span className="text-xs font-bungee text-white">LINES: {lines}</span>
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Shield className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">LINES: {lines}</span>
         </div>
       </div>
 
       {/* Main Play Area with Side Previews */}
-      <div className="flex items-center justify-center space-x-2 my-auto z-20">
-        {/* Hold Piece Box */}
-        <div className="w-14 h-20 bg-[#0e1222] border-2 border-black rounded-2xl shadow-pop-xs flex flex-col items-center justify-between p-1.5">
-          <span className="text-[9px] font-bungee text-slate-400">HOLD</span>
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4 my-auto z-20 w-full px-2">
+        {/* Hold Piece Box (Interactive: Tap to hold) */}
+        <button
+          type="button"
+          onClick={holdCurrentPiece}
+          className="w-14 sm:w-16 h-20 sm:h-24 glass-panel border border-slate-700/40 dark:border-slate-800/80 rounded-2xl shadow-sm flex flex-col items-center justify-between p-2 active:scale-95 transition-transform"
+          title="Tap to Hold"
+          aria-label="Hold Piece"
+        >
+          <span className="text-[9px] font-bold tracking-wider text-slate-400 dark:text-slate-500">HOLD</span>
           <div className="flex-1 flex items-center justify-center">
             {holdPiece && (
               <div
@@ -442,25 +519,31 @@ export const TetrisView: React.FC<TetrisViewProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </button>
 
-        {/* 10x20 Tetris Matrix */}
-        <div className="w-[min(240px,62vw,40vh)] aspect-[10/20] p-1.5 bg-[#0a0d18] rounded-2xl border-2 border-black shadow-pop-lg flex flex-col justify-between">
+        {/* 10x20 Tetris Matrix with direct Touch Gestures */}
+        <div
+          onPointerDown={handleMatrixPointerDown}
+          onPointerMove={handleMatrixPointerMove}
+          onPointerUp={handleMatrixPointerUp}
+          onPointerCancel={handleMatrixPointerUp}
+          className="w-[min(380px,76vw,70vh)] aspect-[10/20] p-1.5 sm:p-2 bg-slate-900/90 dark:bg-slate-950/90 rounded-2xl border border-slate-700/50 dark:border-slate-800/80 shadow-2xl flex flex-col justify-between cursor-pointer touch-none select-none"
+        >
           {displayGrid.map((row, r) => (
             <div key={r} className="flex-1 flex space-x-0.5 my-[1px]">
               {row.map((cell, c) => (
                 <div
                   key={c}
-                  className={`flex-1 rounded-[3px] border border-black/40 transition-colors ${
+                  className={`flex-1 rounded-[3px] border border-black/30 transition-colors ${
                     cell === 'ghost'
-                      ? 'border-dashed border-cyan-400/50 bg-cyan-500/10'
+                      ? 'border-dashed border-sky-400/50 bg-sky-500/10'
                       : cell
                       ? 'shadow-inner'
-                      : 'bg-[#121728]/50'
+                      : 'bg-slate-800/40 dark:bg-slate-900/60'
                   }`}
                   style={{
                     backgroundColor: cell && cell !== 'ghost' ? cell : undefined,
-                    boxShadow: cell && cell !== 'ghost' ? `0 0 4px ${cell}80` : undefined
+                    boxShadow: cell && cell !== 'ghost' ? `0 0 4px ${cell}60` : undefined
                   }}
                 />
               ))}
@@ -469,8 +552,8 @@ export const TetrisView: React.FC<TetrisViewProps> = ({
         </div>
 
         {/* Next Piece Box */}
-        <div className="w-14 h-20 bg-[#0e1222] border-2 border-black rounded-2xl shadow-pop-xs flex flex-col items-center justify-between p-1.5">
-          <span className="text-[9px] font-bungee text-slate-400">NEXT</span>
+        <div className="w-14 sm:w-16 h-20 sm:h-24 glass-panel border border-slate-700/40 dark:border-slate-800/80 rounded-2xl shadow-sm flex flex-col items-center justify-between p-2">
+          <span className="text-[9px] font-bold tracking-wider text-slate-400 dark:text-slate-500">NEXT</span>
           <div className="flex-1 flex items-center justify-center">
             <div
               className="grid gap-0.5"
@@ -491,84 +574,6 @@ export const TetrisView: React.FC<TetrisViewProps> = ({
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Touch Control Bar */}
-      <div className="w-full max-w-xs px-3 pb-1 flex flex-col space-y-1.5 z-20">
-        <div className="flex items-center justify-between space-x-2">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              holdCurrentPiece();
-            }}
-            className="flex-1 py-2 rounded-xl bg-[#14192b] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none text-[10px] font-pop font-black text-pop-pink"
-          >
-            HOLD
-          </button>
-
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              rotatePiece();
-            }}
-            className="w-12 h-10 rounded-xl bg-pop-yellow text-black border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center"
-            aria-label="Rotate"
-          >
-            <RotateCw className="w-5 h-5 stroke-[2.5]" />
-          </button>
-
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              hardDrop();
-            }}
-            className="flex-1 py-2 rounded-xl bg-[#06b6d4] text-black border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none text-[10px] font-pop font-black flex items-center justify-center space-x-1"
-          >
-            <ChevronsDown className="w-4 h-4 stroke-[3]" />
-            <span>SLAM</span>
-          </button>
-        </div>
-
-        <div className="flex items-center justify-between space-x-2">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              moveLeft();
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-[#1e2744] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-white"
-            aria-label="Left"
-          >
-            <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              softDrop();
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-[#1e2744] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-pop-yellow"
-            aria-label="Down"
-          >
-            <ArrowDown className="w-5 h-5 stroke-[2.5]" />
-          </button>
-
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              moveRight();
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-[#1e2744] border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center justify-center text-white"
-            aria-label="Right"
-          >
-            <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-          </button>
         </div>
       </div>
     </div>

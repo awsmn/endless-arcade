@@ -130,28 +130,28 @@ export const LightsOutView: React.FC<LightsOutViewProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-14 pop-dots-dense">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-14">
       {/* Top HUD */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Zap className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">STAGE {level}</span>
+      <div className="w-full max-w-md px-3 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">STAGE {level}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Trophy className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-xs font-bungee text-white">{score}</span>
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Trophy className="w-3.5 h-3.5 text-sky-400" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{score}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1">
-          <span className="text-[10px] font-pop font-black text-slate-400">MOVES:</span>
-          <span className="text-xs font-bungee text-white">{moves}</span>
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1">
+          <span className="text-[10px] font-bold text-slate-400">MOVES:</span>
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{moves}</span>
         </div>
       </div>
 
-      {/* 5x5 Circuit Grid */}
-      <div className="w-[min(340px,86vw,44vh)] aspect-square p-3 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto z-20">
-        <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-2.5">
+      {/* 5x5 Circuit Grid - Maximized */}
+      <div className="w-[min(480px,94vw,62vh)] aspect-square p-3 sm:p-4 bg-slate-900/85 dark:bg-slate-950/85 rounded-3xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto z-20">
+        <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-2.5 sm:gap-3">
           {board.map((row, r) =>
             row.map((isOn, c) => (
               <button
@@ -162,15 +162,15 @@ export const LightsOutView: React.FC<LightsOutViewProps> = ({
                   e.preventDefault();
                   toggleNode(r, c);
                 }}
-                className={`rounded-2xl border-2 border-black flex items-center justify-center transition-all duration-150 transform active:scale-90 cursor-pointer ${
+                className={`rounded-2xl border flex items-center justify-center transition-all duration-150 transform active:scale-95 cursor-pointer ${
                   isOn
-                    ? 'bg-pop-yellow text-slate-950 shadow-[0_0_14px_#facc15] scale-100'
-                    : 'bg-[#151b30] text-slate-600 border-black/80 hover:bg-[#1e2644]'
+                    ? 'bg-amber-400/90 text-slate-950 border-amber-300 shadow-md shadow-amber-500/30'
+                    : 'bg-slate-800/80 text-slate-500 border-slate-700/40 hover:bg-slate-700/80'
                 }`}
               >
                 <Lightbulb
-                  className={`w-6 h-6 transition-all ${
-                    isOn ? 'fill-slate-950 text-slate-950' : 'text-slate-600'
+                  className={`w-6 h-6 sm:w-7 sm:h-7 transition-all ${
+                    isOn ? 'fill-slate-950 text-slate-950' : 'text-slate-500'
                   }`}
                 />
               </button>
@@ -180,18 +180,16 @@ export const LightsOutView: React.FC<LightsOutViewProps> = ({
       </div>
 
       {/* Control Actions & Hint */}
-      <div className="w-full max-w-xs px-3 pb-2 z-20 flex flex-col space-y-2">
+      <div className="w-full max-w-md px-3 pb-2 z-20 flex flex-col space-y-2">
         <div className="flex items-center justify-between space-x-3">
           <button
-            onPointerDown={e => {
-              e.preventDefault();
-              undoMove();
-            }}
+            type="button"
+            onClick={undoMove}
             disabled={history.length === 0}
-            className={`flex-1 py-2 rounded-xl border-2 border-black flex items-center justify-center space-x-1.5 text-xs font-pop font-black ${
+            className={`flex-1 py-2 rounded-xl border flex items-center justify-center space-x-1.5 text-xs font-bold transition-all active:scale-95 ${
               history.length > 0
-                ? 'bg-[#14192b] text-white shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5'
-                : 'bg-[#14192b]/40 text-slate-600'
+                ? 'glass-panel border-slate-700/40 text-slate-200'
+                : 'opacity-30 border-slate-800 text-slate-600'
             }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -199,11 +197,9 @@ export const LightsOutView: React.FC<LightsOutViewProps> = ({
           </button>
 
           <button
-            onPointerDown={e => {
-              e.preventDefault();
-              restartCurrentLevel();
-            }}
-            className="flex-1 py-2 rounded-xl bg-[#14192b] text-pop-pink border-2 border-black shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center space-x-1.5 text-xs font-pop font-black"
+            type="button"
+            onClick={restartCurrentLevel}
+            className="flex-1 py-2 rounded-xl glass-panel border border-slate-700/40 text-rose-400 active:scale-95 flex items-center justify-center space-x-1.5 text-xs font-bold"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>RESTART</span>
@@ -211,7 +207,7 @@ export const LightsOutView: React.FC<LightsOutViewProps> = ({
         </div>
 
         <div className="text-center">
-          <span className="text-[10px] font-pop font-bold text-slate-400">
+          <span className="text-[11px] font-semibold text-slate-400">
             OBJECTIVE: TURN OFF ALL 25 LIGHTS
           </span>
         </div>

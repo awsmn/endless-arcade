@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { CrossyLaneEngine } from './CrossyLaneEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface CrossyLaneViewProps {
   mode: GameMode;
@@ -120,55 +119,6 @@ export const CrossyLaneView: React.FC<CrossyLaneViewProps> = ({
       className="relative w-full h-full overflow-hidden select-none touch-none cursor-pointer"
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
-
-      {/* On-screen Directional Touch Controls for Accessibility */}
-      <div 
-        className="absolute bottom-4 right-4 z-20 flex flex-col items-center space-y-1 pointer-events-auto"
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            engineRef.current?.hop('up');
-          }}
-          className="w-11 h-11 rounded-xl bg-pop-yellow text-black border-2 border-black shadow-pop-xs flex items-center justify-center active:translate-y-0.5 active:shadow-none"
-        >
-          <ArrowUp className="w-5 h-5 stroke-[3]" />
-        </button>
-        <div className="flex space-x-1">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              engineRef.current?.hop('left');
-            }}
-            className="w-11 h-11 rounded-xl bg-[#14192b] text-white border-2 border-black shadow-pop-xs flex items-center justify-center active:translate-y-0.5 active:shadow-none"
-          >
-            <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              engineRef.current?.hop('down');
-            }}
-            className="w-11 h-11 rounded-xl bg-[#14192b] text-white border-2 border-black shadow-pop-xs flex items-center justify-center active:translate-y-0.5 active:shadow-none"
-          >
-            <ArrowDown className="w-5 h-5 stroke-[2.5]" />
-          </button>
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              engineRef.current?.hop('right');
-            }}
-            className="w-11 h-11 rounded-xl bg-[#14192b] text-white border-2 border-black shadow-pop-xs flex items-center justify-center active:translate-y-0.5 active:shadow-none"
-          >
-            <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

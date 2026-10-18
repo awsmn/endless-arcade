@@ -130,7 +130,7 @@ export class RhythmFallEngine implements GameEngine {
     this.lanePressTimers[lane] = 0.12;
 
     const rect = this.viewport;
-    const judgmentY = rect.height - 110;
+    const judgmentY = rect.height - 80;
     const laneWidth = rect.width / 4;
     const hitX = lane * laneWidth + laneWidth / 2;
 
@@ -228,7 +228,7 @@ export class RhythmFallEngine implements GameEngine {
 
   private update(dt: number) {
     const rect = this.viewport;
-    const judgmentY = rect.height - 110;
+    const judgmentY = rect.height - 80;
 
     // Decay lane press visual feedback
     for (let i = 0; i < 4; i++) {
@@ -368,7 +368,7 @@ export class RhythmFallEngine implements GameEngine {
     const width = rect.width;
     const height = rect.height;
     const laneWidth = width / 4;
-    const judgmentY = height - 110;
+    const judgmentY = height - 80;
 
     this.ctx.clearRect(0, 0, width, height);
 

@@ -175,32 +175,30 @@ export const WordPulseView: React.FC<WordPulseViewProps> = ({
   ];
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-2 pt-14 pop-dots-dense">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-2 pt-14">
       {/* Top HUD */}
-      <div className="w-full max-w-xs px-3 flex items-center justify-between z-20">
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-2.5 py-1 shadow-pop-xs flex items-center space-x-1.5">
-          <Trophy className="w-3.5 h-3.5 text-pop-yellow fill-pop-yellow" />
-          <span className="text-xs font-bungee text-white">{score}</span>
+      <div className="w-full max-w-md px-3 flex items-center justify-between z-20">
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm flex items-center space-x-1.5">
+          <Trophy className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{score}</span>
         </div>
 
-        <div className="bg-[#14192b] border-2 border-black rounded-xl px-3 py-1 shadow-pop-xs">
-          <span className="text-xs font-bungee text-pop-pink">GUESS {guesses.length + 1}/6</span>
+        <div className="glass-pill px-3 py-1.5 rounded-xl border border-slate-700/40 dark:border-slate-800 shadow-sm">
+          <span className="text-xs font-bold text-rose-400">GUESS {guesses.length + 1}/6</span>
         </div>
 
         <button
-          onPointerDown={e => {
-            e.preventDefault();
-            startNewWord();
-          }}
-          className="bg-[#14192b] border-2 border-black rounded-xl p-1.5 shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5"
+          type="button"
+          onClick={startNewWord}
+          className="glass-panel border border-slate-700/40 rounded-xl p-2 active:scale-95 shadow-sm text-sky-400"
           aria-label="New Word"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+          <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* 6x5 Letter Grid */}
-      <div className="w-[min(300px,82vw,38vh)] aspect-[5/6] p-2 bg-[#0e1222] rounded-3xl border-2 border-black shadow-pop-lg flex flex-col justify-between my-auto z-20">
+      {/* 6x5 Letter Grid - Maximized */}
+      <div className="w-[min(380px,88vw,48vh)] aspect-[5/6] p-2 sm:p-3 bg-slate-900/85 dark:bg-slate-950/85 rounded-3xl border border-slate-700/50 dark:border-slate-800 shadow-2xl flex flex-col justify-between my-auto z-20">
         {Array.from({ length: 6 }).map((_, rIdx) => {
           const guess = guesses[rIdx];
           const isCurrentRow = rIdx === guesses.length;
@@ -223,21 +221,21 @@ export const WordPulseView: React.FC<WordPulseViewProps> = ({
                   letter = currentGuess[cIdx] || '';
                 }
 
-                let tileBg = 'bg-[#151b30] border-2 border-black/80';
+                let tileBg = 'bg-slate-800/40 border border-slate-700/40 text-slate-200';
                 if (status === 'correct') {
-                  tileBg = 'bg-emerald-500 border-2 border-black text-black shadow-neon-emerald';
+                  tileBg = 'bg-emerald-600/40 border border-emerald-500 text-emerald-300 shadow-sm';
                 } else if (status === 'present') {
-                  tileBg = 'bg-pop-yellow border-2 border-black text-black shadow-neon-amber';
+                  tileBg = 'bg-amber-500/30 border border-amber-400 text-amber-300 shadow-sm';
                 } else if (status === 'absent') {
-                  tileBg = 'bg-slate-800 border-2 border-black/80 text-slate-500';
+                  tileBg = 'bg-slate-800/80 border border-slate-700/30 text-slate-500';
                 } else if (letter) {
-                  tileBg = 'bg-[#1e2744] border-2 border-cyan-400 text-white shadow-pop-xs';
+                  tileBg = 'bg-slate-800 border border-sky-400/60 text-white shadow-sm';
                 }
 
                 return (
                   <div
                     key={cIdx}
-                    className={`flex-1 aspect-square rounded-xl flex items-center justify-center font-bungee text-lg uppercase transition-all duration-150 ${tileBg}`}
+                    className={`flex-1 aspect-square rounded-xl flex items-center justify-center font-bold text-lg sm:text-xl uppercase transition-all duration-150 ${tileBg}`}
                   >
                     {letter}
                   </div>
@@ -249,22 +247,22 @@ export const WordPulseView: React.FC<WordPulseViewProps> = ({
       </div>
 
       {/* Virtual Cyber QWERTY Keyboard */}
-      <div className="w-full max-w-sm px-2 pb-2 flex flex-col space-y-1.5 z-20">
+      <div className="w-full max-w-md px-2 pb-2 flex flex-col space-y-1.5 z-20">
         {KEYBOARD_ROWS.map((row, rIdx) => (
-          <div key={rIdx} className="flex justify-center space-x-1">
+          <div key={rIdx} className="flex justify-center space-x-1 sm:space-x-1.5">
             {row.map(key => {
               const status = keyStatuses[key];
               const isAction = key === 'ENTER' || key === 'DEL';
 
-              let keyBg = 'bg-[#1a2138] text-white border-2 border-black/80';
+              let keyBg = 'bg-slate-800/80 text-slate-200 border border-slate-700/50 hover:bg-slate-700/80';
               if (status === 'correct') {
-                keyBg = 'bg-emerald-500 text-black border-2 border-black';
+                keyBg = 'bg-emerald-600 text-white border border-emerald-500';
               } else if (status === 'present') {
-                keyBg = 'bg-pop-yellow text-black border-2 border-black';
+                keyBg = 'bg-amber-500 text-slate-950 border border-amber-400';
               } else if (status === 'absent') {
-                keyBg = 'bg-slate-800/60 text-slate-600 border-2 border-black/40';
+                keyBg = 'bg-slate-900/60 text-slate-600 border border-slate-800';
               } else if (isAction) {
-                keyBg = 'bg-[#242e4d] text-cyan-400 border-2 border-black font-pop';
+                keyBg = 'bg-slate-700/80 text-sky-400 border border-slate-600';
               }
 
               return (
@@ -277,8 +275,8 @@ export const WordPulseView: React.FC<WordPulseViewProps> = ({
                     else if (key === 'DEL') deleteLetter();
                     else addLetter(key);
                   }}
-                  className={`h-10 rounded-xl flex items-center justify-center font-bungee text-xs shadow-pop-xs active:translate-x-0.5 active:translate-y-0.5 transition-all ${keyBg} ${
-                    isAction ? 'px-2.5 text-[10px]' : 'flex-1'
+                  className={`h-11 rounded-xl flex items-center justify-center font-bold text-xs active:scale-95 transition-all shadow-sm ${keyBg} ${
+                    isAction ? 'px-3 text-[10px]' : 'flex-1'
                   }`}
                 >
                   {key === 'DEL' ? <Delete className="w-4 h-4" /> : key}

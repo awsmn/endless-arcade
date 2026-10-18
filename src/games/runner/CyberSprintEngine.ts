@@ -101,8 +101,8 @@ export class CyberSprintEngine implements GameEngine {
     this.ctx.scale(dpr, dpr);
 
     this.roadTopY = Math.min(130, rect.height * 0.22);
-    this.roadBottomY = rect.height - 90;
-    this.baseRoadWidth = Math.min(rect.width - 24, 360);
+    this.roadBottomY = rect.height - 24;
+    this.baseRoadWidth = Math.min(rect.width - 24, 460);
     this.horizonWidth = this.baseRoadWidth * 0.28;
   }
 
