@@ -1,3 +1,5 @@
+import { drawHeart } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -34,6 +36,8 @@ const LANE_COLORS = ['#00F0FF', '#FF2A85', '#FFE500', '#22E565'];
 const LANE_FREQS = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5 musical chord
 
 export class RhythmFallEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -83,6 +87,7 @@ export class RhythmFallEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = rect.width * dpr;
@@ -105,13 +110,15 @@ export class RhythmFallEngine implements GameEngine {
     this.lanePressState = [false, false, false, false];
     this.lanePressTimers = [0, 0, 0, 0];
     this.beatTimer = 0;
-    this.bpm = 135;
-    this.noteSpeed = 380;
+    this.bpm = 112;
+    this.beatInterval = 60 / this.bpm;
+    this.noteSpeed = 320;
     this.isGameOver = false;
     this.isPaused = false;
     this.isRunning = true;
 
     this.lastTime = performance.now();
+    cancelAnimationFrame(this.animationFrameId);
     this.loop();
   }
 
@@ -122,7 +129,7 @@ export class RhythmFallEngine implements GameEngine {
     this.lanePressState[lane] = true;
     this.lanePressTimers[lane] = 0.12;
 
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const judgmentY = rect.height - 110;
     const laneWidth = rect.width / 4;
     const hitX = lane * laneWidth + laneWidth / 2;
@@ -191,7 +198,6 @@ export class RhythmFallEngine implements GameEngine {
     if (!this.isPaused) return;
     this.isPaused = false;
     this.lastTime = performance.now();
-    this.loop();
   }
 
   public destroy() {
@@ -206,8 +212,12 @@ export class RhythmFallEngine implements GameEngine {
   }
 
   private loop = (time = performance.now()) => {
-    if (!this.isRunning || this.isPaused) return;
-    const dt = Math.min((time - this.lastTime) / 1000, 0.05);
+    if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
+    const dt = Math.min(Math.max(0, (time - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = time;
 
     this.update(dt);
@@ -217,7 +227,7 @@ export class RhythmFallEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const judgmentY = rect.height - 110;
 
     // Decay lane press visual feedback
@@ -354,7 +364,7 @@ export class RhythmFallEngine implements GameEngine {
   }
 
   private render() {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const width = rect.width;
     const height = rect.height;
     const laneWidth = width / 4;
@@ -490,7 +500,7 @@ export class RhythmFallEngine implements GameEngine {
     this.ctx.save();
     this.ctx.font = '700 12px Outfit, sans-serif';
     this.ctx.fillStyle = '#94a3b8';
-    this.ctx.fillText(`LIVES: ${'❤️'.repeat(Math.ceil(livesLeft / 2))}`, 16, 32);
+    for(let i=0;i<5;i++) drawHeart(this.ctx, 22+i*21, 85, 13, i<Math.ceil(livesLeft/2));
     this.ctx.restore();
   }
 }

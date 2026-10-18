@@ -24,13 +24,16 @@ export const ChromaJumpView: React.FC<ChromaJumpViewProps> = ({
 
   const [activeColor, setActiveColor] = useState(CHROMA_COLORS[0].hex);
 
+  const callbacksRef = useRef({ onScoreUpdate, onGameOver });
+  callbacksRef.current = { onScoreUpdate, onGameOver };
+
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const engine = new ChromaJumpEngine();
     engine.init(canvasRef.current, containerRef.current);
-    engine.onScoreUpdate = onScoreUpdate;
-    engine.onGameOver = onGameOver;
+    engine.onScoreUpdate = update => callbacksRef.current.onScoreUpdate(update);
+    engine.onGameOver = (score, isNewHighScore, stars) => callbacksRef.current.onGameOver(score, isNewHighScore, stars);
     engine.onColorChange = (color) => {
       setActiveColor(color);
     };

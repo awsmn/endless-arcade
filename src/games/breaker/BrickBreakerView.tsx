@@ -26,13 +26,16 @@ export const BrickBreakerView: React.FC<BrickBreakerViewProps> = ({
   const [isFastForward, setIsFastForward] = useState(false);
   const isAimingPointerRef = useRef(false);
 
+  const callbacksRef = useRef({ onScoreUpdate, onGameOver });
+  callbacksRef.current = { onScoreUpdate, onGameOver };
+
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const engine = new BrickBreakerEngine();
     engine.init(canvasRef.current, containerRef.current);
-    engine.onScoreUpdate = onScoreUpdate;
-    engine.onGameOver = onGameOver;
+    engine.onScoreUpdate = update => callbacksRef.current.onScoreUpdate(update);
+    engine.onGameOver = (score, isNewHighScore, stars) => callbacksRef.current.onGameOver(score, isNewHighScore, stars);
     engine.onStateChange = (shooting) => {
       setIsShooting(shooting);
       if (!shooting) setIsFastForward(false);

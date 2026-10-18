@@ -1,3 +1,5 @@
+import { drawFruitSprite } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -5,7 +7,6 @@ import { haptics } from '../../engine/haptics';
 export interface FruitDef {
   tier: number;
   name: string;
-  emoji: string;
   radius: number;
   color: string;
   accent: string;
@@ -13,17 +14,17 @@ export interface FruitDef {
 }
 
 export const FRUIT_TIERS: FruitDef[] = [
-  { tier: 0, name: 'Cherry', emoji: '🍒', radius: 15, color: '#ef4444', accent: '#fca5a5', score: 2 },
-  { tier: 1, name: 'Strawberry', emoji: '🍓', radius: 20, color: '#f43f5e', accent: '#fda4af', score: 4 },
-  { tier: 2, name: 'Grape', emoji: '🍇', radius: 26, color: '#a855f7', accent: '#d8b4fe', score: 8 },
-  { tier: 3, name: 'Lemon', emoji: '🍋', radius: 32, color: '#eab308', accent: '#fef08a', score: 16 },
-  { tier: 4, name: 'Orange', emoji: '🍊', radius: 39, color: '#f97316', accent: '#fed7aa', score: 32 },
-  { tier: 5, name: 'Apple', emoji: '🍎', radius: 46, color: '#dc2626', accent: '#f87171', score: 64 },
-  { tier: 6, name: 'Pear', emoji: '🍐', radius: 54, color: '#84cc16', accent: '#bef264', score: 128 },
-  { tier: 7, name: 'Peach', emoji: '🍑', radius: 62, color: '#fb7185', accent: '#fecdd3', score: 256 },
-  { tier: 8, name: 'Pineapple', emoji: '🍍', radius: 71, color: '#eab308', accent: '#fde047', score: 512 },
-  { tier: 9, name: 'Melon', emoji: '🍈', radius: 80, color: '#22c55e', accent: '#86efac', score: 1024 },
-  { tier: 10, name: 'Watermelon', emoji: '🍉', radius: 90, color: '#059669', accent: '#34d399', score: 2048 }
+  { tier: 0, name: 'Cherry', radius: 15, color: '#ef4444', accent: '#fca5a5', score: 2 },
+  { tier: 1, name: 'Strawberry', radius: 20, color: '#f43f5e', accent: '#fda4af', score: 4 },
+  { tier: 2, name: 'Grape', radius: 26, color: '#a855f7', accent: '#d8b4fe', score: 8 },
+  { tier: 3, name: 'Lemon', radius: 32, color: '#eab308', accent: '#fef08a', score: 16 },
+  { tier: 4, name: 'Orange', radius: 39, color: '#f97316', accent: '#fed7aa', score: 32 },
+  { tier: 5, name: 'Apple', radius: 46, color: '#dc2626', accent: '#f87171', score: 64 },
+  { tier: 6, name: 'Pear', radius: 54, color: '#84cc16', accent: '#bef264', score: 128 },
+  { tier: 7, name: 'Peach', radius: 62, color: '#fb7185', accent: '#fecdd3', score: 256 },
+  { tier: 8, name: 'Pineapple', radius: 71, color: '#eab308', accent: '#fde047', score: 512 },
+  { tier: 9, name: 'Melon', radius: 80, color: '#22c55e', accent: '#86efac', score: 1024 },
+  { tier: 10, name: 'Watermelon', radius: 90, color: '#059669', accent: '#34d399', score: 2048 }
 ];
 
 export interface FruitBody {
@@ -51,6 +52,9 @@ interface Particle {
 }
 
 export class FruitFusionEngine implements GameEngine {
+  private readonly dangerLimit = 3500 / getDifficulty().pace;
+  private dropTimer: ReturnType<typeof setTimeout> | null = null;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -112,6 +116,7 @@ export class FruitFusionEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -124,7 +129,7 @@ export class FruitFusionEngine implements GameEngine {
 
     const padX = 16;
     this.jarWidth = Math.min(rect.width - padX * 2, 380);
-    const topPad = 75;
+    const topPad = 170;
     const bottomPad = 80;
     this.jarHeight = Math.min(rect.height - topPad - bottomPad, 520);
     this.jarX = Math.floor((rect.width - this.jarWidth) / 2);
@@ -165,6 +170,7 @@ export class FruitFusionEngine implements GameEngine {
 
   public destroy() {
     this.isRunning = false;
+    if (this.dropTimer) clearTimeout(this.dropTimer);
     cancelAnimationFrame(this.animationFrameId);
   }
 
@@ -200,13 +206,17 @@ export class FruitFusionEngine implements GameEngine {
     this.nextDropperTier = this.getRandomDropTier();
     this.onDropperChange?.(this.currentDropperTier, this.nextDropperTier);
 
-    setTimeout(() => {
+    this.dropTimer = setTimeout(() => {
       this.canDrop = true;
     }, this.dropCooldown);
   }
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
     const dt = Math.min((now - this.lastTime) / 1000, 0.05);
     this.lastTime = now;
@@ -232,8 +242,8 @@ export class FruitFusionEngine implements GameEngine {
       // 1. Move fruits & apply gravity
       for (const fruit of this.fruits) {
         fruit.vy += gravity * subDt;
-        fruit.vx *= friction;
-        fruit.vy *= friction;
+        fruit.vx *= Math.pow(friction, subDt * 60);
+        fruit.vy *= Math.pow(friction, subDt * 60);
 
         fruit.x += fruit.vx * subDt;
         fruit.y += fruit.vy * subDt;
@@ -378,7 +388,7 @@ export class FruitFusionEngine implements GameEngine {
 
     if (anyAboveDanger) {
       this.dangerTime += dt * 1000;
-      if (this.dangerTime > 3500) {
+      if (this.dangerTime > this.dangerLimit) {
         this.handleGameOver();
       }
     } else {
@@ -414,7 +424,7 @@ export class FruitFusionEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -445,7 +455,7 @@ export class FruitFusionEngine implements GameEngine {
       ctx.fillStyle = '#ef4444';
       ctx.font = 'bold 11px system-ui';
       ctx.textAlign = 'right';
-      const timeLeft = Math.max(0, (3200 - this.dangerTime) / 1000).toFixed(1);
+      const timeLeft = Math.max(0, (this.dangerLimit - this.dangerTime) / 1000).toFixed(1);
       ctx.fillText(`OVERFLOW! ${timeLeft}s`, this.jarX + this.jarWidth - 8, this.dangerLineY - 6);
     }
     ctx.restore();
@@ -457,14 +467,14 @@ export class FruitFusionEngine implements GameEngine {
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.moveTo(this.dropperX, 44);
+      ctx.moveTo(this.dropperX, this.jarY - 28);
       ctx.lineTo(this.dropperX, this.jarY + this.jarHeight);
       ctx.stroke();
       ctx.restore();
 
       // Dropper Fruit Preview
       const curDef = FRUIT_TIERS[this.currentDropperTier];
-      this.drawFruitCircle(ctx, this.dropperX, 44, curDef.radius * 0.85, curDef, 1);
+      this.drawFruitCircle(ctx, this.dropperX, this.jarY - 28, curDef.radius * 0.85, curDef, 1);
     }
 
     // Render Fruits
@@ -495,37 +505,6 @@ export class FruitFusionEngine implements GameEngine {
     def: FruitDef,
     _scale: number
   ) {
-    ctx.save();
-
-    // Radial gradient body
-    const grad = ctx.createRadialGradient(
-      x - radius * 0.3,
-      y - radius * 0.3,
-      radius * 0.1,
-      x,
-      y,
-      radius
-    );
-    grad.addColorStop(0, def.accent);
-    grad.addColorStop(0.7, def.color);
-    grad.addColorStop(1, '#00000044');
-
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Outer rim highlight
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.stroke();
-
-    // Emoji icon in center
-    ctx.font = `${Math.floor(radius * 1.15)}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(def.emoji, x, y + 2);
-
-    ctx.restore();
+    drawFruitSprite(ctx, x, y, radius, def.tier);
   }
 }

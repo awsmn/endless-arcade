@@ -1,3 +1,4 @@
+import { GameArtwork } from './GameArtwork';
 import React from 'react';
 import { Trophy, Sparkles, Flame } from 'lucide-react';
 import { GAME_CATALOG } from '../games/registry';
@@ -48,7 +49,7 @@ export const StatsView: React.FC = () => {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-pop font-black uppercase tracking-wider text-pop-pink pop-text-shadow">
-            ★ PERSONAL BEST RECORDS ★
+            PERSONAL BEST RECORDS
           </h3>
         </div>
 
@@ -60,7 +61,7 @@ export const StatsView: React.FC = () => {
             >
               <div className="flex items-center space-x-3">
                 <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${game.color} border-2 border-black shadow-[1.5px_1.5px_0px_#000] flex items-center justify-center font-bungee text-base text-white`}>
-                  {game.illustration || game.title.charAt(0)}
+                  <GameArtwork gameId={game.id} />
                 </div>
                 <div>
                   <h4 className="text-xs font-pop font-black text-slate-900 dark:text-white">{game.title}</h4>

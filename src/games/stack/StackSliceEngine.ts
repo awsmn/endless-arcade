@@ -1,3 +1,5 @@
+import { drawSlab } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -34,6 +36,8 @@ interface Particle {
 }
 
 export class StackSliceEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -82,6 +86,7 @@ export class StackSliceEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -106,7 +111,7 @@ export class StackSliceEngine implements GameEngine {
     this.isPaused = false;
     this.isGameOver = false;
 
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const baseY = rect.height - 110;
     const baseX = (rect.width - this.activeWidth) / 2;
 
@@ -261,7 +266,7 @@ export class StackSliceEngine implements GameEngine {
     this.slideSpeed = Math.min(420, 200 + this.score * 4);
 
     // Reposition active block for next drop
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.slideDir = this.score % 2 === 0 ? 1 : -1;
     this.activeX = this.slideDir === 1 ? -this.activeWidth : rect.width;
 
@@ -278,8 +283,12 @@ export class StackSliceEngine implements GameEngine {
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -291,7 +300,7 @@ export class StackSliceEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     // Smooth camera tracking
     this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
@@ -350,26 +359,22 @@ export class StackSliceEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const sky = ctx.createLinearGradient(0,0,0,rect.height);
+    sky.addColorStop(0,'#111831');sky.addColorStop(1,'#292848');ctx.fillStyle=sky;ctx.fillRect(0,0,rect.width,rect.height);
+    for(let i=0;i<18;i++){const bx=i*31%rect.width;const bh=40+(i*47)%120;ctx.fillStyle=i%2?'#26304b':'#1c253e';ctx.fillRect(bx,rect.height-bh,24,bh);ctx.fillStyle='#c1bded33';for(let wy=rect.height-bh+10;wy<rect.height;wy+=16)ctx.fillRect(bx+6,wy,4,5);}
+    ctx.fillStyle='#ffffff40';for(let i=0;i<25;i++){ctx.beginPath();ctx.arc((i*97)%rect.width,80+(i*71)%(rect.height*.5),i%3===0?1.4:.7,0,Math.PI*2);ctx.fill();}
 
     ctx.save();
     ctx.translate(0, this.cameraY);
 
-    // 1. Render Tower Stack
+    // Faceted slabs retain the exact placement width used by gameplay.
     for (const b of this.stack) {
-      ctx.save();
-      ctx.fillStyle = b.color;
-      ctx.beginPath();
-      ctx.roundRect(b.x, b.y, b.width, b.height, 4);
-      ctx.fill();
-
-      // Block rim highlight
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
+      if (b.y + this.cameraY < -50 || b.y + this.cameraY > rect.height + 50) continue;
+      drawSlab(ctx, b.x, b.y, b.width, b.height, b.color);
     }
 
     // 2. Render Active Sliding Block
@@ -378,16 +383,9 @@ export class StackSliceEngine implements GameEngine {
       const activeY = topBlock.y - this.blockHeight;
       const curColor = this.getColorForIndex(this.score + 1);
 
-      ctx.save();
-      ctx.fillStyle = curColor;
-      ctx.beginPath();
-      ctx.roundRect(this.activeX, activeY, this.activeWidth, this.blockHeight, 4);
-      ctx.fill();
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.restore();
+      drawSlab(ctx, this.activeX, activeY, this.activeWidth, this.blockHeight, curColor, true);
+      ctx.save();ctx.setLineDash([3,5]);ctx.strokeStyle='#c2d8ff45';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(topBlock.x,activeY-32);ctx.lineTo(topBlock.x,activeY+this.blockHeight);ctx.moveTo(topBlock.x+topBlock.width,activeY-32);ctx.lineTo(topBlock.x+topBlock.width,activeY+this.blockHeight);ctx.stroke();ctx.restore();
     }
 
     // 3. Render Falling Debris
@@ -395,8 +393,7 @@ export class StackSliceEngine implements GameEngine {
       ctx.save();
       ctx.translate(d.x + d.width / 2, d.y + d.height / 2);
       ctx.rotate(d.rotation);
-      ctx.fillStyle = d.color;
-      ctx.fillRect(-d.width / 2, -d.height / 2, d.width, d.height);
+      drawSlab(ctx, -d.width / 2, -d.height / 2, d.width, d.height, d.color);
       ctx.restore();
     }
 

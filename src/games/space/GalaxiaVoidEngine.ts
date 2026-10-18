@@ -1,3 +1,5 @@
+import { drawShip, drawPowerup, drawHeart, polygon } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -55,6 +57,8 @@ interface Particle {
 }
 
 export class GalaxiaVoidEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -112,7 +116,7 @@ export class GalaxiaVoidEngine implements GameEngine {
 
   private initStars() {
     this.stars = [];
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     for (let i = 0; i < 50; i++) {
       this.stars.push({
         x: Math.random() * rect.width,
@@ -127,6 +131,7 @@ export class GalaxiaVoidEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -146,7 +151,7 @@ export class GalaxiaVoidEngine implements GameEngine {
   }
 
   public start(_mode: GameMode = 'endless', _level = 1) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.playerX = rect.width / 2;
     this.playerY = rect.height - 110;
     this.targetPlayerX = this.playerX;
@@ -165,6 +170,7 @@ export class GalaxiaVoidEngine implements GameEngine {
     this.waveCount = 0;
     this.bossActive = false;
     this.spawnTimer = 0;
+    this.spawnInterval = 1.08;
     this.screenShake = 0;
 
     this.isRunning = true;
@@ -194,22 +200,26 @@ export class GalaxiaVoidEngine implements GameEngine {
   }
 
   public setTargetPosition(x: number, y: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.targetPlayerX = Math.max(20, Math.min(rect.width - 20, x));
     // Keep finger offset slightly so thumb doesn't cover the ship
     this.targetPlayerY = Math.max(80, Math.min(rect.height - 50, y - 30));
   }
 
   public shiftPosition(dx: number, dy: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.targetPlayerX = Math.max(20, Math.min(rect.width - 20, this.targetPlayerX + dx));
     this.targetPlayerY = Math.max(80, Math.min(rect.height - 50, this.targetPlayerY + dy));
   }
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -221,7 +231,7 @@ export class GalaxiaVoidEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     if (this.invulnerableTimer > 0) {
       this.invulnerableTimer = Math.max(0, this.invulnerableTimer - dt);
@@ -253,6 +263,7 @@ export class GalaxiaVoidEngine implements GameEngine {
       b.x += b.vx * dt;
       b.y += b.vy * dt;
 
+      let consumed = false;
       // Player bullet hit enemy
       if (!b.isEnemy) {
         for (let j = this.enemies.length - 1; j >= 0; j--) {
@@ -262,7 +273,7 @@ export class GalaxiaVoidEngine implements GameEngine {
             enemy.hp--;
             this.spawnParticles(b.x, b.y, b.color, 4);
             sounds.playHit();
-            this.bullets.splice(i, 1);
+            consumed = true;
 
             if (enemy.hp <= 0) {
               this.destroyEnemy(j);
@@ -274,14 +285,14 @@ export class GalaxiaVoidEngine implements GameEngine {
         // Enemy bullet hit player
         const dist = Math.hypot(b.x - this.playerX, b.y - this.playerY);
         if (dist < this.playerRadius + 4) {
-          this.bullets.splice(i, 1);
+          consumed = true;
           this.takePlayerDamage();
           if (this.isGameOver) return;
         }
       }
 
       // Remove off-screen bullets
-      if (b.y < -30 || b.y > rect.height + 30 || b.x < -20 || b.x > rect.width + 20) {
+      if (consumed || b.y < -30 || b.y > rect.height + 30 || b.x < -20 || b.x > rect.width + 20) {
         this.bullets.splice(i, 1);
       }
     }
@@ -298,6 +309,12 @@ export class GalaxiaVoidEngine implements GameEngine {
       const enemy = this.enemies[i];
       enemy.x += enemy.vx * dt;
       enemy.y += enemy.vy * dt;
+      if (enemy.type === 'boss' && enemy.y > 145) { enemy.y = 145; enemy.vy = 0; }
+      const margin = enemy.radius + 6;
+      if (enemy.x < margin || enemy.x > rect.width - margin) {
+        enemy.x = Math.max(margin, Math.min(rect.width - margin, enemy.x));
+        enemy.vx *= -1;
+      }
 
       // Drone side oscillation
       if (enemy.type === 'drone') {
@@ -396,71 +413,64 @@ export class GalaxiaVoidEngine implements GameEngine {
   }
 
   private fireEnemyBullet(enemy: Enemy) {
-    if (enemy.type === 'cruiser') {
-      this.bullets.push({
-        x: enemy.x,
-        y: enemy.y + enemy.radius,
-        vx: 0,
-        vy: 240,
-        isEnemy: true,
-        color: '#ef4444'
-      });
-    } else if (enemy.type === 'boss') {
-      // Boss 3-way shot
-      for (const angle of [-0.3, 0, 0.3]) {
-        this.bullets.push({
-          x: enemy.x,
-          y: enemy.y + enemy.radius,
-          vx: Math.sin(angle) * 260,
-          vy: Math.cos(angle) * 260,
-          isEnemy: true,
-          color: '#f97316'
-        });
-      }
+    if (this.bullets.filter(bullet => bullet.isEnemy).length >= 90) return;
+    if (enemy.type === 'drone' && this.waveCount < 3) return;
+    // Aim at the player's current location; movement after firing is the escape.
+    const aim = Math.atan2(this.playerY - enemy.y, this.playerX - enemy.x);
+    const speed = Math.min(340, 195 + this.waveCount * 4);
+    const angles = enemy.type === 'boss' ? [-.46, -.23, 0, .23, .46]
+      : enemy.type === 'cruiser' && this.waveCount >= 10 ? [-.16, .16] : [0];
+    for (const offset of angles) {
+      this.bullets.push({ x: enemy.x, y: enemy.y + enemy.radius,
+        vx: Math.cos(aim + offset) * speed, vy: Math.sin(aim + offset) * speed,
+        isEnemy: true, color: enemy.type === 'boss' ? '#ffb16b' : '#ff819b' });
     }
   }
 
   private spawnEnemyWave(canvasWidth: number) {
     this.waveCount++;
+    this.spawnInterval = Math.max(0.55, 1.08 - this.waveCount * 0.018);
 
-    // Boss spawn every 10 waves
-    if (this.waveCount % 10 === 0 && !this.bossActive) {
+    // Boss spawn every 8 waves
+    if (this.waveCount % 8 === 0 && !this.bossActive) {
       this.bossActive = true;
       this.enemies.push({
         id: this.nextEnemyId++,
         type: 'boss',
         x: canvasWidth / 2,
         y: -50,
-        vx: 30,
-        vy: 25,
-        hp: 40 + this.waveCount * 2,
-        maxHp: 40 + this.waveCount * 2,
+        vx: 54,
+        vy: 42,
+        hp: 64 + this.waveCount * 3,
+        maxHp: 64 + this.waveCount * 3,
         radius: 36,
         shootTimer: 0,
-        shootInterval: 0.9,
+        shootInterval: Math.max(.45, .9 - this.waveCount * .012),
         color: '#a855f7'
       });
       return;
     }
 
     // Standard waves: swarm of 3 to 5 drones or cruisers
-    const count = 3 + Math.floor(Math.random() * 3);
+    const count = Math.min(7, 3 + Math.floor(this.waveCount / 6) + Math.floor(Math.random() * 2));
     const spacing = canvasWidth / (count + 1);
-    const isCruiser = Math.random() < 0.35;
+
 
     for (let i = 1; i <= count; i++) {
+      const isCruiser = (i + this.waveCount) % 3 === 0;
+      const hp = isCruiser ? 5 + Math.floor(this.waveCount / 12) : 1 + Math.floor(this.waveCount / 10);
       this.enemies.push({
         id: this.nextEnemyId++,
         type: isCruiser ? 'cruiser' : 'drone',
         x: spacing * i + (Math.random() - 0.5) * 20,
         y: -30 - Math.random() * 60,
         vx: (Math.random() - 0.5) * 40,
-        vy: isCruiser ? 60 : 110,
-        hp: isCruiser ? 4 : 1,
-        maxHp: isCruiser ? 4 : 1,
+        vy: (isCruiser ? 72 : 125) + Math.min(85, this.waveCount * 2.5),
+        hp,
+        maxHp: hp,
         radius: isCruiser ? 18 : 13,
         shootTimer: Math.random() * 0.8,
-        shootInterval: isCruiser ? 1.6 : 3,
+        shootInterval: isCruiser ? Math.max(.8, 1.65 - this.waveCount * .018) : Math.max(1.3, 2.5 - this.waveCount * .025),
         color: isCruiser ? '#f43f5e' : '#38bdf8'
       });
     }
@@ -582,7 +592,7 @@ export class GalaxiaVoidEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -611,23 +621,18 @@ export class GalaxiaVoidEngine implements GameEngine {
       ctx.restore();
     }
 
-    // 3. Bullets (Optimized batch rendering)
+    // Bright enemy plasma is visually distinct from narrow player laser bolts.
     for (const b of this.bullets) {
-      ctx.fillStyle = b.color;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.isEnemy ? 4 : 3, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle=b.color;
+      if(b.isEnemy){polygon(ctx,[[b.x,b.y-6],[b.x+4,b.y],[b.x,b.y+6],[b.x-4,b.y]],b.color,'#ffe4e7');}
+      else {ctx.beginPath();ctx.roundRect(b.x-1.5,b.y-8,3,13,1.5);ctx.fill();ctx.fillStyle='#edfaff';ctx.fillRect(b.x-.5,b.y-7,1,8);}
     }
 
     // 4. PowerUps
     for (const p of this.powerups) {
       ctx.save();
       ctx.translate(p.x, p.y);
-      ctx.font = '18px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const icon = p.type === 'spread' ? '⚡' : p.type === 'shield' ? '🛡️' : '💣';
-      ctx.fillText(icon, 0, 0);
+      drawPowerup(ctx, 0, 0, p.type === 'nuke' ? 'bomb' : p.type);
       ctx.restore();
     }
 
@@ -636,44 +641,11 @@ export class GalaxiaVoidEngine implements GameEngine {
       ctx.save();
       ctx.translate(enemy.x, enemy.y);
 
-      if (enemy.type === 'boss') {
-        // Boss Flagship
-        ctx.fillStyle = '#7c3aed';
-        ctx.beginPath();
-        ctx.moveTo(0, enemy.radius);
-        ctx.lineTo(-enemy.radius, -enemy.radius * 0.8);
-        ctx.lineTo(0, -enemy.radius * 0.4);
-        ctx.lineTo(enemy.radius, -enemy.radius * 0.8);
-        ctx.closePath();
-        ctx.fill();
-
-        // Boss Core
-        ctx.fillStyle = '#f43f5e';
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Health bar
-        const barW = enemy.radius * 1.6;
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(-barW / 2, -enemy.radius - 12, barW, 4);
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(-barW / 2, -enemy.radius - 12, barW * (enemy.hp / enemy.maxHp), 4);
-      } else if (enemy.type === 'cruiser') {
-        // Heavy Cruiser
-        ctx.fillStyle = '#f43f5e';
-        ctx.beginPath();
-        ctx.moveTo(0, enemy.radius);
-        ctx.lineTo(-enemy.radius * 0.9, -enemy.radius * 0.6);
-        ctx.lineTo(enemy.radius * 0.9, -enemy.radius * 0.6);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        // Scout Drone
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
-        ctx.fill();
+      drawShip(ctx, 0, 0, enemy.radius * (enemy.type === 'boss' ? .82 : .93), enemy.type, this.lastTime / 1000);
+      if (enemy.type === 'boss' || enemy.type === 'cruiser') {
+        const barW = enemy.radius * 1.8;
+        ctx.fillStyle = '#18243d';ctx.fillRect(-barW/2, -enemy.radius-14, barW, 4);
+        ctx.fillStyle = enemy.type === 'boss' ? '#ffb1d7' : '#ffe09d';ctx.fillRect(-barW/2, -enemy.radius-14, barW * Math.max(0,enemy.hp/enemy.maxHp), 4);
       }
       ctx.restore();
     }
@@ -709,46 +681,14 @@ export class GalaxiaVoidEngine implements GameEngine {
       ctx.restore();
     }
 
-    // Fighter Wings
-    ctx.fillStyle = '#0284c7';
-    ctx.beginPath();
-    ctx.moveTo(0, -18); // nose
-    ctx.lineTo(16, 12);
-    ctx.lineTo(0, 4);
-    ctx.lineTo(-16, 12);
-    ctx.closePath();
-    ctx.fill();
-
-    // Fighter Cockpit
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, -2, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Twin Engine Thrusters
-    ctx.fillStyle = '#f59e0b';
-    ctx.beginPath();
-    ctx.arc(-8, 12 + Math.random() * 4, 3, 0, Math.PI * 2);
-    ctx.arc(8, 12 + Math.random() * 4, 3, 0, Math.PI * 2);
-    ctx.fill();
+    drawShip(ctx, 0, 0, this.playerRadius * 1.05, 'player', this.lastTime / 1000);
 
     ctx.restore();
 
-    // 8. Lives HUD (Top Right)
-    ctx.save();
-    for (let l = 0; l < 3; l++) {
-      const lx = rect.width - 24 - (2 - l) * 22;
-      const ly = 24;
-      const isAlive = l < this.lives;
-      ctx.fillStyle = isAlive ? '#f43f5e' : '#334155';
-      ctx.beginPath();
-      ctx.arc(lx - 4, ly, 4, Math.PI, 0, false);
-      ctx.arc(lx + 4, ly, 4, Math.PI, 0, false);
-      ctx.lineTo(lx, ly + 8);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
+    // Status sits below the shared score/pause HUD instead of underneath it.
+    for (let l=0;l<3;l++) drawHeart(ctx, rect.width - 22 - (2-l)*21, 82, 14, l < this.lives);
+    ctx.font = '600 9px system-ui';ctx.fillStyle='#a7b8d5';ctx.textAlign='right';
+    ctx.fillText(`WAVE ${this.waveCount}  /  ${this.bossActive ? 'FLAGSHIP' : 'PATROL'}`, rect.width-16, 106);
 
     ctx.restore(); // restore screen shake
   }

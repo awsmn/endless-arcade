@@ -1,7 +1,10 @@
+import { JewelTile } from '../../components/JewelTile';
+import { getPuzzleDropTarget, PuzzleGridGeometry } from './geometry';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
+import { storage } from '../../engine/storage';
 import { Sparkles, Trophy } from 'lucide-react';
 
 interface BlockPuzzleViewProps {
@@ -60,6 +63,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
   onScoreUpdate,
   onGameOver
 }) => {
+  const [difficulty] = useState(() => storage.getSettings().difficulty);
   const [board, setBoard] = useState<(string | null)[][]>(() =>
     Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null))
   );
@@ -74,6 +78,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
 
   const pointerStartRef = useRef<{ x: number; y: number; index: number; time: number } | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const boardMetricsRef = useRef<PuzzleGridGeometry | null>(null);
   const isGameOverRef = useRef(false);
   const gameOverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -82,7 +87,10 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
     // Build weighted pool
     const pool: ShapeTemplate[] = [];
     for (const shape of SHAPES) {
-      for (let w = 0; w < shape.weight; w++) {
+      if (difficulty === 'easy' && shape.isLarge) continue;
+      const blocks = shape.matrix.flat().filter(Boolean).length;
+      const weight = shape.weight * (difficulty === 'hard' && blocks >= 4 ? 2 : 1);
+      for (let w = 0; w < weight; w++) {
         pool.push(shape);
       }
     }
@@ -91,12 +99,8 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
     let hasLargeInTray = false;
 
     for (let i = 0; i < 3; i++) {
-      let pick: ShapeTemplate;
-      let attempts = 0;
-      do {
-        pick = pool[Math.floor(Math.random() * pool.length)];
-        attempts++;
-      } while (pick.isLarge && hasLargeInTray && attempts < 10);
+      const choices = hasLargeInTray ? pool.filter(shape => !shape.isLarge) : pool;
+      const pick = choices[Math.floor(Math.random() * choices.length)];
 
       if (pick.isLarge) {
         hasLargeInTray = true;
@@ -110,7 +114,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
       });
     }
     return newTray;
-  }, []);
+  }, [difficulty]);
 
   // Initialize board and tray
   useEffect(() => {
@@ -162,6 +166,7 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
 
   // Central placement action shared by drag-drop and tap-to-place
   const placeShapeAt = (shapeIndex: number, targetR: number, targetC: number) => {
+    if (isPaused || isGameOverRef.current) return false;
     const shape = tray[shapeIndex];
     if (!shape || !canPlaceShape(shape, targetR, targetC, board)) return false;
 
@@ -260,6 +265,17 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
   // Handle Pointer Down on a tray piece
   const handlePointerDown = (index: number, e: React.PointerEvent) => {
     if (isPaused || isGameOverRef.current || !tray[index]) return;
+    const firstRow = boardRef.current?.children[0];
+    const firstCell = firstRow?.children[0]?.getBoundingClientRect();
+    const nextCell = firstRow?.children[1]?.getBoundingClientRect();
+    const nextRow = boardRef.current?.children[1]?.children[0]?.getBoundingClientRect();
+    if (firstCell && nextCell && nextRow) {
+      boardMetricsRef.current = {
+        left: firstCell.left, top: firstCell.top,
+        cellWidth: firstCell.width, cellHeight: firstCell.height,
+        pitchX: nextCell.left - firstCell.left, pitchY: nextRow.top - firstCell.top
+      };
+    }
     try {
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     } catch {}
@@ -277,30 +293,17 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
 
   // Global Pointer Move
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (draggingShapeIndex === null || !boardRef.current) return;
+    const index = pointerStartRef.current?.index;
+    if (index === undefined || !boardMetricsRef.current || isPaused) return;
     setDragOffset({ x: e.clientX, y: e.clientY });
 
-    const shape = tray[draggingShapeIndex];
+    const shape = tray[index];
     if (!shape) {
       setHoverCell(null);
       return;
     }
 
-    // Calculate board cell hover
-    const rect = boardRef.current.getBoundingClientRect();
-    const cellSize = rect.width / BOARD_SIZE;
-    const sCols = shape.matrix[0].length;
-    const sRows = shape.matrix.length;
-
-    // Floating preview is centered at (e.clientX, e.clientY - 60)
-    const shapeCenterX = e.clientX - rect.left;
-    const shapeCenterY = e.clientY - 60 - rect.top;
-
-    const hoverX = shapeCenterX - (sCols / 2) * cellSize;
-    const hoverY = shapeCenterY - (sRows / 2) * cellSize;
-
-    const c = Math.round(hoverX / cellSize);
-    const r = Math.round(hoverY / cellSize);
+    const { r, c } = getPuzzleDropTarget(e.clientX, e.clientY, shape.matrix.length, shape.matrix[0].length, boardMetricsRef.current);
 
     if (canPlaceShape(shape, r, c, board)) {
       setHoverCell({ r, c });
@@ -317,7 +320,8 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
       } catch {}
     }
 
-    if (draggingShapeIndex !== null) {
+    const index = pointerStartRef.current?.index;
+    if (index !== undefined) {
       const start = pointerStartRef.current;
       const endX = e ? e.clientX : dragOffset?.x ?? 0;
       const endY = e ? e.clientY : dragOffset?.y ?? 0;
@@ -326,11 +330,12 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
 
       // If it was a quick tap without drag (< 10px and < 300ms), toggle selection
       if (dist < 10 && duration < 300) {
-        setSelectedShapeIndex(prev => (prev === draggingShapeIndex ? null : draggingShapeIndex));
+        setSelectedShapeIndex(prev => (prev === index ? null : index));
         sounds.playTap();
-      } else if (hoverCell) {
-        // Successful drop placement
-        placeShapeAt(draggingShapeIndex, hoverCell.r, hoverCell.c);
+      } else if (boardMetricsRef.current && tray[index]) {
+        const shape = tray[index]!;
+        const target = getPuzzleDropTarget(endX, endY, shape.matrix.length, shape.matrix[0].length, boardMetricsRef.current);
+        placeShapeAt(index, target.r, target.c);
       }
     }
 
@@ -360,7 +365,9 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
     <div
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      onPointerCancel={() => {
+        setDraggingShapeIndex(null); setDragOffset(null); setHoverCell(null); pointerStartRef.current = null;
+      }}
       className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden select-none touch-none pb-4 pt-16 pop-dots-dense"
     >
       {/* Top Score HUD */}
@@ -409,24 +416,15 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
               }
 
               return (
-                <div
+                <button
                   key={c}
+                  type="button"
+                  aria-label={`Row ${r + 1}, column ${c + 1}${cellColor ? ', filled' : ', empty'}`}
                   onClick={() => handleBoardCellClick(r, c)}
-                  className={`flex-1 rounded-lg transition-all duration-150 flex items-center justify-center border cursor-pointer ${
-                    cellColor
-                      ? 'border-white/30 shadow-md'
-                      : isHovered
-                      ? 'border-white/60 shadow-lg scale-95'
-                      : 'bg-slate-800/40 border-slate-700/30 hover:border-white/20'
-                  }`}
-                  style={{
-                    backgroundColor: cellColor
-                      ? cellColor
-                      : isHovered
-                      ? `${hoverColor}80`
-                      : undefined
-                  }}
-                />
+                  className={`puzzle-cell flex-1 ${cellColor ? 'puzzle-filled' : isHovered ? 'puzzle-target' : ''}`}
+                >
+                  {cellColor ? <JewelTile color={cellColor} /> : isHovered ? <JewelTile color={hoverColor} preview /> : null}
+                </button>
               );
             })}
           </div>
@@ -442,6 +440,14 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
           return (
             <div
               key={idx}
+              role="button"
+              tabIndex={shape ? 0 : -1}
+              aria-label={`Select piece ${idx + 1}`}
+              onKeyDown={(event) => {
+                if ((event.key === 'Enter' || event.key === ' ') && shape && !isPaused && !isGameOverRef.current) {
+                  event.preventDefault(); setSelectedShapeIndex(index => index === idx ? null : idx);
+                }
+              }}
               className={`w-20 h-20 flex items-center justify-center cursor-grab active:cursor-grabbing rounded-xl transition-all ${
                 isSelected ? 'ring-2 ring-pop-yellow bg-white/5 scale-105 shadow-md' : ''
               }`}
@@ -460,13 +466,8 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
                     row.map((val, c) => (
                       <div
                         key={`${r}-${c}`}
-                        className={`w-4 h-4 rounded-md shadow-sm ${
-                          val === 1 ? 'border border-white/30' : 'opacity-0'
-                        }`}
-                        style={{
-                          backgroundColor: val === 1 ? shape.color : 'transparent'
-                        }}
-                      />
+                        className="w-4 h-4 relative"
+                      >{val === 1 && <JewelTile color={shape.color} />}</div>
                     ))
                   )}
                 </div>
@@ -486,22 +487,20 @@ export const BlockPuzzleView: React.FC<BlockPuzzleViewProps> = ({
           }}
         >
           <div
-            className="grid gap-1.5 p-2 rounded-xl bg-black/40 backdrop-blur-sm shadow-2xl scale-125"
+            className="grid block-drag-pieces"
             style={{
-              gridTemplateColumns: `repeat(${tray[draggingShapeIndex]!.matrix[0].length}, minmax(0, 1fr))`
+              gridTemplateColumns: `repeat(${tray[draggingShapeIndex]!.matrix[0].length}, ${boardMetricsRef.current?.cellWidth ?? 28}px)`,
+              gridAutoRows: `${boardMetricsRef.current?.cellHeight ?? 28}px`,
+              columnGap: (boardMetricsRef.current?.pitchX ?? 34) - (boardMetricsRef.current?.cellWidth ?? 28),
+              rowGap: (boardMetricsRef.current?.pitchY ?? 34) - (boardMetricsRef.current?.cellHeight ?? 28)
             }}
           >
             {tray[draggingShapeIndex]!.matrix.map((row, r) =>
               row.map((val, c) => (
                 <div
                   key={`${r}-${c}`}
-                  className={`w-6 h-6 rounded-md shadow-md ${
-                    val === 1 ? 'border border-white/50' : 'opacity-0'
-                  }`}
-                  style={{
-                    backgroundColor: val === 1 ? tray[draggingShapeIndex]!.color : 'transparent'
-                  }}
-                />
+                  className="w-full h-full relative"
+                >{val === 1 && <JewelTile color={tray[draggingShapeIndex]!.color} />}</div>
               ))
             )}
           </div>

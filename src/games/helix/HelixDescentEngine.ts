@@ -1,3 +1,4 @@
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -28,6 +29,8 @@ interface Particle {
 }
 
 export class HelixDescentEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -85,6 +88,7 @@ export class HelixDescentEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = rect.width * dpr;
@@ -103,7 +107,7 @@ export class HelixDescentEngine implements GameEngine {
     this.towerRotation = 0;
     this.ballY = -30;
     this.ballVy = 0;
-    this.cameraY = -120;
+    this.cameraY = -245;
     this.tiersFallen = 0;
     this.isDestroyer = false;
     this.screenShake = 0;
@@ -120,6 +124,7 @@ export class HelixDescentEngine implements GameEngine {
     }
 
     this.lastTime = performance.now();
+    cancelAnimationFrame(this.animationFrameId);
     this.loop();
   }
 
@@ -129,11 +134,11 @@ export class HelixDescentEngine implements GameEngine {
 
     const segments: PlatformSegment[] = [];
     const colors = [
-      '#f97316', // orange
-      '#ec4899', // pink
-      '#06b6d4', // cyan
-      '#8b5cf6', // purple
-      '#10b981', // emerald
+      '#ffbc89', // apricot
+      '#d4a1ef', // lilac
+      '#87d9df', // aqua
+      '#a6a5ed', // periwinkle
+      '#8cd7b3', // mint
       '#eab308'  // yellow
     ];
     const ringColor = colors[id % colors.length];
@@ -215,7 +220,6 @@ export class HelixDescentEngine implements GameEngine {
     if (!this.isPaused) return;
     this.isPaused = false;
     this.lastTime = performance.now();
-    this.loop();
   }
 
   public destroy() {
@@ -230,8 +234,12 @@ export class HelixDescentEngine implements GameEngine {
   }
 
   private loop = (time = performance.now()) => {
-    if (!this.isRunning || this.isPaused) return;
-    const dt = Math.min((time - this.lastTime) / 1000, 0.05);
+    if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
+    const dt = Math.min(Math.max(0, (time - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = time;
 
     this.update(dt);
@@ -320,7 +328,7 @@ export class HelixDescentEngine implements GameEngine {
     }
 
     // Camera smoothly tracks ball down
-    const targetCameraY = this.ballY - 140;
+    const targetCameraY = this.ballY - Math.min(270, this.viewport.height * .4);
     this.cameraY += (targetCameraY - this.cameraY) * Math.min(1, dt * 9);
 
     // Recycle rings: remove rings above camera, generate new rings below
@@ -348,7 +356,7 @@ export class HelixDescentEngine implements GameEngine {
     haptics.failure();
 
     // Spawn massive shatter explosion
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const cx = rect.width / 2;
     for (let i = 0; i < 28; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -367,7 +375,7 @@ export class HelixDescentEngine implements GameEngine {
   }
 
   private spawnBounceSparks(y: number, color: string) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const cx = rect.width / 2;
     const platformFrontOffset = (this.columnRadius + (this.towerRadius - this.columnRadius) * 0.45) * 0.35;
     for (let i = 0; i < 10; i++) {
@@ -391,7 +399,7 @@ export class HelixDescentEngine implements GameEngine {
     haptics.failure();
 
     // Splatter ball particles
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const cx = rect.width / 2;
     const platformFrontOffset = (this.columnRadius + (this.towerRadius - this.columnRadius) * 0.45) * 0.35;
     for (let i = 0; i < 35; i++) {
@@ -430,7 +438,7 @@ export class HelixDescentEngine implements GameEngine {
   }
 
   private render() {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const width = rect.width;
     const height = rect.height;
     const cx = width / 2;
@@ -452,18 +460,27 @@ export class HelixDescentEngine implements GameEngine {
     this.ctx.fillStyle = bgGrad;
     this.ctx.fillRect(0, 0, width, height);
 
+    // Rear platform halves must be occluded by the opaque cylinder.
+    for (const ring of this.rings) {
+      if (ring.isShattered) continue;
+      const screenY = ring.y - this.cameraY;
+      if (screenY >= -100 && screenY <= height + 100) this.renderRing(cx, screenY, ring, false);
+    }
+
     // Draw central cylinder core pillar
     const coreGrad = this.ctx.createLinearGradient(cx - this.columnRadius, 0, cx + this.columnRadius, 0);
-    coreGrad.addColorStop(0, '#151b32');
-    coreGrad.addColorStop(0.5, '#2e3a66');
+    coreGrad.addColorStop(0, '#222e4b');
+    coreGrad.addColorStop(0.35, '#667394');
+    coreGrad.addColorStop(0.55, '#435170');
     coreGrad.addColorStop(1, '#111628');
     this.ctx.fillStyle = coreGrad;
     this.ctx.fillRect(cx - this.columnRadius, 0, this.columnRadius * 2, height);
 
-    // Pillar outer black borders (pop neo-brutalist style)
-    this.ctx.strokeStyle = '#000000';
-    this.ctx.lineWidth = 2.5;
-    this.ctx.strokeRect(cx - this.columnRadius, -10, this.columnRadius * 2, height + 20);
+    // Engraved bands make the cylinder read as a solid, round structure.
+    this.ctx.strokeStyle = '#b9c9e13b'; this.ctx.lineWidth = 1;
+    const bandOffset = ((-this.cameraY % 42) + 42) % 42;
+    for(let y=bandOffset;y<height;y+=42){this.ctx.beginPath();this.ctx.ellipse(cx,y,this.columnRadius,5,0,0,Math.PI);this.ctx.stroke();}
+    this.ctx.fillStyle='#c5daf023';this.ctx.fillRect(cx-this.columnRadius*.25,0,4,height);
 
     // Draw Platform Rings with isometric elliptical projection
     for (const ring of this.rings) {
@@ -472,7 +489,7 @@ export class HelixDescentEngine implements GameEngine {
       // Skip rings outside viewport
       if (screenY < -100 || screenY > height + 100) continue;
 
-      this.renderRing(cx, screenY, ring);
+      this.renderRing(cx, screenY, ring, true);
     }
 
     // Render Ball (Centered horizontally, at ball screen Y)
@@ -512,61 +529,54 @@ export class HelixDescentEngine implements GameEngine {
       this.ctx.restore();
     }
 
-    // Render Particles
+    // Impact streaks fade cleanly; no outlined circles at the contact point.
     for (const p of this.particles) {
       const screenY = p.y - this.cameraY;
-      const progress = p.life / p.maxLife;
-      const alpha = 1 - progress;
-
-      this.ctx.save();
-      this.ctx.globalAlpha = alpha;
-      this.ctx.fillStyle = p.color;
-      this.ctx.beginPath();
-      this.ctx.arc(p.x, screenY, p.radius, 0, Math.PI * 2);
-      this.ctx.fill();
-      this.ctx.strokeStyle = '#000000';
-      this.ctx.lineWidth = 1;
-      this.ctx.stroke();
-      this.ctx.restore();
+      const alpha = Math.max(0, 1 - p.life / p.maxLife);
+      this.ctx.save();this.ctx.globalAlpha=alpha;
+      this.ctx.strokeStyle=p.color;this.ctx.lineWidth=Math.max(1,p.radius*.45);this.ctx.lineCap='round';
+      this.ctx.beginPath();this.ctx.moveTo(p.x,screenY);
+      this.ctx.lineTo(p.x-p.vx*.025,screenY-p.vy*.025);this.ctx.stroke();this.ctx.restore();
     }
 
     this.ctx.restore();
   }
 
-  private renderRing(cx: number, cy: number, ring: PlatformRing) {
-    const rx = this.towerRadius;
-    const ry = this.towerRadius * 0.35; // perspective flattening
-
-    // Draw each segment of the ring
-    for (const seg of ring.segments) {
-      if (seg.type === 'gap') continue;
-
-      // Project segment onto elliptical arc
-      const start = seg.startAngle + this.towerRotation;
-      const end = seg.endAngle + this.towerRotation;
-
-      this.ctx.save();
-      this.ctx.beginPath();
-
-      // Draw thick outer ring slab
-      this.ctx.ellipse(cx, cy, rx, ry, 0, start, end);
-      this.ctx.ellipse(cx, cy, this.columnRadius + 2, (this.columnRadius + 2) * 0.35, 0, end, start, true);
-      this.ctx.closePath();
-
-      // Colors
-      if (seg.type === 'hazard') {
-        this.ctx.fillStyle = '#FF1E44';
-      } else {
-        this.ctx.fillStyle = ring.color;
+  private renderRing(cx: number, cy: number, ring: PlatformRing, front: boolean) {
+    const ctx=this.ctx;
+    const rx=this.towerRadius, ry=rx*.35, inner=this.columnRadius+2, thickness=13;
+    const segments=ring.segments.filter(segment=>segment.type!=='gap').flatMap(segment=>{
+      const start=segment.startAngle+this.towerRotation+.006;
+      const end=segment.endAngle+this.towerRotation-.006;
+      // Split at the camera-facing plane so no segment straddles both depth passes.
+      const cuts=[start];
+      for(let cut=Math.ceil(start/Math.PI)*Math.PI;cut<end;cut+=Math.PI) if(cut>start) cuts.push(cut);
+      cuts.push(end);
+      return cuts.slice(0,-1).map((angle,index)=>({...segment,start:angle,end:cuts[index+1]}));
+    }).filter(segment=>(Math.sin((segment.start+segment.end)/2)>=0)===front)
+      .sort((a,b)=>Math.sin((a.start+a.end)/2)-Math.sin((b.start+b.end)/2));
+    for(const segment of segments){
+      const {start,end}=segment;
+      const color=segment.type==='hazard'?'#f56383':ring.color;
+      // Extruded outer edge, inside edge, and radial cut faces.
+      ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,start,end);ctx.ellipse(cx,cy+thickness,rx,ry,0,end,start,true);ctx.closePath();
+      ctx.fillStyle=color;ctx.fill();ctx.fillStyle='#10182b77';ctx.fill();
+      ctx.beginPath();ctx.ellipse(cx,cy,inner,inner*.35,0,start,end);ctx.ellipse(cx,cy+thickness,inner,inner*.35,0,end,start,true);ctx.closePath();ctx.fillStyle='#16213d';ctx.fill();
+      for(const angle of [start,end]){
+        ctx.beginPath();ctx.moveTo(cx+Math.cos(angle)*inner,cy+Math.sin(angle)*inner*.35);ctx.lineTo(cx+Math.cos(angle)*rx,cy+Math.sin(angle)*ry);ctx.lineTo(cx+Math.cos(angle)*rx,cy+Math.sin(angle)*ry+thickness);ctx.lineTo(cx+Math.cos(angle)*inner,cy+Math.sin(angle)*inner*.35+thickness);ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.fillStyle='#18213d44';ctx.fill();
       }
-      this.ctx.fill();
-
-      // Neo-brutalist border
-      this.ctx.strokeStyle = '#000000';
-      this.ctx.lineWidth = 2;
-      this.ctx.stroke();
-
-      this.ctx.restore();
+      const surface=ctx.createLinearGradient(cx-rx,cy-ry,cx+rx,cy+ry);surface.addColorStop(0,'#e1e9ff');surface.addColorStop(.18,color);surface.addColorStop(1,color);
+      ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,start,end);ctx.ellipse(cx,cy,inner,inner*.35,0,end,start,true);ctx.closePath();ctx.fillStyle=surface;ctx.fill();ctx.strokeStyle='#f4f5ff70';ctx.lineWidth=1;ctx.stroke();
+      // The outer inset follows each platform, leaving true, visible gaps.
+      // Narrow slices at the depth split need a proportional inset. A fixed
+      // inset can reverse the angles, making Canvas draw an almost full circle.
+      const edgeInset=Math.min(.02,(end-start)*.2);
+      ctx.strokeStyle=segment.type==='hazard'?'#6d2549':'#ffffff55';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,cy,rx-6,ry-2,0,start+edgeInset,end-edgeInset);ctx.stroke();
+      if(segment.type==='hazard'){
+        const mid=(start+end)/2, r=(rx+inner)/2;
+        const mx=cx+Math.cos(mid)*r,my=cy+Math.sin(mid)*r*.35;
+        ctx.strokeStyle='#521e3a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(mx-4,my-3);ctx.lineTo(mx+4,my+3);ctx.moveTo(mx+4,my-3);ctx.lineTo(mx-4,my+3);ctx.stroke();
+      }
     }
   }
 }

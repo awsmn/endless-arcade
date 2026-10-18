@@ -19,7 +19,7 @@ export const PauseModal: React.FC<PauseModalProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in pop-dots-dense">
-      <div className="w-full max-w-sm bg-[#14192b] border-2 border-black p-6 rounded-3xl shadow-pop-lg flex flex-col items-center space-y-5">
+      <div role="dialog" aria-modal="true" aria-label="Game paused" className="w-full max-w-sm max-h-[90dvh] overflow-y-auto bg-[#14192b] border-2 border-black p-6 rounded-3xl shadow-pop-lg flex flex-col items-center space-y-5">
         {/* Title */}
         <div className="text-center space-y-1.5 flex flex-col items-center">
           <span className="text-[10px] font-bungee uppercase tracking-widest bg-pop-yellow text-black px-3 py-0.5 rounded border-2 border-black shadow-pop-xs -rotate-2 inline-block">

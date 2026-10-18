@@ -3,6 +3,7 @@ import { Volume2, VolumeX, Smartphone, Trash2, CheckCircle2, Sun, Moon } from 'l
 import { PlatformSettings } from '../types/game';
 import { sounds } from '../engine/audio';
 import { haptics } from '../engine/haptics';
+import { DifficultyPicker } from './DifficultyPicker';
 
 interface SettingsViewProps {
   settings: PlatformSettings;
@@ -27,6 +28,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* Toggles */}
+      <DifficultyPicker value={settings.difficulty} onChange={difficulty => onUpdateSettings({ difficulty })} />
+      <p className="text-xs text-slate-500 dark:text-slate-400">Applies to your next game. 2048 always uses classic rules.</p>
       <div className="bg-white dark:bg-[#14192b] rounded-2xl border-2 border-black shadow-pop divide-y-2 divide-black/20 dark:divide-black/80 overflow-hidden">
         {/* Theme Toggle */}
         <div className="p-4 flex items-center justify-between">
@@ -40,13 +43,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
           <button
+            role="switch"
+            aria-label="Light theme"
+            aria-checked={isLight}
             onClick={() => {
               const nextTheme = isLight ? 'dark' : 'light';
               onUpdateSettings({ theme: nextTheme });
               sounds.playTap();
               haptics.tap();
             }}
-            className={`w-13 h-7 rounded-full p-1 border-2 border-black transition-colors ${
+            className={`w-12 h-7 rounded-full p-1 border-2 border-black transition-colors ${
               isLight ? 'bg-pop-yellow' : 'bg-slate-300 dark:bg-[#1c2440]'
             }`}
           >
@@ -70,13 +76,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
           <button
+            role="switch"
+            aria-label="Sound effects"
+            aria-checked={settings.soundEnabled}
             onClick={() => {
               const next = !settings.soundEnabled;
               onUpdateSettings({ soundEnabled: next });
               sounds.setEnabled(next);
               if (next) sounds.playTap();
             }}
-            className={`w-13 h-7 rounded-full p-1 border-2 border-black transition-colors ${
+            className={`w-12 h-7 rounded-full p-1 border-2 border-black transition-colors ${
               settings.soundEnabled ? 'bg-pop-cyan' : 'bg-slate-300 dark:bg-[#1c2440]'
             }`}
           >
@@ -100,6 +109,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
           <button
+            role="switch"
+            aria-label="Haptic vibration"
+            aria-checked={settings.hapticsEnabled}
             disabled={!haptics.isSupported()}
             onClick={() => {
               const next = !settings.hapticsEnabled;
@@ -107,7 +119,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               haptics.setEnabled(next);
               if (next) haptics.bump();
             }}
-            className={`w-13 h-7 rounded-full p-1 border-2 border-black transition-colors ${
+            className={`w-12 h-7 rounded-full p-1 border-2 border-black transition-colors ${
               !haptics.isSupported()
                 ? 'opacity-40 cursor-not-allowed bg-slate-300 dark:bg-slate-800'
                 : settings.hapticsEnabled

@@ -5,6 +5,7 @@ import { haptics } from '../engine/haptics';
 import { GameMetadata } from '../types/game';
 
 interface InGameOverlayProps {
+  difficulty: string;
   game: GameMetadata;
   score: number;
   highScore: number;
@@ -16,6 +17,7 @@ interface InGameOverlayProps {
 }
 
 export const InGameOverlay: React.FC<InGameOverlayProps> = ({
+  difficulty,
   game,
   score,
   highScore,
@@ -43,6 +45,7 @@ export const InGameOverlay: React.FC<InGameOverlayProps> = ({
 
         {/* Center: Live Score Display */}
         <div className="flex flex-col items-center">
+          <span className="text-[9px] uppercase tracking-widest text-slate-300 mb-1">{difficulty}</span>
           <div className="px-4 py-1.5 rounded-2xl bg-[#0e1222] border-2 border-black shadow-pop-sm flex items-center space-x-2">
             <span className="text-xl font-bungee text-pop-yellow tracking-wider">
               {score.toLocaleString()}

@@ -22,13 +22,16 @@ export const FlappyOrbitView: React.FC<FlappyOrbitViewProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<FlappyOrbitEngine | null>(null);
 
+  const callbacksRef = useRef({ onScoreUpdate, onGameOver });
+  callbacksRef.current = { onScoreUpdate, onGameOver };
+
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const engine = new FlappyOrbitEngine();
     engine.init(canvasRef.current, containerRef.current);
-    engine.onScoreUpdate = onScoreUpdate;
-    engine.onGameOver = onGameOver;
+    engine.onScoreUpdate = update => callbacksRef.current.onScoreUpdate(update);
+    engine.onGameOver = (score, isNewHighScore, stars) => callbacksRef.current.onGameOver(score, isNewHighScore, stars);
 
     engine.start(mode, level);
     engineRef.current = engine;

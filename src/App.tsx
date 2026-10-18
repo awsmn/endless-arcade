@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { DifficultyPicker } from './components/DifficultyPicker';
+import { DIFFICULTIES } from './engine/difficulty';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { CategoryFilter } from './components/CategoryFilter';
@@ -10,21 +12,21 @@ import { GameOverModal } from './components/GameOverModal';
 import { InstallBanner } from './components/InstallBanner';
 import { StatsView } from './components/StatsView';
 import { SettingsView } from './components/SettingsView';
-import { SnakeView } from './games/snake/SnakeView';
-import { FruitFusionView } from './games/fruit/FruitFusionView';
-import { BrickBreakerView } from './games/breaker/BrickBreakerView';
-import { Game2048View } from './games/game2048/Game2048View';
-import { KnifeStrikeView } from './games/knife/KnifeStrikeView';
-import { MinesweeperView } from './games/minesweeper/MinesweeperView';
-import { StackSliceView } from './games/stack/StackSliceView';
-import { CyberSprintView } from './games/runner/CyberSprintView';
-import { FlappyOrbitView } from './games/flappy/FlappyOrbitView';
-import { ChromaJumpView } from './games/chroma/ChromaJumpView';
-import { GalaxiaVoidView } from './games/space/GalaxiaVoidView';
-import { BlockPuzzleView } from './games/blockpuzzle/BlockPuzzleView';
-import { HelixDescentView } from './games/helix/HelixDescentView';
-import { RhythmFallView } from './games/rhythm/RhythmFallView';
-import { CrossyLaneView } from './games/crossy/CrossyLaneView';
+const SnakeView = lazy(() => import('./games/snake/SnakeView').then(module => ({ default: module.SnakeView })));
+const FruitFusionView = lazy(() => import('./games/fruit/FruitFusionView').then(module => ({ default: module.FruitFusionView })));
+const BrickBreakerView = lazy(() => import('./games/breaker/BrickBreakerView').then(module => ({ default: module.BrickBreakerView })));
+const Game2048View = lazy(() => import('./games/game2048/Game2048View').then(module => ({ default: module.Game2048View })));
+const KnifeStrikeView = lazy(() => import('./games/knife/KnifeStrikeView').then(module => ({ default: module.KnifeStrikeView })));
+const MinesweeperView = lazy(() => import('./games/minesweeper/MinesweeperView').then(module => ({ default: module.MinesweeperView })));
+const StackSliceView = lazy(() => import('./games/stack/StackSliceView').then(module => ({ default: module.StackSliceView })));
+const CyberSprintView = lazy(() => import('./games/runner/CyberSprintView').then(module => ({ default: module.CyberSprintView })));
+const FlappyOrbitView = lazy(() => import('./games/flappy/FlappyOrbitView').then(module => ({ default: module.FlappyOrbitView })));
+const ChromaJumpView = lazy(() => import('./games/chroma/ChromaJumpView').then(module => ({ default: module.ChromaJumpView })));
+const GalaxiaVoidView = lazy(() => import('./games/space/GalaxiaVoidView').then(module => ({ default: module.GalaxiaVoidView })));
+const BlockPuzzleView = lazy(() => import('./games/blockpuzzle/BlockPuzzleView').then(module => ({ default: module.BlockPuzzleView })));
+const HelixDescentView = lazy(() => import('./games/helix/HelixDescentView').then(module => ({ default: module.HelixDescentView })));
+const RhythmFallView = lazy(() => import('./games/rhythm/RhythmFallView').then(module => ({ default: module.RhythmFallView })));
+const CrossyLaneView = lazy(() => import('./games/crossy/CrossyLaneView').then(module => ({ default: module.CrossyLaneView })));
 
 const PLAYABLE_GAMES = [
   'neon-snake',
@@ -49,7 +51,7 @@ import { GameCategory, GameMetadata, GameScoreUpdate, PlatformSettings } from '.
 import { storage } from './engine/storage';
 import { sounds } from './engine/audio';
 import { haptics } from './engine/haptics';
-import { Search } from 'lucide-react';
+import { Search, Heart } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation & Filtering
@@ -59,7 +61,7 @@ export const App: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   // Platform Preferences & Meta
-  const [settings, setSettings] = useState<PlatformSettings>(storage.getSettings());
+  const [settings, setSettings] = useState<PlatformSettings>(() => storage.getSettings());
   const [totalStars, setTotalStars] = useState(0);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
@@ -73,10 +75,10 @@ export const App: React.FC = () => {
   const [isNewHighScore, setIsNewHighScore] = useState(false);
   const [gameStars, setGameStars] = useState(0);
 
+  const gameEndedRef = useRef(false);
+
   // Initialize and Sync Settings & PWA prompt
   useEffect(() => {
-    sounds.setEnabled(settings.soundEnabled);
-    haptics.setEnabled(settings.hapticsEnabled);
     setFavorites(storage.getFavorites());
     setTotalStars(storage.getTotalStars());
 
@@ -90,6 +92,29 @@ export const App: React.FC = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  useEffect(() => {
+    sounds.setEnabled(settings.soundEnabled);
+    haptics.setEnabled(settings.hapticsEnabled);
+  }, [settings.soundEnabled, settings.hapticsEnabled]);
+
+  // Keep a hidden game safe until the player explicitly resumes.
+  useEffect(() => {
+    if (!activeGame) return;
+    const pauseHidden = () => { if (document.hidden && !gameEndedRef.current) setIsPaused(true); };
+    const keyboardPause = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !gameEndedRef.current) {
+        event.preventDefault();
+        setIsPaused(value => !value);
+      }
+    };
+    document.addEventListener('visibilitychange', pauseHidden);
+    window.addEventListener('keydown', keyboardPause);
+    return () => {
+      document.removeEventListener('visibilitychange', pauseHidden);
+      window.removeEventListener('keydown', keyboardPause);
+    };
+  }, [activeGame]);
 
   // Theme Sync effect (Light vs Dark mode)
   useEffect(() => {
@@ -136,6 +161,7 @@ export const App: React.FC = () => {
   };
 
   const handleStartGame = (game: GameMetadata) => {
+    gameEndedRef.current = false;
     const progress = storage.getProgress(game.id);
     setActiveGame(game);
     setGameScore(0);
@@ -152,7 +178,10 @@ export const App: React.FC = () => {
   };
 
   const handleGameOver = (finalScore: number, _isNewHighScore?: boolean, stars?: number) => {
-    if (!activeGame) return;
+    if (!activeGame || gameEndedRef.current) return;
+    gameEndedRef.current = true;
+    setGameScore(finalScore);
+    setIsPaused(false);
     const earnedStars = stars ?? 0;
     setGameStars(earnedStars);
     const result = storage.saveScore(activeGame.id, finalScore, earnedStars, 1);
@@ -164,6 +193,8 @@ export const App: React.FC = () => {
 
   const handleRestartGame = () => {
     if (!activeGame) return;
+    gameEndedRef.current = false;
+    setGameStars(0);
     setGameScore(0);
     setIsPaused(false);
     setIsGameOver(false);
@@ -179,7 +210,7 @@ export const App: React.FC = () => {
   };
 
   const handleResetProgress = () => {
-    localStorage.clear();
+    storage.resetProgress();
     setFavorites([]);
     setTotalStars(0);
     setSettings(storage.getSettings());
@@ -191,6 +222,9 @@ export const App: React.FC = () => {
     if (navTab === 'favorites' && !favorites.includes(game.id)) {
       return false;
     }
+
+    // Favorites are independent of the lobby's search and category filters.
+    if (navTab === 'favorites') return true;
 
     // Category filter
     if (selectedCategory !== 'all') {
@@ -205,7 +239,7 @@ export const App: React.FC = () => {
 
     // Search query
     if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.trim().toLowerCase();
       return (
         game.title.toLowerCase().includes(q) ||
         game.tagline.toLowerCase().includes(q) ||
@@ -226,21 +260,23 @@ export const App: React.FC = () => {
           <div className="relative w-full max-w-md h-full flex flex-col overflow-hidden bg-[#0c1020] shadow-2xl border-x-2 border-black touch-none select-none">
             {/* In-Game HUD Overlay */}
             <InGameOverlay
+              difficulty={activeGame.id === '2048-unlimited' ? 'Classic rules' : DIFFICULTIES[settings.difficulty].label}
               game={activeGame}
               score={gameScore}
               highScore={highScore}
               soundEnabled={settings.soundEnabled}
               onToggleSound={handleToggleSound}
-              onPause={() => setIsPaused(true)}
+              onPause={() => { if (!gameEndedRef.current) setIsPaused(true); }}
               onExit={handleExitGame}
             />
 
             {/* Active Game View Area */}
             <div key={gameSessionId} className="relative flex-1 w-full h-full overflow-hidden touch-none select-none game-canvas-container">
+              <Suspense fallback={<div className="game-loading" role="status"><span className="loading-orbit" />Warming up {activeGame.title}…</div>}>
               {activeGame.id === 'neon-snake' && (
                 <SnakeView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -248,7 +284,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'fruit-fusion' && (
                 <FruitFusionView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -256,7 +292,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'brick-breaker' && (
                 <BrickBreakerView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -264,7 +300,7 @@ export const App: React.FC = () => {
               {activeGame.id === '2048-unlimited' && (
                 <Game2048View
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -272,7 +308,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'knife-strike' && (
                 <KnifeStrikeView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -280,7 +316,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'minesweeper-pulse' && (
                 <MinesweeperView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -288,7 +324,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'stack-slice' && (
                 <StackSliceView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -296,7 +332,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'cyber-sprint' && (
                 <CyberSprintView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -304,7 +340,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'flappy-orbit' && (
                 <FlappyOrbitView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -312,7 +348,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'chroma-jump' && (
                 <ChromaJumpView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -320,7 +356,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'galaxia-void' && (
                 <GalaxiaVoidView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -328,7 +364,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'block-puzzle' && (
                 <BlockPuzzleView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -336,7 +372,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'helix-descent' && (
                 <HelixDescentView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -344,7 +380,7 @@ export const App: React.FC = () => {
               {activeGame.id === 'rhythm-fall' && (
                 <RhythmFallView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
@@ -352,11 +388,12 @@ export const App: React.FC = () => {
               {activeGame.id === 'crossy-lane' && (
                 <CrossyLaneView
                   mode="endless"
-                  isPaused={isPaused}
+                  isPaused={isPaused || isGameOver}
                   onScoreUpdate={handleScoreUpdate}
                   onGameOver={handleGameOver}
                 />
               )}
+              </Suspense>
             </div>
 
             {/* Pause Modal */}
@@ -400,16 +437,18 @@ export const App: React.FC = () => {
           />
 
           {/* Main Content Area */}
-          <main className="flex-1 w-full max-w-md mx-auto">
+          <main className="arcade-main flex-1 w-full max-w-6xl mx-auto">
             {navTab === 'arcade' && (
-              <div className="space-y-4 pb-24">
+              <div className="space-y-6 pb-28">
+                <div className="lobby-intro px-4 pt-7"><div><span className="eyebrow">INSERT CURIOSITY. PRESS PLAY.</span><h2>Small games.<br /> <span>Endless possibilities.</span></h2><p>15 quick escapes. Zero downloads. One more go.</p></div><span className="lobby-stamp">100%<br /><small>PLAYABLE</small></span></div>
                 {/* Search Bar */}
                 <div className="px-4 pt-3">
                   <div className="relative">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pop-pink dark:text-pop-yellow stroke-[2.5]" />
                     <input
                       type="text"
-                      placeholder="Search games, mechanics..."
+                      aria-label="Search games"
+                      placeholder="Find your next obsession..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-[#14192b] border-2 border-black shadow-pop-sm text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-pop-yellow focus:shadow-pop transition-all font-medium"
@@ -420,11 +459,13 @@ export const App: React.FC = () => {
                 {/* Hero / Surprise Pick Card with Interactive Random Roll */}
                 {searchQuery === '' && selectedCategory === 'all' && (
                   <RandomHeroPicker
-                    catalog={GAME_CATALOG}
+                    catalog={GAME_CATALOG.filter(game => PLAYABLE_GAMES.includes(game.id))}
                     onSelectGame={handleStartGame}
                     isLight={isLight}
                   />
                 )}
+
+                <div className="px-4"><DifficultyPicker value={settings.difficulty} onChange={difficulty => setSettings(storage.saveSettings({ difficulty }))} /></div>
 
                 {/* Category Filter Pills */}
                 <CategoryFilter
@@ -437,8 +478,8 @@ export const App: React.FC = () => {
                   <div className="flex items-center justify-between pb-2">
                     <h3 className="text-xs font-pop font-black uppercase tracking-wider text-slate-900 dark:text-white pop-text-shadow">
                       {selectedCategory === 'all'
-                        ? '★ ALL ARCADE GAMES ★'
-                        : `★ ${selectedCategory.toUpperCase()} GAMES ★`}
+                        ? 'THE GAME ROOM'
+                        : `${selectedCategory.toUpperCase()} GAMES`}
                     </h3>
                     <span className="text-[10px] font-bungee text-pop-pink dark:text-pop-yellow bg-white dark:bg-[#14192b] px-2 py-0.5 rounded border-2 border-black shadow-pop-xs">
                       {filteredGames.length} GAMES
@@ -446,7 +487,7 @@ export const App: React.FC = () => {
                   </div>
 
                   {filteredGames.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3.5">
+                    <div className="game-grid grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                       {filteredGames.map((game) => (
                         <GameCard
                           key={game.id}
@@ -486,7 +527,7 @@ export const App: React.FC = () => {
                   <p className="text-xs text-slate-600 dark:text-slate-300">Quick access to the games you love</p>
                 </div>
                 {filteredGames.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3.5">
+                  <div className="game-grid grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredGames.map((game) => (
                       <GameCard
                         key={game.id}
@@ -501,7 +542,7 @@ export const App: React.FC = () => {
                   </div>
                 ) : (
                   <div className="text-center py-16 space-y-3 bg-white dark:bg-[#14192b] border-2 border-black rounded-2xl p-6 shadow-pop">
-                    <span className="text-4xl inline-block animate-bounce">❤️</span>
+                    <Heart className="w-12 h-12 mx-auto text-pop-pink" strokeWidth={1.5} />
                     <p className="text-slate-900 dark:text-white text-base font-pop font-black">NO FAVORITES YET</p>
                     <p className="text-xs text-slate-600 dark:text-slate-300 max-w-[220px] mx-auto">
                       Tap the heart icon on any game card to pin it to your favorites!

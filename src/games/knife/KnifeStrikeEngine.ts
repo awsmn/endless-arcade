@@ -1,3 +1,5 @@
+import { drawKnife, drawFruit, polygon } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -24,6 +26,8 @@ interface Particle {
 }
 
 export class KnifeStrikeEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -78,6 +82,7 @@ export class KnifeStrikeEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -170,8 +175,12 @@ export class KnifeStrikeEngine implements GameEngine {
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -344,7 +353,7 @@ export class KnifeStrikeEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -356,6 +365,12 @@ export class KnifeStrikeEngine implements GameEngine {
       ctx.translate(shakeX, shakeY);
     }
 
+    const bg = ctx.createLinearGradient(0, 0, 0, rect.height);
+    bg.addColorStop(0, '#201a30'); bg.addColorStop(1, '#0a101d');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,rect.width,rect.height);
+    ctx.strokeStyle = '#f2c69218'; ctx.lineWidth = 1;
+    for(let i=0;i<7;i++){ctx.beginPath();ctx.arc(this.centerX,this.centerY,this.targetRadius+45+i*27,0,Math.PI*2);ctx.stroke();}
+
     // 1. Draw Rotating Target Wheel
     ctx.save();
     ctx.translate(this.centerX, this.centerY);
@@ -363,23 +378,34 @@ export class KnifeStrikeEngine implements GameEngine {
 
     // Wood / Core Disc
     const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, this.targetRadius);
-    grad.addColorStop(0, '#7c3aed');
-    grad.addColorStop(0.85, '#4c1d95');
-    grad.addColorStop(1, '#2e1065');
+    grad.addColorStop(0, '#ce986e');
+    grad.addColorStop(0.85, '#88573e');
+    grad.addColorStop(1, '#4b3334');
 
     ctx.fillStyle = this.targetFlash > 0 ? '#ffffff' : grad;
     ctx.beginPath();
     ctx.arc(0, 0, this.targetRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Wheel concentric rings
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(0, 0, this.targetRadius * 0.55, 0, Math.PI * 2);
-    ctx.stroke();
+    // Hand-cut tree rings, growth lines, and radial cracks.
+    ctx.strokeStyle = '#efc09588'; ctx.lineWidth = 2;
+    for (const fraction of [.25, .49, .73, .93]) {
+      ctx.beginPath();
+      for (let n = 0; n <= 64; n++) {
+        const angle = n / 64 * Math.PI * 2;
+        const radius = this.targetRadius * fraction + Math.sin(angle * 5 + fraction * 7) * 2;
+        const px = Math.cos(angle) * radius, py = Math.sin(angle) * radius;
+        if (n === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+    ctx.strokeStyle = '#392c32'; ctx.lineWidth = 2.5;
+    for (let n=0;n<7;n++) {
+      const angle = n * 2.399;
+      ctx.beginPath();ctx.moveTo(Math.cos(angle)*this.targetRadius,Math.sin(angle)*this.targetRadius);
+      ctx.lineTo(Math.cos(angle+.07)*this.targetRadius*.82,Math.sin(angle+.07)*this.targetRadius*.82);
+      ctx.lineTo(Math.cos(angle+.03)*this.targetRadius*.7,Math.sin(angle+.03)*this.targetRadius*.7);ctx.stroke();
+    }
 
     // Embedded Knives (spinning with wheel)
     for (const angle of this.embeddedKnives) {
@@ -397,7 +423,7 @@ export class KnifeStrikeEngine implements GameEngine {
         ctx.font = '22px serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🍎', 0, this.targetRadius + 14);
+        drawFruit(ctx, 0, this.targetRadius + 14, 15, 5);
         ctx.restore();
       }
     }
@@ -444,35 +470,6 @@ export class KnifeStrikeEngine implements GameEngine {
     y: number,
     _embedded: boolean
   ) {
-    ctx.save();
-    ctx.translate(x, y);
-
-    // Blade
-    ctx.fillStyle = '#f1f5f9';
-    ctx.beginPath();
-    ctx.moveTo(0, -32); // tip
-    ctx.lineTo(5, -4);
-    ctx.lineTo(3, 10);
-    ctx.lineTo(-3, 10);
-    ctx.lineTo(-5, -4);
-    ctx.closePath();
-    ctx.fill();
-
-    // Blade shine highlight
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Handle / Grip
-    ctx.fillStyle = '#6366f1';
-    ctx.fillRect(-3, 10, 6, 18);
-
-    // Pommel
-    ctx.fillStyle = '#f59e0b';
-    ctx.beginPath();
-    ctx.arc(0, 29, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
+    drawKnife(ctx, x, y);
   }
 }

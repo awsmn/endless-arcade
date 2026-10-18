@@ -1,3 +1,5 @@
+import { drawStar } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -34,6 +36,8 @@ interface ChromaObstacle {
 }
 
 export class ChromaJumpEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -56,7 +60,8 @@ export class ChromaJumpEngine implements GameEngine {
   private obstacles: ChromaObstacle[] = [];
   private nextObstacleId = 1;
   private nextObstacleWorldY = 220;
-  private obstacleSpacing = 280;
+  private obstacleSpacing = 320;
+  private restingScreenY = 420;
 
   private particles: Particle[] = [];
   private score = 0;
@@ -88,6 +93,7 @@ export class ChromaJumpEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -99,6 +105,7 @@ export class ChromaJumpEngine implements GameEngine {
     this.ctx.scale(dpr, dpr);
 
     this.ballX = rect.width / 2;
+    this.restingScreenY = Math.min(rect.height - 125, Math.max(240, rect.height * .7));
   }
 
   public start(_mode: GameMode = 'endless', _level = 1) {
@@ -106,20 +113,21 @@ export class ChromaJumpEngine implements GameEngine {
       clearTimeout(this.gameOverTimer);
       this.gameOverTimer = null;
     }
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.ballX = rect.width / 2;
     this.ballY = 400;
     this.ballVy = 0;
     this.hasStarted = false;
     this.hoverTimer = 0;
-    this.cameraY = 400 - rect.height * 0.2;
+    this.cameraY = this.ballY - this.restingScreenY;
+    this.obstacleSpacing = Math.max(300, Math.min(350, (rect.height - 180) * .62));
     this.currentColorIndex = Math.floor(Math.random() * 4);
     this.obstacles = [];
     this.particles = [];
     this.score = 0;
     this.screenShake = 0;
     this.nextObstacleId = 1;
-    this.nextObstacleWorldY = 220;
+    this.nextObstacleWorldY = this.ballY - Math.min(180, Math.max(125, (this.restingScreenY - 110) * .62));
 
     // Spawn first few obstacles
     for (let i = 0; i < 4; i++) {
@@ -189,7 +197,8 @@ export class ChromaJumpEngine implements GameEngine {
     const dir = Math.random() < 0.5 ? 1 : -1;
     const baseSpeed = Math.min(1.5, 0.85 + Math.floor(this.score / 5) * 0.1);
     const rotSpeed = (baseSpeed + Math.random() * 0.25) * dir;
-    const radius = type === 'double_circle' ? 95 : type === 'cross' ? 70 : 80;
+    const maxRadius = Math.min(95, this.viewport.width * .24);
+    const radius = type === 'double_circle' ? maxRadius : type === 'cross' ? maxRadius * .74 : maxRadius * .84;
 
     this.obstacles.push({
       id: this.nextObstacleId++,
@@ -207,8 +216,12 @@ export class ChromaJumpEngine implements GameEngine {
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -220,7 +233,7 @@ export class ChromaJumpEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     // Hover gracefully until player taps jump
     if (!this.hasStarted) {
@@ -235,13 +248,13 @@ export class ChromaJumpEngine implements GameEngine {
     this.ballY += this.ballVy * dt;
 
     // Smooth camera tracking: keep ball around 60% of viewport
-    const targetCameraY = this.ballY - rect.height * 0.2;
+    const targetCameraY = this.ballY - this.restingScreenY;
     if (targetCameraY < this.cameraY) {
       this.cameraY += (targetCameraY - this.cameraY) * 6 * dt;
     }
 
     // Death below bottom of screen
-    if (this.ballY > this.cameraY + rect.height * 0.75) {
+    if (this.ballY - this.cameraY > rect.height - 85) {
       this.handleGameOver();
       return;
     }
@@ -314,7 +327,7 @@ export class ChromaJumpEngine implements GameEngine {
 
   private checkObstacleCollision(obs: ChromaObstacle): boolean {
     const ringThickness = 14;
-    const centerX = this.container.clientWidth / 2;
+    const centerX = this.viewport.width / 2;
 
     if (obs.type === 'circle') {
       const dy = this.ballY - obs.y;
@@ -421,7 +434,7 @@ export class ChromaJumpEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const centerX = rect.width / 2;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
@@ -438,13 +451,15 @@ export class ChromaJumpEngine implements GameEngine {
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     // Camera viewport offset
-    const offsetY = rect.height * 0.55 - this.cameraY;
+    const offsetY = -this.cameraY;
 
     ctx.save();
+    ctx.beginPath();ctx.rect(0,105,rect.width,Math.max(1,rect.height-195));ctx.clip();
     ctx.translate(0, offsetY);
 
     // 2. Render Obstacles
     for (const obs of this.obstacles) {
+      if (obs.y + obs.radius < this.cameraY + 105 || obs.y - obs.radius > this.cameraY + rect.height - 85) continue;
       if (obs.type === 'circle') {
         const ringWidth = 14;
         ctx.save();
@@ -461,7 +476,7 @@ export class ChromaJumpEngine implements GameEngine {
         }
         ctx.restore();
       } else if (obs.type === 'double_circle') {
-        const ringWidth = 12;
+        const ringWidth = 14;
         // Outer ring
         ctx.save();
         ctx.translate(centerX, obs.y);
@@ -498,7 +513,7 @@ export class ChromaJumpEngine implements GameEngine {
           ctx.moveTo(Math.cos(armAngle) * innerRadius, Math.sin(armAngle) * innerRadius);
           ctx.lineTo(Math.cos(armAngle) * obs.radius, Math.sin(armAngle) * obs.radius);
           ctx.strokeStyle = CHROMA_COLORS[i].hex;
-          ctx.lineWidth = 12;
+          ctx.lineWidth = 14;
           ctx.lineCap = 'round';
           ctx.stroke();
         }
@@ -509,10 +524,7 @@ export class ChromaJumpEngine implements GameEngine {
       if (!obs.starCollected) {
         ctx.save();
         ctx.fillStyle = '#f59e0b';
-        ctx.font = '20px system-ui';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('⭐', centerX, obs.y);
+        drawStar(ctx, centerX, obs.y, 12);
         ctx.restore();
       }
 

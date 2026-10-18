@@ -1,3 +1,5 @@
+import { polygon } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -30,6 +32,8 @@ interface Particle {
 }
 
 export class BrickBreakerEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -91,6 +95,7 @@ export class BrickBreakerEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -228,8 +233,12 @@ export class BrickBreakerEngine implements GameEngine {
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -447,7 +456,7 @@ export class BrickBreakerEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -498,7 +507,9 @@ export class BrickBreakerEngine implements GameEngine {
         // Numbered Brick
         ctx.save();
         const color = this.getBrickColor(brick.hp);
-        ctx.fillStyle = color;
+        const enamel=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
+        enamel.addColorStop(0,'#e4deff');enamel.addColorStop(.16,color);enamel.addColorStop(1,color);
+        ctx.fillStyle = enamel;
         ctx.beginPath();
         ctx.roundRect(bx, by, bw, bh, 6);
         ctx.fill();
@@ -507,6 +518,9 @@ export class BrickBreakerEngine implements GameEngine {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
+
+        polygon(ctx,[[bx+2,by+bh-5],[bx+bw-2,by+bh-5],[bx+bw-4,by+bh-1],[bx+4,by+bh-1]],'#101d3b55');
+        ctx.strokeStyle='#ffffff77';ctx.beginPath();ctx.moveTo(bx+7,by+5);ctx.lineTo(bx+bw-7,by+5);ctx.stroke();
 
         // HP number
         ctx.fillStyle = '#ffffff';

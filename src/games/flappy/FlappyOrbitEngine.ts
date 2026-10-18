@@ -1,3 +1,5 @@
+import { drawShip, drawStar, polygon } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -33,6 +35,8 @@ interface ObstacleGate {
 }
 
 export class FlappyOrbitEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -57,6 +61,7 @@ export class FlappyOrbitEngine implements GameEngine {
   private worldSpeed = 165; // px/s
   private spawnInterval = 1.7; // seconds
   private spawnTimer = 0;
+  private gatesPassed = 0;
 
   // Parallax background
   private stars: Star[] = [];
@@ -87,7 +92,7 @@ export class FlappyOrbitEngine implements GameEngine {
 
   private initStars() {
     this.stars = [];
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     for (let i = 0; i < 45; i++) {
       this.stars.push({
         x: Math.random() * rect.width,
@@ -102,6 +107,7 @@ export class FlappyOrbitEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -116,7 +122,7 @@ export class FlappyOrbitEngine implements GameEngine {
   }
 
   public start(_mode: GameMode = 'endless', _level = 1) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.probeY = rect.height * 0.45;
     this.probeVy = 0;
     this.probeRotation = 0;
@@ -125,6 +131,7 @@ export class FlappyOrbitEngine implements GameEngine {
     this.gates = [];
     this.particles = [];
     this.score = 0;
+    this.gatesPassed = 0;
     this.worldSpeed = 165;
     this.spawnTimer = 0;
     this.screenShake = 0;
@@ -181,8 +188,12 @@ export class FlappyOrbitEngine implements GameEngine {
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -194,7 +205,7 @@ export class FlappyOrbitEngine implements GameEngine {
   };
 
   private update(dt: number) {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     // Scroll stars
     for (const star of this.stars) {
@@ -225,7 +236,7 @@ export class FlappyOrbitEngine implements GameEngine {
     }
 
     // Gradually scale speed
-    this.worldSpeed = Math.min(260, 160 + this.score * 2.2);
+    this.worldSpeed = Math.min(260, 145 + this.gatesPassed * 2);
 
     // Physics on probe
     this.probeVy += this.gravity * dt;
@@ -270,6 +281,7 @@ export class FlappyOrbitEngine implements GameEngine {
       if (!g.passed && g.x < this.probeX) {
         g.passed = true;
         this.score++;
+        this.gatesPassed++;
         sounds.playCollect(1.2);
         haptics.impact();
         this.onScoreUpdate?.({ score: this.score });
@@ -313,13 +325,16 @@ export class FlappyOrbitEngine implements GameEngine {
   }
 
   private spawnGate() {
-    const rect = this.container.getBoundingClientRect();
-    const topPad = 120;
-    const bottomPad = rect.height - 130;
+    const rect = this.viewport;
+    const topPad = 85;
+    const bottomPad = Math.max(topPad + 80, rect.height - 100);
     const availableHeight = bottomPad - topPad;
-
-    const gapHeight = Math.max(120, 160 - this.score * 1.5);
-    const gapY = topPad + gapHeight / 2 + Math.random() * (availableHeight - gapHeight);
+    const gapHeight = Math.min(availableHeight, Math.max(130, 185 - this.gatesPassed * 1.2));
+    const minY = topPad + gapHeight / 2;
+    const maxY = bottomPad - gapHeight / 2;
+    // Bound consecutive height changes so every opening is reachable.
+    const lastY = this.gates[this.gates.length - 1]?.gapY ?? rect.height * 0.45;
+    const gapY = Math.max(minY, Math.min(maxY, lastY + (Math.random() - 0.5) * 150));
 
     this.gates.push({
       id: this.nextGateId++,
@@ -367,7 +382,7 @@ export class FlappyOrbitEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -385,6 +400,13 @@ export class FlappyOrbitEngine implements GameEngine {
     bgGrad.addColorStop(1, '#020617');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, rect.width, rect.height);
+
+    ctx.save();
+    ctx.translate(rect.width * .72, rect.height * .22);
+    ctx.fillStyle = '#243353'; ctx.beginPath(); ctx.arc(0, 0, 49, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0b1329'; ctx.beginPath(); ctx.arc(-14, -12, 46, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8b99c03f'; ctx.lineWidth = 5; ctx.beginPath();ctx.ellipse(0,0,72,17,-.45,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
 
     // 2. Stars
     for (const star of this.stars) {
@@ -432,6 +454,20 @@ export class FlappyOrbitEngine implements GameEngine {
       // Bottom Pylon Laser Rim
       ctx.strokeStyle = '#38bdf8';
       ctx.stroke();
+      for (const [edgeY, direction] of [[topH, -1], [bottomY, 1]]) {
+        const capY = direction < 0 ? edgeY - 16 : edgeY;
+        const gx = g.x - g.width / 2;
+        ctx.fillStyle = '#131f3c'; ctx.fillRect(gx - 4, capY, g.width + 8, 16);
+        ctx.fillStyle = '#9af2ef'; ctx.fillRect(gx - 2, direction < 0 ? edgeY - 5 : edgeY + 2, g.width + 4, 3);
+        ctx.fillStyle = '#d4b5fa';
+        for (let n = 0; n < 3; n++) ctx.fillRect(gx + 6 + n * 11, capY + 5, 5, 5);
+        const length = direction < 0 ? topH : bottomH;
+        for (let offset = 30; offset < length - 16; offset += 38) {
+          const py = edgeY + direction * offset;
+          polygon(ctx, [[gx + 4,py],[gx + g.width - 4,py],[gx + g.width - 8,py + 17],[gx + 8,py + 17]], '#1c3555', '#54789a');
+          ctx.fillStyle = '#7de1ed'; ctx.fillRect(g.x - 2, py + 5, 4, 7);
+        }
+      }
       ctx.restore();
 
       // Floating Cosmic Energy Star in gap
@@ -440,10 +476,7 @@ export class FlappyOrbitEngine implements GameEngine {
         ctx.translate(g.x, g.gapY);
         ctx.rotate(g.angle);
         ctx.fillStyle = '#f59e0b';
-        ctx.font = '18px system-ui';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('⭐', 0, 0);
+        drawStar(ctx, 0, 0, 11);
         ctx.restore();
       }
     }
@@ -465,29 +498,7 @@ export class FlappyOrbitEngine implements GameEngine {
     ctx.translate(this.probeX, this.probeY);
     ctx.rotate(this.probeRotation);
 
-    // Glowing shield outer ring
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, this.probeRadius + 4, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Probe body (futuristic triangle pod)
-    ctx.fillStyle = '#0284c7';
-    ctx.beginPath();
-    ctx.moveTo(14, 0); // nose tip
-    ctx.lineTo(-12, -10);
-    ctx.lineTo(-6, 0);
-    ctx.lineTo(-12, 10);
-    ctx.closePath();
-    ctx.fill();
-
-    // Core energy cockpit
-    ctx.fillStyle = '#e0f2fe';
-    ctx.beginPath();
-    ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-
+    drawShip(ctx, 0, 0, this.probeRadius * 1.05, 'probe', this.hoverTimer);
     ctx.restore();
 
     // Tap to thrust prompt before game begins

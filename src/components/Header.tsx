@@ -51,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
               </h1>
             </div>
             <span className="text-[9px] font-black tracking-widest text-pop-purple dark:text-pop-cyan uppercase block mt-0.5">
-              ★ ART POP EDITION ★
+              ART POP EDITION
             </span>
           </div>
         </div>

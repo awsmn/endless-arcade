@@ -1,3 +1,4 @@
+import { FruitAsset } from '../../components/FruitAsset';
 import React, { useEffect, useRef, useState } from 'react';
 import { FruitFusionEngine, FRUIT_TIERS } from './FruitFusionEngine';
 import { GameMode, GameScoreUpdate } from '../../types/game';
@@ -25,13 +26,16 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
   const [nextTier, setNextTier] = useState<number>(0);
   const isDraggingRef = useRef(false);
 
+  const callbacksRef = useRef({ onScoreUpdate, onGameOver });
+  callbacksRef.current = { onScoreUpdate, onGameOver };
+
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const engine = new FruitFusionEngine();
     engine.init(canvasRef.current, containerRef.current);
-    engine.onScoreUpdate = onScoreUpdate;
-    engine.onGameOver = onGameOver;
+    engine.onScoreUpdate = update => callbacksRef.current.onScoreUpdate(update);
+    engine.onGameOver = (score, isNewHighScore, stars) => callbacksRef.current.onGameOver(score, isNewHighScore, stars);
     engine.onDropperChange = (_cur, next) => {
       setNextTier(next);
     };
@@ -118,9 +122,9 @@ export const FruitFusionView: React.FC<FruitFusionViewProps> = ({
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block pointer-events-none" />
 
       {/* Next Fruit Indicator HUD */}
-      <div className="absolute top-16 right-4 z-20 glass-pill px-3 py-1.5 flex items-center space-x-2 border border-pink-500/30 pointer-events-none">
+      <div className="absolute top-16 right-4 z-20 glass-pill rounded-2xl px-3 py-1.5 flex items-center space-x-2 border border-pink-500/30 pointer-events-none">
         <span className="text-[10px] uppercase font-black text-slate-400">Next</span>
-        <span className="text-lg">{nextFruitDef?.emoji}</span>
+        <FruitAsset tier={nextTier} name={nextFruitDef.name} />
       </div>
 
       {/* Bottom Drop Control Button */}

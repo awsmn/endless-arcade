@@ -19,7 +19,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
   onScoreUpdate,
   onGameOver
 }) => {
-  const [board, setBoard] = useState<Board>(createInitialBoard());
+  const [board, setBoard] = useState<Board>(() => createInitialBoard());
   const [score, setScore] = useState(0);
   const [history, setHistory] = useState<{ board: Board; score: number } | null>(null);
   const isGameOverRef = useRef(false);
@@ -216,7 +216,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || swipeHandledRef.current) return;
     const dx = e.clientX - touchStartRef.current.x;
     const dy = e.clientY - touchStartRef.current.y;
     const minDistance = 20;
@@ -227,7 +227,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
       } else {
         move(dy > 0 ? 'down' : 'up');
       }
-      touchStartRef.current = { x: e.clientX, y: e.clientY };
+      swipeHandledRef.current = true;
     }
   };
 
@@ -242,7 +242,7 @@ export const Game2048View: React.FC<Game2048ViewProps> = ({
   };
 
   const handleUndo = () => {
-    if (!history) return;
+    if (!history || isPaused || isGameOverRef.current) return;
     setBoard(history.board);
     setScore(history.score);
     onScoreUpdate({ score: history.score });

@@ -236,3 +236,118 @@ html.light .pop-dots-dense {
 .animate-pulse-glow {
   animation: pulseGlow 2.5s infinite ease-in-out;
 }
+
+/* The game room */
+:root { --room-panel: #151b2d; --room-text: #f5f6ff; --room-muted: #a8b3cc; --room-border: #2b3450; }
+html.light { --room-panel: #fff; --room-text: #172033; --room-muted: #5a6780; --room-border: #dce1ee; }
+.arcade-main { padding-bottom: env(safe-area-inset-bottom); }
+header > div { max-width: 1120px !important; }
+header h1 { text-shadow: none !important; font-weight: 900; }
+.lobby-intro { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #b3a2ff; }
+html.light .eyebrow { color: #7049c7; }
+.lobby-intro h2 { margin: 12px 0; font-size: clamp(32px, 5vw, 56px); font-weight: 900; letter-spacing: -.045em; line-height: 1.05; }
+.lobby-intro h2 span { color: #ffe66d; }
+html.light .lobby-intro h2 span { color: #7651cd; }
+.lobby-intro p { color: var(--room-muted); font-size: 14px; }
+.lobby-stamp { border: 2px solid #b4a4fa; color: #c5b6ff; border-radius: 50%; width: 100px; height: 100px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(12deg); font-size: 25px; line-height: 1.1; font-weight: 900; }
+.lobby-stamp small { font-size: 9px; letter-spacing: .12em; margin-top: 4px; }
+.featured-game { display: grid; grid-template-columns: 1.15fr 1fr; border: 1px solid var(--room-border); background: var(--room-panel); border-radius: 24px; overflow: hidden; box-shadow: 0 12px 40px #0002; }
+.featured-copy { padding: 30px; min-width: 0; }
+.featured-label { font-size: 10px; font-weight: 800; letter-spacing: .15em; color: var(--room-muted); display: flex; align-items: center; gap: 9px; }
+.featured-label > span { width: 7px; height: 7px; border-radius: 50%; background: #8cefaa; }
+.featured-copy h2 { font-size: clamp(26px, 3.5vw, 38px); font-weight: 900; letter-spacing: -.03em; line-height: 1.15; margin: 15px 0 10px; color: var(--room-text); }
+.featured-copy > p { color: var(--room-muted); max-width: 370px; font-size: 13px; line-height: 1.65; min-height: 43px; }
+.featured-actions { display: flex; gap: 12px; margin: 23px 0 18px; align-items: center; flex-wrap: wrap; }
+.featured-actions button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; border-radius: 11px; min-height: 44px; padding: 0 18px; transition: transform .18s, background .18s; }
+.featured-actions button:active { transform: scale(.97); }
+.featured-play { background: #ffe66d; color: #162033; box-shadow: 0 3px 0 #b69a34; }
+.featured-play:hover { background: #fff09e; }
+.featured-shuffle { color: var(--room-text); border: 1px solid var(--room-border); }
+.featured-shuffle:hover { background: #8b7dce20; }
+.featured-caption { font-size: 9px; font-weight: 700; letter-spacing: .1em; color: var(--room-muted); }
+.featured-caption span { margin: 0 7px; color: #b6a2f8; }
+.featured-art { position: relative; min-height: 280px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.featured-art::before, .card-art::before { content: ''; pointer-events: none; position: absolute; inset: 0; background-image: radial-gradient(#ffffff20 1px, transparent 1px); background-size: 15px 15px; }
+.featured-art .game-artwork { width: 100%; max-width: 430px; position: relative; transform: rotate(-5deg) scale(1.08); }
+.featured-art-label { position: absolute; bottom: 18px; right: 18px; color: #fff9; font-size: 10px; letter-spacing: .2em; font-weight: 900; }
+.difficulty-picker { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--room-border); background: var(--room-panel); padding: 14px 18px; border-radius: 16px; }
+.difficulty-copy { display: flex; align-items: center; gap: 12px; color: #b9a9ff; }
+.difficulty-copy strong { font-size: 10px; letter-spacing: .09em; color: var(--room-text); }
+.difficulty-copy p { font-size: 11px; margin-top: 2px; color: var(--room-muted); }
+.difficulty-options { display: flex; background: #0002; padding: 4px; gap: 3px; border-radius: 11px; flex-shrink: 0; }
+.difficulty-options button { padding: 10px 15px; border-radius: 8px; font-size: 11px; font-weight: 800; color: var(--room-muted); transition: background .15s; }
+.difficulty-options button[aria-pressed=true] { color: #172033; background: #c5b6ff; box-shadow: 0 2px 4px #0002; }
+.arcade-card { border: 1px solid var(--room-border); border-radius: 18px; overflow: hidden; background: var(--room-panel); transition: transform .2s, box-shadow .2s; min-width: 0; }
+.arcade-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px #0003; border-color: var(--game-accent); }
+.card-art { height: 171px; position: relative; overflow: hidden; }
+.art-play { display: block; width: 100%; height: 100%; }
+.game-artwork { width: 100%; height: 100%; }
+.card-art .game-artwork { transition: transform .25s; padding: 12px 0 0; }
+.arcade-card:hover .game-artwork { transform: scale(1.05) rotate(-2deg); }
+.card-badges { position: absolute; top: 11px; left: 11px; right: 11px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+.card-badges > span { background: #0b102b8c; color: #fff; font-size: 8px; font-weight: 800; letter-spacing: .08em; padding: 5px 7px; border: 1px solid #ffffff24; border-radius: 6px; }
+.favorite-button { pointer-events: auto; background: #0b102b9e; border: 1px solid #ffffff30; color: #fff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 11px; }
+.favorite-button:hover { background: #141931; }
+.art-play-indicator { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.7); opacity: 0; width: 54px; height: 54px; border-radius: 50%; background: #0b102bd9; color: white; display: grid; place-items: center; transition: transform .2s, opacity .2s; }
+.art-play:hover .art-play-indicator, .art-play:focus-visible .art-play-indicator { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.card-info { padding: 16px; }
+.card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; color: var(--room-text); }
+.card-title-row h3 { font-size: 15px; font-weight: 800; line-height: 1.25; letter-spacing: -.02em; }
+.card-title-row > svg { color: var(--room-muted); flex-shrink: 0; }
+.card-info > p { font-size: 11px; color: var(--room-muted); line-height: 1.6; margin: 7px 0 15px; height: 35px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--room-border); padding-top: 12px; gap: 8px; }
+.card-best { display: flex; gap: 5px; align-items: center; color: var(--room-muted); font-size: 10px; font-weight: 600; }
+.card-best svg { color: #d3b269; }
+.card-play { display: flex; align-items: center; justify-content: center; gap: 5px; background: #ffe66d; color: #172033; padding: 8px 12px; min-height: 36px; border-radius: 8px; font-size: 10px; font-weight: 900; }
+.card-play:hover { background: #fff09e; }
+.game-loading { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; color: #c5b6ff; font-size: 14px; }
+.loading-orbit { width: 38px; height: 38px; border: 3px solid #c5b6ff30; border-top-color: #c5b6ff; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid #b8a6ff; outline-offset: 4px; }
+button:disabled { cursor: default; opacity: .55; }
+input { user-select: text; -webkit-user-select: text; }
+@media (min-width: 768px) {
+  .arcade-main { padding: 0 16px; }
+  .arcade-main > div > div.px-4.pt-3 { max-width: 550px; }
+  .lobby-intro { padding-top: 40px; }
+  .card-art { height: 190px; }
+}
+@media (max-width: 540px) {
+  .lobby-stamp { width: 68px; height: 68px; font-size: 20px; }
+  .lobby-stamp small { font-size: 7px; }
+  .lobby-intro p { font-size: 12px; }
+  .featured-game { grid-template-columns: 1fr; }
+  .featured-copy { padding: 23px; order: 1; }
+  .featured-copy > p { min-height: 0; }
+  .featured-art { min-height: 0; height: 185px; }
+  .featured-art .game-artwork { max-width: 300px; }
+  .featured-art-label { font-size: 8px; }
+  .featured-copy h2 { margin-top: 10px; }
+  .difficulty-picker { flex-direction: column; align-items: stretch; padding: 14px; gap: 12px; }
+  .difficulty-options button { flex: 1; }
+  .game-grid { gap: 12px; }
+  .card-art { height: 130px; }
+  .card-info { padding: 12px; }
+  .card-title-row h3 { font-size: 13px; }
+  .card-title-row > svg { display: none; }
+  .card-play { padding: 8px; }
+  .card-best { font-size: 9px; }
+  header > div { gap: 8px; }
+  header h1 { font-size: 12px !important; }
+  header .space-x-1\.5 { gap: 3px; margin-left: 0; }
+}
+@media (max-width: 370px) { header > div > div:first-child { gap: 6px; } header > div > div:first-child > div:last-child > span { font-size: 7px; } header .w-8 { width: 28px; } .card-footer { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Jewel pieces have individual facets; the drag layer itself has no backing plate. */
+.puzzle-cell { position: relative; min-width: 0; border-radius: 5px; border: 1px solid #40516a45; background: #142034; cursor: pointer; }
+.puzzle-cell.puzzle-filled { border-color: transparent; background: none; }
+.puzzle-cell.puzzle-target { border: 1px dashed #d4e8ff; background: #acc9e512; }
+.jewel-tile { position: absolute; inset: 0; display: block; background: var(--jewel-color); border-radius: 4px; box-shadow: 0 2px 1px #0005, inset 0 0 0 1px #ffffff60; overflow: hidden; }
+.jewel-tile::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg,#ffffffaa,#ffffff22 48%,#0b173a88); clip-path: polygon(0 0,100% 0,100% 100%,0 100%,21% 79%,79% 79%,79% 21%,21% 21%,21% 79%,0 100%); }
+.jewel-tile > span { position: absolute; inset: 20%; border: 1px solid #ffffff50; background: linear-gradient(135deg,#fff4,#fff0 65%); border-radius: 1px; }
+.jewel-preview { opacity: .55; box-shadow: inset 0 0 0 2px #fff9; }
+.block-drag-pieces { filter: drop-shadow(0 5px 4px #0006); }

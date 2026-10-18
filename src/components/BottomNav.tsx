@@ -33,6 +33,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           return (
             <button
               key={tab.id}
+              aria-current={isActive ? 'page' : undefined}
               onClick={() => {
                 sounds.playTap();
                 haptics.tap();

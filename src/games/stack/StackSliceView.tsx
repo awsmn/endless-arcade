@@ -24,13 +24,16 @@ export const StackSliceView: React.FC<StackSliceViewProps> = ({
 
   const [combo, setCombo] = useState(0);
 
+  const callbacksRef = useRef({ onScoreUpdate, onGameOver });
+  callbacksRef.current = { onScoreUpdate, onGameOver };
+
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
     const engine = new StackSliceEngine();
     engine.init(canvasRef.current, containerRef.current);
-    engine.onScoreUpdate = onScoreUpdate;
-    engine.onGameOver = onGameOver;
+    engine.onScoreUpdate = update => callbacksRef.current.onScoreUpdate(update);
+    engine.onGameOver = (score, isNewHighScore, stars) => callbacksRef.current.onGameOver(score, isNewHighScore, stars);
     engine.onCombo = (c) => {
       setCombo(c);
       setTimeout(() => setCombo(0), 800);
@@ -48,6 +51,7 @@ export const StackSliceView: React.FC<StackSliceViewProps> = ({
         engine.drop();
       }
     };
+    window.addEventListener('resize', handleResize);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {

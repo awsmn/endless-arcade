@@ -1,3 +1,4 @@
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -25,6 +26,7 @@ interface BonusFood extends Point {
 }
 
 export class NeonSnakeEngine implements GameEngine {
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -48,10 +50,12 @@ export class NeonSnakeEngine implements GameEngine {
   private isRunning = false;
   private isPaused = false;
   private isGameOver = false;
+  private hasStarted = false;
 
   // Timing & Speed
   private lastTick = 0;
-  private tickInterval = 155; // ms per step (fair starting speed)
+  private readonly pace = getDifficulty().pace;
+  private tickInterval = 175; // ms per step (fair starting speed)
   private minInterval = 75;   // top speed limit
   private animationFrameId = 0;
   private gameOverTimer: ReturnType<typeof setTimeout> | null = null;
@@ -78,6 +82,7 @@ export class NeonSnakeEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -111,6 +116,7 @@ export class NeonSnakeEngine implements GameEngine {
     this.level = level;
     this.score = 0;
     this.isGameOver = false;
+    this.hasStarted = false;
     this.isPaused = false;
     this.isRunning = true;
     this.particles = [];
@@ -128,7 +134,7 @@ export class NeonSnakeEngine implements GameEngine {
     this.direction = { x: 1, y: 0 };
     this.inputQueue = [];
 
-    this.tickInterval = Math.max(this.minInterval, 155 - (level - 1) * 5);
+    this.tickInterval = Math.max(this.minInterval, (175 - (level - 1) * 5) / this.pace);
     this.spawnFood();
 
     this.onScoreUpdate?.({ score: this.score, level: this.level });
@@ -141,11 +147,16 @@ export class NeonSnakeEngine implements GameEngine {
 
   public setDirection(x: number, y: number) {
     if (!this.isRunning || this.isPaused || this.isGameOver) return;
+    if (Math.abs(x) + Math.abs(y) !== 1) return;
     
     // Compare against the latest intended direction (queued or current)
     const last = this.inputQueue.length > 0 ? this.inputQueue[this.inputQueue.length - 1] : this.direction;
     // Prevent 180-degree reversal
     if (last.x + x === 0 && last.y + y === 0) return;
+    if (!this.hasStarted) {
+      this.hasStarted = true;
+      this.lastTick = performance.now();
+    }
     // Prevent duplicate commands
     if (last.x === x && last.y === y) return;
 
@@ -176,8 +187,12 @@ export class NeonSnakeEngine implements GameEngine {
 
   private loop = (timestamp: number) => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
 
-    if (!this.isPaused && !this.isGameOver) {
+    if (!this.isPaused && !this.isGameOver && this.hasStarted) {
       // Logic tick
       if (timestamp - this.lastTick >= this.tickInterval) {
         this.step();
@@ -208,8 +223,11 @@ export class NeonSnakeEngine implements GameEngine {
       return;
     }
 
-    // Self-body collision check
-    for (let i = 0; i < this.snake.length; i++) {
+    // A non-growing move may safely enter the cell the tail is leaving.
+    const willGrow = (head.x === this.food.x && head.y === this.food.y) ||
+      (this.bonusFood !== null && head.x === this.bonusFood.x && head.y === this.bonusFood.y);
+    const collisionLength = this.snake.length - (willGrow ? 0 : 1);
+    for (let i = 0; i < collisionLength; i++) {
       if (head.x === this.snake[i].x && head.y === this.snake[i].y) {
         this.triggerGameOver();
         return;
@@ -229,7 +247,7 @@ export class NeonSnakeEngine implements GameEngine {
       this.spawnFood();
 
       // Speed up gradually (smooth, uniform progression)
-      this.tickInterval = Math.max(this.minInterval, this.tickInterval - 1.2);
+      this.tickInterval = Math.max(this.minInterval / this.pace, this.tickInterval - 1.2);
 
       // Random chance to spawn bonus gold orb
       if (!this.bonusFood && Math.random() < 0.35) {
@@ -259,7 +277,7 @@ export class NeonSnakeEngine implements GameEngine {
       }
     }
 
-    this.onScoreUpdate?.({ score: this.score, level: this.level });
+    if (ateFood) this.onScoreUpdate?.({ score: this.score, level: this.level });
   }
 
   private triggerGameOver() {
@@ -276,16 +294,19 @@ export class NeonSnakeEngine implements GameEngine {
   }
 
   private spawnFood() {
-    let valid = false;
-    let newFood: Point = { x: 0, y: 0 };
-    while (!valid) {
-      newFood = {
-        x: Math.floor(Math.random() * this.gridWidth),
-        y: Math.floor(Math.random() * this.gridHeight)
-      };
-      valid = !this.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y);
+    const occupied = new Set(this.snake.map(segment => segment.y * this.gridWidth + segment.x));
+    const free: Point[] = [];
+    for (let y = 0; y < this.gridHeight; y++) {
+      for (let x = 0; x < this.gridWidth; x++) {
+        if (!occupied.has(y * this.gridWidth + x) && !(this.bonusFood?.x === x && this.bonusFood?.y === y)) free.push({ x, y });
+      }
     }
-    this.food = newFood;
+    if (free.length === 0) {
+      if (this.bonusFood) { this.food = { x: this.bonusFood.x, y: this.bonusFood.y }; this.bonusFood = null; }
+      else this.triggerGameOver();
+      return;
+    }
+    this.food = free[Math.floor(Math.random() * free.length)];
   }
 
   private spawnBonusFood() {
@@ -355,7 +376,7 @@ export class NeonSnakeEngine implements GameEngine {
   }
 
   private render() {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     this.ctx.save();
     this.ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -446,7 +467,7 @@ export class NeonSnakeEngine implements GameEngine {
       this.ctx.save();
       if (i === 0) {
         // Snake Head
-        this.ctx.fillStyle = '#06b6d4';
+        this.ctx.fillStyle = '#9df2b6';
         this.ctx.beginPath();
         this.ctx.roundRect(sx + pad, sy + pad, this.cellSize - pad * 2, this.cellSize - pad * 2, 7);
         this.ctx.fill();
@@ -488,7 +509,7 @@ export class NeonSnakeEngine implements GameEngine {
       } else {
         // Snake Body segments with gradient along tail
         const progress = i / this.snake.length;
-        this.ctx.fillStyle = progress < 0.5 ? '#0891b2' : '#0e7490';
+        this.ctx.fillStyle = progress < 0.5 ? '#47c996' : '#279b80';
         this.ctx.beginPath();
         this.ctx.roundRect(
           sx + pad,
@@ -513,6 +534,12 @@ export class NeonSnakeEngine implements GameEngine {
       this.ctx.restore();
     }
 
+    if (this.isRunning && !this.hasStarted) {
+      this.ctx.fillStyle = '#cbd5e1';
+      this.ctx.textAlign = 'center';
+      this.ctx.font = '600 13px system-ui';
+      this.ctx.fillText('Swipe or press a direction to start', rect.width / 2, this.offsetY - 16);
+    }
     this.ctx.restore();
   }
 }

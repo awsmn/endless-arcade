@@ -1,3 +1,5 @@
+import { drawCar, drawLog, polygon } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -49,6 +51,8 @@ const GRID_COLS = 9;
 const TILE_SIZE = 48;
 
 export class CrossyLaneEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -99,6 +103,7 @@ export class CrossyLaneEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = rect.width * dpr;
@@ -133,6 +138,7 @@ export class CrossyLaneEngine implements GameEngine {
 
     this.cameraY = this.playerRow * TILE_SIZE;
     this.lastTime = performance.now();
+    cancelAnimationFrame(this.animationFrameId);
     this.loop();
   }
 
@@ -156,7 +162,7 @@ export class CrossyLaneEngine implements GameEngine {
       coins: []
     };
 
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const worldWidth = Math.max(rect.width, GRID_COLS * TILE_SIZE);
 
     if (type === 'road') {
@@ -265,7 +271,6 @@ export class CrossyLaneEngine implements GameEngine {
     if (!this.isPaused) return;
     this.isPaused = false;
     this.lastTime = performance.now();
-    this.loop();
   }
 
   public destroy() {
@@ -280,8 +285,12 @@ export class CrossyLaneEngine implements GameEngine {
   }
 
   private loop = (time = performance.now()) => {
-    if (!this.isRunning || this.isPaused) return;
-    const dt = Math.min((time - this.lastTime) / 1000, 0.05);
+    if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
+    const dt = Math.min(Math.max(0, (time - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = time;
 
     this.update(dt);
@@ -296,7 +305,7 @@ export class CrossyLaneEngine implements GameEngine {
       return;
     }
 
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const worldWidth = rect.width;
 
     // Hop animation interpolation
@@ -425,7 +434,7 @@ export class CrossyLaneEngine implements GameEngine {
     sounds.playGameOver();
     haptics.failure();
 
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const px = this.playerCol * (rect.width / GRID_COLS) + (rect.width / GRID_COLS) / 2;
     const py = rect.height * 0.65 - (this.playerRow * TILE_SIZE - this.cameraY);
     for (let i = 0; i < 25; i++) {
@@ -450,7 +459,7 @@ export class CrossyLaneEngine implements GameEngine {
   }
 
   private render() {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const width = rect.width;
     const height = rect.height;
     const colWidth = width / GRID_COLS;
@@ -533,29 +542,10 @@ export class CrossyLaneEngine implements GameEngine {
 
       // Draw Logs on River
       for (const log of row.logs) {
-        this.ctx.fillStyle = '#854d0e';
-        this.ctx.beginPath();
-        this.ctx.roundRect(log.x, rowScreenY - 14, log.width, 28, 8);
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
+        drawLog(this.ctx,log.x,rowScreenY,log.width);
       }
 
-      // Draw Vehicles on Road
-      for (const v of row.vehicles) {
-        this.ctx.fillStyle = v.color;
-        this.ctx.beginPath();
-        this.ctx.roundRect(v.x, rowScreenY - 14, v.width, 28, 6);
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-
-        // Windshield
-        this.ctx.fillStyle = '#0f172a';
-        this.ctx.fillRect(v.speed > 0 ? v.x + v.width - 12 : v.x + 4, rowScreenY - 10, 8, 20);
-      }
+      for (const vehicle of row.vehicles) drawCar(this.ctx,vehicle.x,rowScreenY,vehicle.width,vehicle.color,vehicle.speed>0);
 
       // Draw Train on Rail
       if (row.type === 'rail' && row.trainActive && row.trainX !== undefined) {
@@ -586,31 +576,16 @@ export class CrossyLaneEngine implements GameEngine {
       this.ctx.ellipse(px, py + 8, 12, 6, 0, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Bunny / Hopper Body
-      this.ctx.save();
-      this.ctx.translate(px, py - jumpHeight);
-
-      this.ctx.fillStyle = '#FFE500';
-      this.ctx.beginPath();
-      this.ctx.roundRect(-14, -14, 28, 28, 8);
-      this.ctx.fill();
-      this.ctx.strokeStyle = '#000000';
-      this.ctx.lineWidth = 2.5;
-      this.ctx.stroke();
-
-      // Eyes
-      this.ctx.fillStyle = '#000000';
-      this.ctx.beginPath();
-      this.ctx.arc(-5, -4, 3, 0, Math.PI * 2);
-      this.ctx.arc(5, -4, 3, 0, Math.PI * 2);
-      this.ctx.fill();
-
-      // Cheeks
-      this.ctx.fillStyle = '#FF2A85';
-      this.ctx.beginPath();
-      this.ctx.arc(-8, 3, 2.5, 0, Math.PI * 2);
-      this.ctx.arc(8, 3, 2.5, 0, Math.PI * 2);
-      this.ctx.fill();
+      // Original little courier robot, with antennae and an illuminated visor.
+      const ctx=this.ctx;
+      ctx.save();
+      ctx.translate(px, py - jumpHeight);
+      ctx.fillStyle='#c3d9e9';ctx.beginPath();ctx.roundRect(-11,-8,22,22,6);ctx.fill();
+      ctx.fillStyle='#e9e7d3';ctx.beginPath();ctx.roundRect(-13,-22,26,23,7);ctx.fill();ctx.strokeStyle='#8fabc4';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle='#263c53';ctx.beginPath();ctx.roundRect(-10,-17,20,9,3);ctx.fill();ctx.fillStyle='#9df0df';ctx.fillRect(-6,-14,4,3);ctx.fillRect(2,-14,4,3);
+      ctx.strokeStyle='#a3b7ce';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-7,-22);ctx.lineTo(-9,-29);ctx.moveTo(7,-22);ctx.lineTo(9,-29);ctx.stroke();
+      ctx.fillStyle='#efab8f';ctx.fillRect(-8,10,6,4);ctx.fillRect(2,10,6,4);
+      ctx.fillStyle='#eab886';ctx.fillRect(-3,4,6,3);
 
       this.ctx.restore();
     }

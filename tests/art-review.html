@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Arcade artwork review</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 18px;
+      background: #0a1020;
+      color: #e1e9fc;
+      font: 14px system-ui;
+    }
+    main {
+      max-width: 440px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 6px;
+    }
+    p {
+      color: #9fafcc;
+      font-size: 12px;
+      margin: 0 0 16px;
+    }
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #3c4e70;
+      border-radius: 12px;
+      background: #19243d;
+      color: white;
+      font: inherit;
+      margin-bottom: 14px;
+    }
+    #stage {
+      height: 530px;
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #364564;
+      background: #101a2e;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <main>
+    <h1>Custom arcade artwork</h1>
+    <p>Actual game renderers and shared assets. No emoji or external images.</p>
+    <select id="scene" aria-label="Preview scene">
+      <option value="fruits">Fruit Fusion / all eleven fruits</option>
+      <option value="helix">Helix Descent / solid cylinder</option>
+      <option value="flappy">Flappy Orbit / spacecraft and gates</option>
+      <option value="space">Galaxia Void / enemy fleet</option>
+      <option value="runner">Cyber Sprint / city run</option>
+      <option value="knife">Knife Strike / wood and steel</option>
+      <option value="stack">Stack Slice / dimensional slabs</option>
+      <option value="chroma">Chroma Jump / playfield spacing</option>
+    </select>
+    <div id="stage"><canvas id="canvas"></canvas></div>
+  </main>
+  <script type="module">
+    import { drawFruit } from "/src/engine/art.ts";
+    import { HelixDescentEngine } from "/src/games/helix/HelixDescentEngine.ts";
+    import { FlappyOrbitEngine } from "/src/games/flappy/FlappyOrbitEngine.ts";
+    import { GalaxiaVoidEngine } from "/src/games/space/GalaxiaVoidEngine.ts";
+    import { CyberSprintEngine } from "/src/games/runner/CyberSprintEngine.ts";
+    import { KnifeStrikeEngine } from "/src/games/knife/KnifeStrikeEngine.ts";
+    import { StackSliceEngine } from "/src/games/stack/StackSliceEngine.ts";
+    import { ChromaJumpEngine } from "/src/games/chroma/ChromaJumpEngine.ts";
+    import { sounds } from "/src/engine/audio.ts";
+    import { haptics } from "/src/engine/haptics.ts";
+    sounds.setEnabled(false);
+    haptics.setEnabled(false);
+    const canvas = document.querySelector("#canvas"),
+      stage = document.querySelector("#stage"),
+      select = document.querySelector("select");
+    const engines = {
+      helix: HelixDescentEngine,
+      flappy: FlappyOrbitEngine,
+      space: GalaxiaVoidEngine,
+      runner: CyberSprintEngine,
+      knife: KnifeStrikeEngine,
+      stack: StackSliceEngine,
+      chroma: ChromaJumpEngine,
+    };
+    function render() {
+      const width = stage.clientWidth,
+        height = stage.clientHeight;
+      if (select.value === "fruits") {
+        canvas.width = width * 2;
+        canvas.height = height * 2;
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(2, 0, 0, 2, 0, 0);
+        ctx.fillStyle = "#111e30";
+        ctx.fillRect(0, 0, width, height);
+        const names = [
+          "Cherry",
+          "Strawberry",
+          "Grape",
+          "Lemon",
+          "Orange",
+          "Apple",
+          "Pear",
+          "Peach",
+          "Pineapple",
+          "Melon",
+          "Watermelon",
+        ];
+        names.forEach((name, i) => {
+          const x = (((i % 3) + 0.5) * width) / 3,
+            y = Math.floor(i / 3) * 129 + 61;
+          drawFruit(ctx, x, y, 44, i);
+          ctx.fillStyle = "#b8c9e1";
+          ctx.font = "600 11px system-ui";
+          ctx.textAlign = "center";
+          ctx.fillText(name, x, y + 56);
+        });
+        return;
+      }
+      const engine = new engines[select.value]();
+      engine.init(canvas, stage);
+      engine.start("endless", 1);
+      engine.pause();
+      if (select.value === "helix") {
+        engine.towerRotation = 0.6;
+        engine.ballY = -45;
+        engine.cameraY = -200;
+        engine.particles = [];
+      }
+      if (select.value === "flappy") {
+        engine.probeX = 120;
+        engine.probeY = 245;
+        engine.gates = [
+          {
+            id: 1,
+            x: 290,
+            gapY: 255,
+            gapHeight: 185,
+            width: 44,
+            passed: false,
+            angle: 0.3,
+            starCollected: false,
+          },
+        ];
+      }
+      if (select.value === "space") {
+        engine.playerY = 425;
+        engine.waveCount = 8;
+        engine.enemies = [
+          {
+            id: 1,
+            type: "boss",
+            x: width / 2,
+            y: 145,
+            radius: 40,
+            hp: 72,
+            maxHp: 88,
+          },
+          {
+            id: 2,
+            type: "cruiser",
+            x: 85,
+            y: 255,
+            radius: 21,
+            hp: 5,
+            maxHp: 5,
+          },
+          {
+            id: 3,
+            type: "drone",
+            x: width - 85,
+            y: 245,
+            radius: 17,
+            hp: 2,
+            maxHp: 2,
+          },
+        ];
+        engine.bullets = [
+          { x: width / 2 - 6, y: 350, color: "#9df4ff" },
+          { x: width / 2 + 6, y: 350, color: "#9df4ff" },
+          { x: width / 2 - 55, y: 300, color: "#ff819b", isEnemy: true },
+          { x: width / 2 + 50, y: 315, color: "#ff819b", isEnemy: true },
+        ];
+        engine.powerups = [
+          { x: 70, y: 350, type: "shield" },
+          { x: width - 70, y: 370, type: "spread" },
+        ];
+      }
+      if (select.value === "runner")
+        engine.obstacles = [
+          { lane: -1, z: 0.22, type: "block" },
+          { lane: 1, z: 0.42, type: "barrier" },
+          { lane: 0, z: 0.65, type: "laser" },
+          { lane: 0, z: 0.4, type: "coin" },
+        ];
+      if (select.value === "knife") {
+        engine.embeddedKnives = [0.9, 2.4, 4.1];
+        engine.apples = [{ angle: 5.3, sliced: false }];
+      }
+      if (select.value === "stack") {
+        engine.stack = Array.from({ length: 9 }, (_, i) => ({
+          x: width / 2 - 95 + i * 3,
+          y: 430 - i * 24,
+          width: 190 - i * 6,
+          height: 24,
+          color: engine.getColorForIndex(i),
+        }));
+        engine.activeWidth = 142;
+        engine.activeX = width / 2 - 43;
+        engine.score = 8;
+      }
+      engine.render();
+      engine.destroy();
+    }
+    select.addEventListener("change", render);
+    window.addEventListener("resize", render);
+    render();
+  </script>
+</html>

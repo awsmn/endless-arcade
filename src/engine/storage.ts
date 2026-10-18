@@ -6,6 +6,7 @@ const SETTINGS_KEY = 'ug_settings';
 const RECENTS_KEY = 'ug_recents';
 
 const DEFAULT_SETTINGS: PlatformSettings = {
+  difficulty: 'normal',
   soundEnabled: true,
   hapticsEnabled: true,
   vibrationIntensity: 'medium',
@@ -22,6 +23,10 @@ class StorageEngine {
       const data = localStorage.getItem(SETTINGS_KEY);
       if (data) {
         const settings: PlatformSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+        if (!['easy', 'normal', 'hard'].includes(settings.difficulty)) settings.difficulty = 'normal';
+        if (typeof settings.soundEnabled !== 'boolean') settings.soundEnabled = DEFAULT_SETTINGS.soundEnabled;
+        if (typeof settings.hapticsEnabled !== 'boolean') settings.hapticsEnabled = DEFAULT_SETTINGS.hapticsEnabled;
+        if (!['dark', 'light', 'neon', 'cyber'].includes(settings.theme)) settings.theme = DEFAULT_SETTINGS.theme;
         this.cacheSettings = settings;
         return settings;
       }
@@ -49,7 +54,21 @@ class StorageEngine {
     try {
       const data = localStorage.getItem(PROGRESS_PREFIX + gameId);
       if (data) {
-        return JSON.parse(data);
+        const saved = JSON.parse(data);
+        if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+          const nonnegative = (value: unknown, fallback = 0) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+          const stars = saved.starsEarned && typeof saved.starsEarned === 'object' ? saved.starsEarned : {};
+          return {
+            gameId,
+            highScore: nonnegative(saved.highScore),
+            highestLevelUnlocked: Math.max(1, nonnegative(saved.highestLevelUnlocked, 1)),
+            starsEarned: Object.fromEntries(Object.entries(stars)
+              .filter(([key, value]) => Number(key) >= 1 && typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 3)
+              .map(([key, value]) => [key, Number(value)])),
+            playCount: nonnegative(saved.playCount),
+            lastPlayed: nonnegative(saved.lastPlayed)
+          };
+        }
       }
     } catch (e) {
       console.warn('Failed to load game progress', e);
@@ -106,7 +125,8 @@ class StorageEngine {
     try {
       const data = localStorage.getItem(FAVORITES_KEY);
       if (data) {
-        const arr: string[] = JSON.parse(data);
+        const parsed = JSON.parse(data);
+        const arr: string[] = Array.isArray(parsed) ? [...new Set<string>(parsed.filter((value: unknown) => typeof value === 'string'))] : [];
         this.cacheFavorites = new Set(arr);
         return arr;
       }
@@ -154,7 +174,8 @@ class StorageEngine {
   public getRecentGames(): string[] {
     try {
       const data = localStorage.getItem(RECENTS_KEY);
-      return data ? JSON.parse(data) : [];
+      const parsed = data ? JSON.parse(data) : [];
+      return Array.isArray(parsed) ? parsed.filter((value: unknown) => typeof value === 'string') : [];
     } catch {
       return [];
     }
@@ -166,7 +187,7 @@ class StorageEngine {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith(PROGRESS_PREFIX)) {
-          const progress: UserGameProgress = JSON.parse(localStorage.getItem(key) || '{}');
+          const progress = this.getProgress(key.slice(PROGRESS_PREFIX.length));
           if (progress.starsEarned) {
             total += Object.values(progress.starsEarned).reduce((sum, val) => sum + val, 0);
           }
@@ -176,6 +197,17 @@ class StorageEngine {
       // fallback
     }
     return total;
+  }
+
+  public resetProgress() {
+    // Only clear this app's progress. Preserve preferences and unrelated site data.
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith(PROGRESS_PREFIX) || key === FAVORITES_KEY || key === RECENTS_KEY)) keys.push(key);
+    }
+    keys.forEach(key => localStorage.removeItem(key));
+    this.cacheFavorites = new Set();
   }
 }
 

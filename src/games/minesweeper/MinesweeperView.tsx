@@ -1,3 +1,4 @@
+import { getDifficulty } from '../../engine/difficulty';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
@@ -28,12 +29,12 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
 }) => {
   const rows = 9;
   const cols = 9;
-  const totalMines = 10;
+  const [totalMines] = useState(() => getDifficulty().mines);
 
   const [grid, setGrid] = useState<Cell[][]>(() => createInitialGrid());
   const [isFirstTap, setIsFirstTap] = useState(true);
   const [flagMode, setFlagMode] = useState(false);
-  const [remainingFlags, setRemainingFlags] = useState(totalMines);
+  const [remainingFlags, setRemainingFlags] = useState<number>(totalMines);
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(0);
 
@@ -92,11 +93,23 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
     }
   };
 
+  useEffect(() => {
+    return () => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); };
+  }, []);
+
+  useEffect(() => {
+    if (isPaused && longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+      pointerStartRef.current = null;
+    }
+  }, [isPaused]);
+
   // Timer
   useEffect(() => {
     if (isFirstTap || isPaused || isGameOverRef.current) return;
     const interval = setInterval(() => {
-      setTimer((t) => t + 1);
+      if (!isGameOverRef.current) setTimer((t) => t + 1);
     }, 1000);
     return () => clearInterval(interval);
   }, [isFirstTap, isPaused]);
@@ -107,6 +120,8 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
       if (isPaused || isGameOverRef.current) return;
 
       const newGrid = grid.map((row) => row.map((cell) => ({ ...cell })));
+
+      if (newGrid[startR][startC].isFlagged || newGrid[startR][startC].isRevealed) return;
 
       // If first tap, generate safe board
       if (isFirstTap) {
@@ -218,6 +233,8 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
   const pointerStartRef = useRef<{ r: number; c: number } | null>(null);
 
   const handlePointerDownCell = (r: number, c: number, e: React.PointerEvent) => {
+    if (isPaused || isGameOverRef.current || e.button !== 0) return;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
     try {
       (e.currentTarget as HTMLElement)?.setPointerCapture?.(e.pointerId);
     } catch {
@@ -295,10 +312,18 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
         {grid.map((row, r) => (
           <div key={r} className="flex-1 flex space-x-1 my-0.5">
             {row.map((cell, c) => (
-              <div
+              <button
                 key={c}
+                type="button"
+                aria-label={`Row ${r + 1}, column ${c + 1}: ${cell.isRevealed ? cell.isMine ? 'mine' : `${cell.neighborMines} nearby mines` : cell.isFlagged ? 'flagged' : 'hidden'}`}
+                onClick={(e) => {
+                  if (e.detail === 0) {
+                    if (flagMode) toggleFlag(r, c);
+                    else revealCell(r, c);
+                  }
+                }}
                 onPointerDown={(e) => handlePointerDownCell(r, c, e)}
-                onPointerUp={() => handlePointerUpCell(r, c)}
+                onPointerUp={(e) => handlePointerUpCell(r, c, e)}
                 onPointerCancel={() => {
                   if (longPressTimerRef.current) {
                     clearTimeout(longPressTimerRef.current);
@@ -329,7 +354,7 @@ export const MinesweeperView: React.FC<MinesweeperViewProps> = ({
                 ) : cell.isFlagged ? (
                   <Flag className="w-4 h-4 text-pop-pink fill-pop-pink drop-shadow" />
                 ) : null}
-              </div>
+              </button>
             ))}
           </div>
         ))}

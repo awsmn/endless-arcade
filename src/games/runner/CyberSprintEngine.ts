@@ -1,3 +1,5 @@
+import { drawRunner, polygon } from '../../engine/art';
+import { getDifficulty } from '../../engine/difficulty';
 import { GameEngine, GameMode, GameScoreUpdate } from '../../types/game';
 import { sounds } from '../../engine/audio';
 import { haptics } from '../../engine/haptics';
@@ -25,6 +27,8 @@ interface Particle {
 }
 
 export class CyberSprintEngine implements GameEngine {
+  private readonly pace = getDifficulty().pace;
+  private viewport = { width: 0, height: 0 };
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
   private container!: HTMLElement;
@@ -85,6 +89,7 @@ export class CyberSprintEngine implements GameEngine {
   public resize() {
     if (!this.canvas || !this.container) return;
     const rect = this.container.getBoundingClientRect();
+    this.viewport = { width: rect.width, height: rect.height };
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.canvas.width = Math.round(rect.width * dpr);
@@ -173,8 +178,12 @@ export class CyberSprintEngine implements GameEngine {
 
   private loop = () => {
     if (!this.isRunning) return;
+    if (this.isPaused) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+      return;
+    }
     const now = performance.now();
-    const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+    const dt = Math.min(Math.max(0, (now - this.lastTime) / 1000) * this.pace, 0.05);
     this.lastTime = now;
 
     if (!this.isPaused && !this.isGameOver) {
@@ -187,12 +196,15 @@ export class CyberSprintEngine implements GameEngine {
 
   private update(dt: number) {
     // Gradually scale speed (balanced uniform progression)
-    this.worldSpeed = Math.min(0.95, 0.52 + this.distance * 0.00025);
-    this.spawnInterval = Math.max(0.75, 1.2 - this.distance * 0.0002);
+    this.worldSpeed = Math.min(0.95, 0.46 + this.distance * 0.0002);
+    this.spawnInterval = Math.max(0.75, 1.45 - this.distance * 0.00018);
 
     this.distance += dt * 45;
-    this.score = Math.floor(this.distance + this.coins * 10);
-    this.onScoreUpdate?.({ score: this.score });
+    const nextScore = Math.floor(this.distance + this.coins * 10);
+    if (nextScore !== this.score) {
+      this.score = nextScore;
+      this.onScoreUpdate?.({ score: this.score });
+    }
 
     // Smooth lane shift interpolation
     this.currentLaneX += (this.targetLane - this.currentLaneX) * 14 * dt;
@@ -349,7 +361,7 @@ export class CyberSprintEngine implements GameEngine {
 
   // Perspective 3D -> 2D projection
   private projectLane(laneX: number, z: number): { x: number; y: number; scale: number } {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const centerX = rect.width / 2;
 
     // Depth perspective curve: t from 0 (horizon) to 1 (near bottom)
@@ -367,7 +379,7 @@ export class CyberSprintEngine implements GameEngine {
   private render() {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.viewport;
     const centerX = rect.width / 2;
 
     ctx.clearRect(0, 0, rect.width, rect.height);
@@ -383,6 +395,17 @@ export class CyberSprintEngine implements GameEngine {
     skyGrad.addColorStop(1, '#0f172a');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, rect.width, this.roadTopY);
+
+    // Layered skyline, rooftop antennae, and lit windows.
+    for(let layer=0;layer<2;layer++){
+      for(let i=0;i<12;i++){
+        const bw=24+(i*17)%25,bx=i*43-layer*11,bh=28+(i*37+layer*29)%95;
+        ctx.fillStyle=layer?'#27344e':'#18243b';ctx.fillRect(bx,this.roadTopY-bh,bw,bh);
+        ctx.fillStyle=layer?'#8adcd547':'#cfb4ec2e';
+        for(let wy=this.roadTopY-bh+9;wy<this.roadTopY-5;wy+=14)for(let wx=bx+5;wx<bx+bw-3;wx+=10)ctx.fillRect(wx,wy,3,5);
+        ctx.strokeStyle='#8899c354';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(bx+bw*.6,this.roadTopY-bh);ctx.lineTo(bx+bw*.6,this.roadTopY-bh-12);ctx.stroke();
+      }
+    }
 
     // Horizon glowing neon line
     ctx.strokeStyle = '#06b6d4';
@@ -459,32 +482,10 @@ export class CyberSprintEngine implements GameEngine {
 
     if (this.isSliding) {
       // Flattened hovercraft on slide
-      ctx.scale(1.2, 0.4);
+      ctx.scale(1.08, 0.7);
     }
 
-    // Hovercraft Body
-    ctx.fillStyle = '#06b6d4';
-    ctx.beginPath();
-    ctx.moveTo(0, -22); // nose
-    ctx.lineTo(18, 14);
-    ctx.lineTo(0, 6);
-    ctx.lineTo(-18, 14);
-    ctx.closePath();
-    ctx.fill();
-
-    // Cockpit
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, -6, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Thruster exhaust flame
-    ctx.fillStyle = '#f59e0b';
-    ctx.beginPath();
-    ctx.moveTo(-6, 8);
-    ctx.lineTo(0, 22 + (Math.random() - 0.5) * 6);
-    ctx.lineTo(6, 8);
-    ctx.fill();
+    drawRunner(ctx, this.distance * .32, this.isSliding);
 
     ctx.restore();
 
@@ -515,52 +516,32 @@ export class CyberSprintEngine implements GameEngine {
     ctx.scale(scale, scale);
 
     if (type === 'coin') {
-      // Glowing Gold Coin Ring
-      ctx.fillStyle = '#f59e0b';
-      ctx.beginPath();
-      ctx.arc(0, -12, 12, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(0, -12, 6, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle='#a86c2d';ctx.beginPath();ctx.ellipse(0,-10,11,13,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#f7d578';ctx.beginPath();ctx.ellipse(0,-12,10,12,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#fff0ae';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,-12,6,8,0,0,Math.PI*2);ctx.stroke();
+      polygon(ctx,[[0,-17],[3,-12],[0,-7],[-3,-12]],'#b37b37');
     } else if (type === 'barrier') {
-      // Low ground barricade (jumpable)
-      ctx.fillStyle = '#f43f5e';
-      ctx.beginPath();
-      ctx.roundRect(-24, -14, 48, 14, 4);
-      ctx.fill();
-
-      // Yellow warning stripes
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(-16, -12, 8, 10);
-      ctx.fillRect(8, -12, 8, 10);
+      polygon(ctx,[[-25,-14],[-20,-19],[24,-19],[27,-14]],'#ffc69e');
+      ctx.fillStyle='#c56169';ctx.beginPath();ctx.roundRect(-25,-14,52,15,3);ctx.fill();
+      ctx.save();ctx.beginPath();ctx.rect(-22,-13,46,12);ctx.clip();
+      for(let x=-30;x<32;x+=14)polygon(ctx,[[x,-13],[x+7,-13],[x-1,0],[x-8,0]],'#ffe6a6');ctx.restore();
+      ctx.fillStyle='#455977';ctx.fillRect(-22,0,7,5);ctx.fillRect(16,0,7,5);
     } else if (type === 'laser') {
-      // Overhead laser gate (slideable under)
-      ctx.fillStyle = '#a855f7';
-      // Side posts
-      ctx.fillRect(-24, -36, 6, 36);
-      ctx.fillRect(18, -36, 6, 36);
-
-      // Overhead laser beam
-      ctx.fillStyle = '#e879f9';
-      ctx.fillRect(-22, -34, 44, 8);
+      for(const side of [-1,1]){
+        ctx.fillStyle='#53668b';ctx.fillRect(side*23-4,-38,8,39);
+        polygon(ctx,[[side*23-6,1],[side*23+6,1],[side*23+5,5],[side*23-5,5]],'#263b56');
+        ctx.fillStyle='#c2b5ed';ctx.fillRect(side*23-2,-34,4,8);
+      }
+      ctx.fillStyle='#a86ac33f';ctx.fillRect(-22,-35,44,9);ctx.fillStyle='#ec9de0';ctx.fillRect(-22,-33,44,4);ctx.fillStyle='#ffe0f7';ctx.fillRect(-22,-32,44,1);
     } else {
-      // Solid concrete cyber cube (must switch lane)
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(-22, -32, 44, 32);
-
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(-22, -32, 44, 32);
-
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 16px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚠', 0, -10);
+      polygon(ctx,[[-22,-32],[-15,-39],[27,-39],[22,-32]],'#a8b5ca');
+      polygon(ctx,[[22,-32],[27,-39],[27,-6],[22,0]],'#374a64');
+      const body=ctx.createLinearGradient(0,-32,0,0);body.addColorStop(0,'#637a98');body.addColorStop(1,'#354862');
+      polygon(ctx,[[-22,-32],[22,-32],[22,0],[-22,0]],body,'#96a6c5');
+      ctx.strokeStyle='#273a55';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-17,-27);ctx.lineTo(17,-5);ctx.moveTo(17,-27);ctx.lineTo(-17,-5);ctx.stroke();
+      polygon(ctx,[[0,-28],[11,-9],[-11,-9]],'#ffd98b','#6b4e45');
+      ctx.strokeStyle='#614d48';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(0,-16);ctx.moveTo(0,-13);ctx.lineTo(0,-12);ctx.stroke();
     }
-
     ctx.restore();
   }
 }
