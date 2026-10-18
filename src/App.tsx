@@ -27,6 +27,14 @@ const BlockPuzzleView = lazy(() => import('./games/blockpuzzle/BlockPuzzleView')
 const HelixDescentView = lazy(() => import('./games/helix/HelixDescentView').then(module => ({ default: module.HelixDescentView })));
 const RhythmFallView = lazy(() => import('./games/rhythm/RhythmFallView').then(module => ({ default: module.RhythmFallView })));
 const CrossyLaneView = lazy(() => import('./games/crossy/CrossyLaneView').then(module => ({ default: module.CrossyLaneView })));
+const TetrisView = lazy(() => import('./games/tetris/TetrisView').then(module => ({ default: module.TetrisView })));
+const SudokuView = lazy(() => import('./games/sudoku/SudokuView').then(module => ({ default: module.SudokuView })));
+const MemoryMatrixView = lazy(() => import('./games/memory/MemoryMatrixView').then(module => ({ default: module.MemoryMatrixView })));
+const GemSlideView = lazy(() => import('./games/gemslide/GemSlideView').then(module => ({ default: module.GemSlideView })));
+const LightsOutView = lazy(() => import('./games/lightsout/LightsOutView').then(module => ({ default: module.LightsOutView })));
+const WordPulseView = lazy(() => import('./games/wordle/WordPulseView').then(module => ({ default: module.WordPulseView })));
+const NeonConnectView = lazy(() => import('./games/connect/NeonConnectView').then(module => ({ default: module.NeonConnectView })));
+const SimonEchoView = lazy(() => import('./games/simon/SimonEchoView').then(module => ({ default: module.SimonEchoView })));
 
 const PLAYABLE_GAMES = [
   'neon-snake',
@@ -43,7 +51,15 @@ const PLAYABLE_GAMES = [
   'block-puzzle',
   'helix-descent',
   'rhythm-fall',
-  'crossy-lane'
+  'crossy-lane',
+  'tetris-neon',
+  'sudoku-pulse',
+  'memory-matrix',
+  'gem-slide-15',
+  'cyber-lights',
+  'word-pulse',
+  'neon-connect',
+  'simon-echo'
 ];
 
 import { GAME_CATALOG } from './games/registry';
@@ -393,6 +409,70 @@ export const App: React.FC = () => {
                   onGameOver={handleGameOver}
                 />
               )}
+              {activeGame.id === 'tetris-neon' && (
+                <TetrisView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'sudoku-pulse' && (
+                <SudokuView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'memory-matrix' && (
+                <MemoryMatrixView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'gem-slide-15' && (
+                <GemSlideView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'cyber-lights' && (
+                <LightsOutView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'word-pulse' && (
+                <WordPulseView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'neon-connect' && (
+                <NeonConnectView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
+              {activeGame.id === 'simon-echo' && (
+                <SimonEchoView
+                  mode="endless"
+                  isPaused={isPaused || isGameOver}
+                  onScoreUpdate={handleScoreUpdate}
+                  onGameOver={handleGameOver}
+                />
+              )}
               </Suspense>
             </div>
 
@@ -440,7 +520,7 @@ export const App: React.FC = () => {
           <main className="arcade-main flex-1 w-full max-w-6xl mx-auto">
             {navTab === 'arcade' && (
               <div className="space-y-6 pb-28">
-                <div className="lobby-intro px-4 pt-7"><div><span className="eyebrow">INSERT CURIOSITY. PRESS PLAY.</span><h2>Small games.<br /> <span>Endless possibilities.</span></h2><p>15 quick escapes. Zero downloads. One more go.</p></div><span className="lobby-stamp">100%<br /><small>PLAYABLE</small></span></div>
+                <div className="lobby-intro px-4 pt-7"><div><span className="eyebrow">INSERT CURIOSITY. PRESS PLAY.</span><h2>Small games.<br /> <span>Endless possibilities.</span></h2><p>23 quick escapes. Zero downloads. One more go.</p></div><span className="lobby-stamp">100%<br /><small>PLAYABLE</small></span></div>
                 {/* Search Bar */}
                 <div className="px-4 pt-3">
                   <div className="relative">

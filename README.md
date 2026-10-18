@@ -1,6 +1,6 @@
 # Endless Arcade
 
-A mobile-first React + TypeScript arcade with 15 playable games, local records, synthesized audio, haptics, and offline PWA support.
+A mobile-first React + TypeScript arcade with 23 playable games, local records, synthesized audio, haptics, and offline PWA support.
 
 ## Run locally
 
@@ -16,7 +16,7 @@ Node.js 20+ is recommended. Tests use Node's built-in test runner and esbuild, t
 
 ## Game room
 
-Neon Snake, Fruit Fusion, Infinite Breaker, 2048 Unlimited, Cyber Sprint, Knife Strike, Stack Slice, Minesweeper Pulse, Flappy Orbit, Chroma Jump, Galaxia Void, Block Puzzle 1010, Helix Descent, Rhythm Fall, and Crossy Lane.
+Neon Snake, Fruit Fusion, Infinite Breaker, 2048 Unlimited, Cyber Sprint, Knife Strike, Stack Slice, Minesweeper Pulse, Flappy Orbit, Chroma Jump, Galaxia Void, Block Puzzle 1010, Helix Descent, Rhythm Fall, Crossy Lane, Neon Tetris, Sudoku Pulse, Memory Matrix, Gem Slide 15, Cyber Lights Out, Word Pulse, Neon Connect, and Simon Echo.
 
 The lobby includes custom local SVG scenes, search, category filters, favorites, a random spotlight, light/dark themes, and responsive two-, three-, and four-column layouts. No external image requests are needed for game artwork.
 

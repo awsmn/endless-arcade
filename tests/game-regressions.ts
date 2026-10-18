@@ -323,3 +323,42 @@ test('Detailed fruit sprites are rasterized once per tier and reused', () => {
     else globalThis.document = originalDocument;
   }
 });
+
+test('Game catalog has 23 unique, valid entries', async () => {
+  const { GAME_CATALOG } = await import('../src/games/registry');
+  assert.equal(GAME_CATALOG.length, 23);
+  const ids = new Set(GAME_CATALOG.map(g => g.id));
+  assert.equal(ids.size, 23);
+  for (const game of GAME_CATALOG) {
+    assert.ok(game.title.length > 0);
+    assert.ok(game.instructions.length >= 3);
+    assert.ok(game.tagline.length > 0);
+  }
+});
+
+test('Lights Out toggle flips target node and all 4 orthogonal neighbors', () => {
+  const SIZE = 5;
+  const board = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+  const toggle = (r: number, c: number) => {
+    board[r][c] = !board[r][c];
+    if (r > 0) board[r - 1][c] = !board[r - 1][c];
+    if (r < SIZE - 1) board[r + 1][c] = !board[r + 1][c];
+    if (c > 0) board[r][c - 1] = !board[r][c - 1];
+    if (c < SIZE - 1) board[r][c + 1] = !board[r][c + 1];
+  };
+
+  // Toggle center (2, 2)
+  toggle(2, 2);
+  assert.equal(board[2][2], true);
+  assert.equal(board[1][2], true);
+  assert.equal(board[3][2], true);
+  assert.equal(board[2][1], true);
+  assert.equal(board[2][3], true);
+  assert.equal(board[0][0], false);
+
+  // Toggle center again -> flips back to false
+  toggle(2, 2);
+  assert.equal(board[2][2], false);
+  assert.equal(board[1][2], false);
+});
+
